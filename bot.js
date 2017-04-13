@@ -20,6 +20,7 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const client = new Discord.Client();
+const api = require('./keys.js');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
 
@@ -70,27 +71,36 @@ var commandPanic = "off";
 var commandCancel = "off";
 var commandHelp = "off";
 
-    console.log('● Settings ●');
-    console.log("");
+console.log('● Settings ●');
+console.log("");
+console.log('● You can change these settings as you want in "settings.txt".');
 
 rl.on('line', function(line) {
     console.log("» " + line);
-    if (line.includes("mod:on")) {commandMod = "on"} 
-    else if (line.includes("filter:on")) {commandFilter = "on"}
-    else if (line.includes("rm:on")) {commandRm = "on"}
-    else if (line.includes("uinfo:on")) {commandUinfo = "on"}
-    else if (line.includes("warn:on")) {commandWarn = "on"}
-    else if (line.includes("ban:on")) {commandBan = "on"}
-    else if (line.includes("say:on")) {commandSay = "on"}
-    else if (line.includes("setgame:on")) {commandSetgame = "on"}
-    else if (line.includes("panic:on")) {commandPanic = "on"}
-    else if (line.includes("cancel:on")) {commandCancel = "on"}
-    else if (line.includes("help:on")) {commandHelp = "on"}
+    if (line.includes("mod:on")) {
+        commandMod = "on"
+    } else if (line.includes("filter:on")) {
+        commandFilter = "on"
+    } else if (line.includes("rm:on")) {
+        commandRm = "on"
+    } else if (line.includes("uinfo:on")) {
+        commandUinfo = "on"
+    } else if (line.includes("warn:on")) {
+        commandWarn = "on"
+    } else if (line.includes("ban:on")) {
+        commandBan = "on"
+    } else if (line.includes("say:on")) {
+        commandSay = "on"
+    } else if (line.includes("setgame:on")) {
+        commandSetgame = "on"
+    } else if (line.includes("panic:on")) {
+        commandPanic = "on"
+    } else if (line.includes("cancel:on")) {
+        commandCancel = "on"
+    } else if (line.includes("help:on")) {
+        commandHelp = "on"
+    }
 });
-
-client.login('MzAwNTUyMzc0MDg1MjIyNDAw.C8udkQ.WqOWKPikEVT6cdSeGMuyf2Khe3I');
-
-
 
 function setGame() {
     var presence = {};
@@ -102,7 +112,7 @@ function setGame() {
     switch (Math.floor(Math.random() * 1000) % 22) {
         case 0:
             presence.game.name = "with various buttons";
-            break; //SCRUATCHO
+            break;
         case 1:
             presence.game.name = "xail's stream";
             break;
@@ -170,9 +180,13 @@ function setGame() {
     client.user.setPresence(presence);
 }
 
+client.login(api.key()).catch(function() {
+    console.log("[ERROR] Login failed.");
+    console.log(api.key);
+});
+
 client.on('ready', () => {
-    console.log(" ");
-    console.log('● You can change these settings as you want in "settings.txt".');
+
     console.log(" ");
     console.log(" ");
     console.log("● XailBot is ready!");
@@ -183,20 +197,18 @@ client.on('ready', () => {
     doModeration[300575580116746240] = true;
 });
 
-function getBoshyTime(guild) {
-    if (guild.id == 300575580116746240) { //AstralPhaser
+function warningIcon(guild) {
         return ":warning:";
-    }
 }
 
 //var prank = true;
 //IT'S JUST A PRANK BRO
 
-function reactionChecker(messageReaction, user) {
+function reactionChecker(messageReaction, user) { // this function is never called
     if (messageReaction.message.author.id == 300552374085222400 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
         messageReact = messageReaction;
     }
-    
+
 }
 
 function messageChecker(oldMessage, newMessage) {
@@ -227,7 +239,7 @@ function messageChecker(oldMessage, newMessage) {
             message.delete(10000)
         }
     }
-       
+
 
     if (panicMode[message.guild.id] == null) {
         panicMode[message.guild.id] = false;
@@ -246,15 +258,6 @@ function messageChecker(oldMessage, newMessage) {
         message.delete();
     }
 
- 
-    
-    
-    /*if (message.channel.id == 277943393231831040) {
-        var line = "[" + message.createdAt.toUTCString() + " - " + message.member.displayName + "] " + msg + "\n";
-        fs.appendFile("brokerules.txt", line, function(err) {
-            
-        });
-    }*/
 
     if (message.author.id != 280495817901473793 && !message.author.bot) {
         //Server Detection:
@@ -370,7 +373,7 @@ function messageChecker(oldMessage, newMessage) {
                         message.reply("I don't know, it's probably because of something Xail did.");
                     } else if (msg.toLowerCase().includes("can i")) {
                         message.reply("It's up to you, mate.");
-                    } else if (msg.toLowerCase().includes("+") || msg.toLowerCase().includes("divided") || msg.toLowerCase().includes("-") || msg.toLowerCase().includes("plus") || msg.toLowerCase().includes("subtract") || msg.toLowerCase().includes("minus") || msg.toLowerCase().includes("times") || msg.toLowerCase().includes("*") || msg.toLowerCase().includes("/") || msg.toLowerCase().includes("="))  {
+                    } else if (msg.toLowerCase().includes("+") || msg.toLowerCase().includes("divided") || msg.toLowerCase().includes("-") || msg.toLowerCase().includes("plus") || msg.toLowerCase().includes("subtract") || msg.toLowerCase().includes("minus") || msg.toLowerCase().includes("times") || msg.toLowerCase().includes("*") || msg.toLowerCase().includes("/") || msg.toLowerCase().includes("=")) {
                         message.reply("Sorry, I don't know what it is. Go ask Xail, he'd probably know.");
                     } else if (msg.toLowerCase().includes("xail") || msg.toLowerCase().includes("xailran")) {
                         message.reply("Did you know I am actually based off of that guy?");
@@ -390,43 +393,43 @@ function messageChecker(oldMessage, newMessage) {
             var command = msg.substr(4);
             switch (command) {
                 case "ping":
-                doNotDelete = true;
+                    doNotDelete = true;
                     switch (Math.floor(Math.random() * 1000) % 5) {
                         case 0:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PONG!** I want to play pong too... :\'(');
+                            message.channel.send(warningIcon(message.guild) + ' **PONG!** I want to play pong too... :\'(');
                             break;
                         case 1:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PONG!** I love playing pong!');
+                            message.channel.send(warningIcon(message.guild) + ' **PONG!** I love playing pong!');
                             break;
                         case 2:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PONG!** Thanks for playing pong with me!');
+                            message.channel.send(warningIcon(message.guild) + ' **PONG!** Thanks for playing pong with me!');
                             break;
                         case 3:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PONG!** Reflect upon this!');
+                            message.channel.send(warningIcon(message.guild) + ' **PONG!** Reflect upon this!');
                             break;
                         case 4:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PONG!**');
+                            message.channel.send(warningIcon(message.guild) + ' **PONG!**');
                             break;
                     }
                     commandProcessed = true;
                     break;
                 case "pong":
-                doNotDelete = true;
+                    doNotDelete = true;
                     switch (Math.floor(Math.random() * 1000) % 5) {
                         case 0:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PING!** Pings are also cool!');
+                            message.channel.send(warningIcon(message.guild) + ' **PING!** Pings are also cool!');
                             break;
                         case 1:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PING!** Do you like playing pong?');
+                            message.channel.send(warningIcon(message.guild) + ' **PING!** Do you like playing pong?');
                             break;
                         case 2:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PING!** Here\'s the test message you wanted!');
+                            message.channel.send(warningIcon(message.guild) + ' **PING!** Here\'s the test message you wanted!');
                             break;
                         case 3:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PING!** Don\'t breathe this!');
+                            message.channel.send(warningIcon(message.guild) + ' **PING!** Don\'t breathe this!');
                             break;
                         case 4:
-                            message.channel.send(getBoshyTime(message.guild) + ' **PING!**');
+                            message.channel.send(warningIcon(message.guild) + ' **PING!**');
                             break;
                     }
                     commandProcessed = true;
@@ -439,7 +442,7 @@ function messageChecker(oldMessage, newMessage) {
                     commandProcessed = true;
                     break;
                 case "help":
-                doNotDelete = false;
+                    doNotDelete = false;
                     message.channel.send(
                         "Here are some things you can try:\n```\n" +
                         "copyright         Tells you about XailBot\n" +
@@ -450,7 +453,7 @@ function messageChecker(oldMessage, newMessage) {
                         "```")
                     break;
                 case "copyright":
-                doNotDelete = false;
+                    doNotDelete = false;
                     message.author.sendMessage(
                         "Copyright (C) 2017 Victor Tran and Rylan Arbour\n\n" +
                         "Rewritten by zBlake for use on Rainbow Gaming." +
@@ -471,7 +474,7 @@ function messageChecker(oldMessage, newMessage) {
                     commandProcessed = true;
                     break;
                 case "warranty":
-                doNotDelete = false;
+                    doNotDelete = false;
                     message.author.sendMessage(
                         "This program is distributed in the hope that it will be useful,\n" +
                         "but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
@@ -481,70 +484,11 @@ function messageChecker(oldMessage, newMessage) {
                     commandProcessed = true;
                     break;
                 case "egg":
-                doNotDelete = true;
+                    doNotDelete = true;
                     message.reply(":egg:");
                     message.delete();
                     commandProcessed = true;
                     break;
-                default:
-                    if (command.startsWith("time")) {
-                        command = command.substr(5);
-
-                        var hours;
-
-                        switch (command.toLowerCase()) {
-                            case "nzdt":
-                            case "auckland":
-                            case "christchurch":
-                            case "new zealand":
-                            case "nz":
-                                hours = +12;
-                                break;
-                            case "aedt":
-                                hours = +11;
-                                break;
-                            case "sydney":
-                            case "canberra":
-                            case "xail":
-                            case "xailran":
-                            case "server":
-                                hours = +10;
-                                break;
-                            case "aest:":
-                                hours = +10;
-                                break;
-                            case "acdt":
-                                hours = +10.5;
-                                break;
-                            case "adelaide":
-                            case "aedt":
-                                hours = +9.5;
-                                break;
-                            case "singapore":
-                                hours = +8;
-                                break;
-                            default:
-                                hours = parseFloat(command);
-                                command = "UTC " + command + ":00";
-                        }
-
-                        if (hours > -14 && hours < 14) {
-                            var localtime = new Date();
-                            var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + hours * 60) * 60000);
-                            var dateString = date.toString();
-                            if (dateString == "Invalid Date") {
-                                message.channel.send(":no_entry_sign: **ERROR:** That ain't a valid timezone. Don't try to confuse me... *or else...*");
-                            } else {
-                                dateString = dateString.substring(0, dateString.lastIndexOf(" "));
-                                dateString = dateString.substring(0, dateString.lastIndexOf(" "));
-                                message.channel.send(':arrow_forward: The time now at ' + command + ' is ' + dateString);
-                            }
-                        } else {
-                            message.channel.send(":no_entry_sign: **ERROR:** That ain't a valid timezone. Don't try to confuse me... *or else...*");
-                        }
-                        message.delete();
-                        commandProcessed = true;
-                    }
             }
         }
 
@@ -557,7 +501,7 @@ function messageChecker(oldMessage, newMessage) {
                 var command = msg.substr(4);
                 switch (command) {
                     case "filter":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandFilter == "on") {
                             if (message.guild.id != 300575580116746240) {
                                 message.reply(':no_entry_sign: ERROR: Unable to use that command in this server.');
@@ -575,7 +519,7 @@ function messageChecker(oldMessage, newMessage) {
                         }
 
                     case "filter on":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandFilter == "on") {
                             if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
                                 if (expletiveFilter) {
@@ -595,7 +539,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "filter off":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandFilter == "on") {
                             if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
                                 if (expletiveFilter) {
@@ -616,7 +560,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "mod":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandMod == "on") {
                             if (doModeration[message.guild.id]) {
                                 message.channel.send(':arrow_forward: Moderation: on');
@@ -629,11 +573,13 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "random":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         var channel = client.channels.get("300575580116746241");
                         channel.join()
                             .then(connection => {
-                                return connection.playFile('D:\\BOT\\nope.wav', {volume: 0.6});
+                                return connection.playFile('D:\\BOT\\nope.wav', {
+                                    volume: 0.6
+                                });
                             })
                             .then(dispatcher => {
                                 dispatcher.on('end', connection.destroy());
@@ -644,7 +590,7 @@ function messageChecker(oldMessage, newMessage) {
                         message.delete();
                         break;
                     case "mod on":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandMod == "on") {
                             if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
                                 if (doModeration[message.guild.id]) {
@@ -664,7 +610,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "mod off":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandMod == "on") {
                             if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
                                 if (doModeration[message.guild.id]) {
@@ -685,20 +631,20 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "deletemessages":
-                    doNotDelete = true;
-                            if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
-                                message.channel.send(':rotating_light: Messages from the bot will now automatically be deleted.').then(function() {
-                                    botDelMessage[message.guild.id] = true;
-                                });
-                                console.log("● Automatic message deletion for the bot is now on.");
-                                message.delete();
-                            } else {
-                                message.reply(':no_entry_sign: **NOPE:** This is an administrator only command.');
-                                message.delete();
-                            }
-                            break;
+                        doNotDelete = true;
+                        if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
+                            message.channel.send(':rotating_light: Messages from the bot will now automatically be deleted.').then(function() {
+                                botDelMessage[message.guild.id] = true;
+                            });
+                            console.log("● Automatic message deletion for the bot is now on.");
+                            message.delete();
+                        } else {
+                            message.reply(':no_entry_sign: **NOPE:** This is an administrator only command.');
+                            message.delete();
+                        }
+                        break;
                     case "panic":
-                    doNotDelete = true;
+                        doNotDelete = true;
                         if (commandPanic == "on") {
                             if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
                                 message.channel.send(':rotating_light: **Panic mode is now on.** All message sending for this server has been turned off.').then(function() {
@@ -715,7 +661,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "warn":
-                    doNotDelete = true;
+                        doNotDelete = true;
                         if (commandWarn == "on") {
                             if (warnMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See mod:help for more information.');
@@ -725,14 +671,19 @@ function messageChecker(oldMessage, newMessage) {
                                     embed = new Discord.RichEmbed("warning");
                                     embed.setAuthor("ᴡᴀʀɴɪɴɢ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
                                     embed.setColor("#E5C01D");
-                                    
+
                                     //begin attempt at csv write
-                                    var writer = csvWriter({ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"], sendHeaders:false}) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
-                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {flags: 'a'}))
+                                    var writer = csvWriter({
+                                        headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
+                                        sendHeaders: false
+                                    }) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
+                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {
+                                        flags: 'a'
+                                    }))
                                     writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Warning", moderatorWarn.username, warnReason])
                                     writer.end()
                                     console.log("● Successfully wrote warning for user '" + member.displayName + "' to CSV file.")
-                                    
+
                                     var msg = warnMember + "\n";
                                     embed.addField("**User**", msg);
 
@@ -753,7 +704,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "ban":
-                    doNotDelete = true;
+                        doNotDelete = true;
                         if (commandBan == "on") {
                             if (banMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See mod:help for more information.');
@@ -765,12 +716,17 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.setColor("#af1c1c");
 
                                     //begin attempt at csv write
-                                    var writer = csvWriter({ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"], sendHeaders:false}) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
-                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {flags: 'a'}))
+                                    var writer = csvWriter({
+                                        headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
+                                        sendHeaders: false
+                                    }) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
+                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {
+                                        flags: 'a'
+                                    }))
                                     writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Ban", moderatorBan, banReason])
                                     writer.end()
                                     console.log("● Successfully wrote ban for user '" + member.displayName + "' to CSV file.")
-                                    
+
                                     var msg = banMember + "\n";
                                     embed.addField("**User**", msg);
 
@@ -779,7 +735,7 @@ function messageChecker(oldMessage, newMessage) {
 
                                     var msg = banReason + "\n";
                                     embed.addField("**Reason**", msg);
-                                    
+
                                     banMember.ban(7);
                                     message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully banned.");
                                     client.channels.get("300585564279799808").sendEmbed(embed);
@@ -788,11 +744,11 @@ function messageChecker(oldMessage, newMessage) {
                             }
                             message.delete();
                             break;
-                            } else {
+                        } else {
                             return;
                         }
                     case "softban":
-                    doNotDelete = true;
+                        doNotDelete = true;
                         if (commandBan == "on") {
                             if (banMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to softban. See mod:help for more information.');
@@ -804,12 +760,17 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.setColor("#af1c1c");
 
                                     //begin attempt at csv write
-                                    var writer = csvWriter({ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"], sendHeaders:false}) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
-                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {flags: 'a'}))
+                                    var writer = csvWriter({
+                                        headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
+                                        sendHeaders: false
+                                    }) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
+                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {
+                                        flags: 'a'
+                                    }))
                                     writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Softban", moderatorBan, banReason])
                                     writer.end()
                                     console.log("● Successfully wrote softban for user '" + member.displayName + "' to CSV file.")
-                                    
+
                                     var msg = banMember + "\n";
                                     embed.addField("**User**", msg);
 
@@ -818,7 +779,7 @@ function messageChecker(oldMessage, newMessage) {
 
                                     var msg = banReason + "\n";
                                     embed.addField("**Reason**", msg);
-                                    
+
                                     message.guild.ban(banMember, 7);
                                     message.guild.unban(banMember);
                                     message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully softbanned.");
@@ -832,10 +793,10 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "reboot":
-                    doNotDelete = true;
+                        doNotDelete = true;
                         message.channel.send(":white_check_mark: We'll be back in a bit.").then(function() {
                             client.destroy();
-                            client.login('MzAwNTUyMzc0MDg1MjIyNDAw.C8udkQ.WqOWKPikEVT6cdSeGMuyf2Khe3I').then(function() {
+                            client.login(api.key()).then(function() {
                                 message.channel.send(":white_check_mark: XailBot is back online!");
                             }).catch(function() {
                                 console.log("▲ [ERROR] Login failed.");
@@ -843,7 +804,7 @@ function messageChecker(oldMessage, newMessage) {
                         });
                         break;
                     case "help":
-                    doNotDelete = true;
+                        doNotDelete = true;
                         if (commandHelp == "on") {
                             var helpMessage = "And here are the mod only commands:\n```\n" +
                                 "* mod [on|off]    		   Queries moderation status.\n";
@@ -875,7 +836,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     case "cancel":
-                    doNotDelete = false;
+                        doNotDelete = false;
                         if (commandCancel == "on") {
                             if (poweroff) {
                                 poweroff = false;
@@ -895,7 +856,6 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     default:
-
                         if (command.startsWith("uinfo") && commandUinfo == "on") {
                             doNotDelete = true;
                             command = command.substr(6);
@@ -1169,27 +1129,29 @@ function messageChecker(oldMessage, newMessage) {
                             }
                             message.delete();
                             message.channel.send(":information_source: A poll has just been created! \n" + ":writing_hand: **" + pollm + "**\n:white_check_mark: Cast your votes to the poll by using reactions on this message!");
-
-                       // } else if (command.startsWith("endpoll")) {
-                       //     console.log(messageReact.emoji);           
                             
-                       //     var pollm = "";
-                       //     var argsArray = messageReact.emoji;
-                       //     var arrayLength = 1;
-
-                       //     message.channel.send(":information_source: Here are the results:");
+                            // Commented out to try and find solution.
                             
-                       //     if (arrayLength > 0) {
-                       //         for (var i = 0; i < arrayLength; i++) {
-                       //             message.channel.send(messageReact.emoji.name + " - " + messageReact.count);
-                       //         }
-                       //     }
+                            // } else if (command.startsWith("endpoll")) {
+                            //     console.log(messageReact.emoji);           
 
-                       //     message.channel.send(messageReact.emoji.name + " - " + messageReact.count);
+                            //     var pollm = "";
+                            //     var argsArray = messageReact.emoji;
+                            //     var arrayLength = 1;
 
-                       //     console.log("▲ Poll has ended.");
-                       //     message.delete();
-                            
+                            //     message.channel.send(":information_source: Here are the results:");
+
+                            //     if (arrayLength > 0) {
+                            //         for (var i = 0; i < arrayLength; i++) {
+                            //             message.channel.send(messageReact.emoji.name + " - " + messageReact.count);
+                            //         }
+                            //     }
+
+                            //     message.channel.send(messageReact.emoji.name + " - " + messageReact.count);
+
+                            //     console.log("▲ Poll has ended.");
+                            //     message.delete();
+
                         } else if (command.startsWith("setgame") && commandSetgame == "on") {
                             doNotDelete = true;
                             command = command.substr(6);
@@ -1232,8 +1194,8 @@ function messageChecker(oldMessage, newMessage) {
                                 }
                             });
                         }
-   
-                        
+
+
                         if (command == "poweroff") {
                             doNotDelete = true;
                             if (message.author.id == 196792235654774784 || message.author.id == 246574843460321291) {
@@ -1291,7 +1253,7 @@ function messageChecker(oldMessage, newMessage) {
             if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 5) {
                 var auth = message.author;
                 if (message.guild.id == 300575580116746240) { //AstralPhaser
-                    client.channels.get("300585564279799808").sendMessage(getBoshyTime(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
+                    client.channels.get("300585564279799808").sendMessage(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
                 }
                 doNotDelete = false;
                 message.reply("Quite enough of this. I'm not warning you any more. A notification has been sent to the mods.");
@@ -1323,7 +1285,7 @@ function messageChecker(oldMessage, newMessage) {
             } else if (smallMessageCount[message.author.id] == 6) {
                 var auth = message.author;
                 if (message.guild.id == 300575580116746240) { //test server
-                    client.channels.get("300585564279799808").sendMessage(getBoshyTime(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
+                    client.channels.get("300585564279799808").sendMessage(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
 
                 }
                 doNotDelete = false;
@@ -1368,13 +1330,13 @@ client.on('guildMemberAdd', function(guildMember) {
         embed = new Discord.RichEmbed("info");
         embed.setAuthor("ᴜꜱᴇʀ ᴊᴏɪɴᴇᴅ » " + guildMember.displayName, guildMember.user.displayAvatarURL);
         embed.setColor("#30b236");
-        
+
         var msg = guildMember.user.discriminator + "\n"
         embed.addField("**Discriminator**", "#" + msg);
-        
+
         var msg = guildMember.user.createdAt.toUTCString() + "\n";
         embed.addField("**User Created**", msg);
-        
+
         if (guildMember.joinedAt.toUTCString() == "Thu, 01 Jan 1970 00:00:00 GMT") {
             msg = "Joined at: -∞... and beyond! Discord seems to be giving incorrect info... :(";
         } else {
@@ -1479,7 +1441,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
     if (oldMessage.cleanContent == newMessage.cleanContent) return; //Ignore
     var channel = null;
     if (oldMessage.guild != null) {
-        if (oldMessage.guild.id == 300575580116746240) { //AstralPhaser Central
+        if (oldMessage.guild.id == 300575580116746240) {
             channel = client.channels.get("300585564279799808");
         }
 
@@ -1495,3 +1457,4 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
         }
     }
 });
+
