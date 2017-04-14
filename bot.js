@@ -39,25 +39,19 @@ var sameMessageCount = {};
 var smallMessageCount = {};
 var lastUserInteraction = {};
 var poweroff = false;
-var warntoggle = false;
 var warnMember = null;
 var banMember = null;
-var interrogMember = null;
-var bulletinTimeout;
 var numDel;
-var botMessageTimeout;
 var botDelMessage = {};
 var warnReason = {};
 var banReason = {};
 var moderatorWarn = {};
 var moderatorBan = {};
 var doNotDelete = {};
-var poll = {};
-var pollquestion = {};
-
-//Reactions to poll
-var messageReact = {};
-
+var muteMember = {};
+var moderatorMute = {};
+var muteReason = {};
+var warningCount = 0;
 
 var commandMod = "off";
 var commandFilter = "off";
@@ -198,7 +192,7 @@ client.on('ready', () => {
 });
 
 function warningIcon(guild) {
-        return ":warning:";
+    return ":warning:";
 }
 
 //var prank = true;
@@ -260,13 +254,8 @@ function messageChecker(oldMessage, newMessage) {
 
 
     if (message.author.id != 280495817901473793 && !message.author.bot) {
-        //Server Detection:
-        //AstralPhaser Central: 277922530973581312
-        //Michael's Stuff     : 234414439330349056
-        //AKidFromTheUK       : 285740807854751754
-
         if (doModeration[message.guild.id]) { //Check if we should do moderation on this server
-            if ((expletiveFilter && message.guild.id == 300575580116746240)) { //Check for expletives only if on AstralPhaser Central or theShell
+            if ((expletiveFilter && message.guild.id == 300575580116746240)) {
                 //Check for expletives
                 var exp = msg.search(/(\b|\s|^|\.|\,|\ )(shit|shite|shitty|bullshit|fuck|fucking|ass|penis|cunt|faggot|fag|wank|wanker|nigger|nigga|bastard|thisisnotarealwordbutatestword)(\b|\s|$|\.|\,|\ )/i);
                 if (exp != -1) { //Gah! They're not supposed to say that!
@@ -493,11 +482,7 @@ function messageChecker(oldMessage, newMessage) {
         }
 
         if (msg.toLowerCase().startsWith("mod:") && !commandProcessed) {
-            //Check for moderator/admin permission
-
-            //Moderator ID: 282068037664768001
-            //Admin ID:     282068065619804160
-            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) { //Thanks Aren! :D
+            if (message.member.roles.find("name", "Adept Fleece Police") || ("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                 var command = msg.substr(4);
                 switch (command) {
                     case "filter":
@@ -546,7 +531,6 @@ function messageChecker(oldMessage, newMessage) {
                                     expletiveFilter = false;
                                     message.channel.send(':white_check_mark: Expletive Filter is now turned off.');
                                     console.log("● Expletive Filter is now off.");
-                                    client.clearInterval(bulletinTimeout);
                                 } else {
                                     message.channel.send(':arrow_forward: Expletive Filter is already off.');
                                 }
@@ -572,19 +556,21 @@ function messageChecker(oldMessage, newMessage) {
                         } else {
                             return;
                         }
+                        //Test command for joining voice channels. Used for testing features with voice chat, only temporary command.
                     case "random":
                         doNotDelete = false;
                         var channel = client.channels.get("300575580116746241");
                         channel.join()
                             .then(connection => {
-                                return connection.playFile('D:\\BOT\\nope.wav', {
+                                const dispatcher = connection.playFile('./nope.wav', {
                                     volume: 0.6
                                 });
                             })
                             .then(dispatcher => {
-                                dispatcher.on('end', connection.destroy());
+                                dispatcher.on('end', () => {
+                                    message.channel.send("Song finished.");
+                                });
                                 dispatcher.on('error', console.error);
-                                // You can also do things like dispatcher.pause() and dispatcher.end() here.
                             })
                             .catch(console.error);
                         message.delete();
@@ -660,29 +646,75 @@ function messageChecker(oldMessage, newMessage) {
                         } else {
                             return;
                         }
+                    case "mute":
+                        doNotDelete = true;
+                        if (commandWarn == "on") {
+                            if (muteMember == null) {
+                                message.reply(':no_entry_sign: **ERROR:** You need to enter a user to mute. See mod:help for more information.');
+                            } else {
+                                message.guild.fetchMember(muteMember).then(function(member) {
+                                    embed = new Discord.RichEmbed("mute");
+                                    embed.setAuthor("ᴍᴜᴛᴇ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+                                    embed.setColor("#E5C01D");
+
+                                    //Write mute information to .csv file
+                                    var writer = csvWriter({
+                                        headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
+                                        sendHeaders: false
+                                    })
+                                    writer.pipe(fs.createWriteStream('punishment tracker.csv', {
+                                        flags: 'a'
+                                    }))
+                                    writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Mute", moderatorMute.username, muteReason])
+                                    writer.end()
+                                    console.log("● Successfully wrote mute for user '" + member.displayName + "' to CSV file.")
+
+                                    var msg = muteMember + "\n";
+                                    embed.addField("**User**", msg);
+
+                                    var msg = moderatorMute + "\n";
+                                    embed.addField("**Moderator**", msg);
+
+                                    var msg = muteReason + "\n";
+                                    embed.addField("**Reason**", msg);
+
+                                    muteMember.addRole(muteMember.guild.roles.get("302285092036935680"));
+                                    muteMember.setVoiceChannel(muteMember.guild.channels.get(muteMember.guild.afkChannelID));
+
+                                    message.channel.send(":white_check_mark: " + muteMember.displayName + " was succesfully muted.");
+                                    client.channels.get("300585564279799808").sendEmbed(embed);
+                                    muteMember = null;
+                                });
+                            }
+                            message.delete();
+                            break;
+                        } else {
+                            return;
+                        }
                     case "warn":
                         doNotDelete = true;
                         if (commandWarn == "on") {
                             if (warnMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See mod:help for more information.');
-
                             } else {
                                 message.guild.fetchMember(warnMember).then(function(member) {
-                                    embed = new Discord.RichEmbed("warning");
-                                    embed.setAuthor("ᴡᴀʀɴɪɴɢ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
-                                    embed.setColor("#E5C01D");
 
-                                    //begin attempt at csv write
+                                    //Write warning information to .csv file
                                     var writer = csvWriter({
-                                        headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
+                                        headers: ["Discord Username", "Date (in GMT)", "Type of Punishment", "Punished by", "Reason"],
                                         sendHeaders: false
-                                    }) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
+                                    })
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
                                     writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Warning", moderatorWarn.username, warnReason])
                                     writer.end()
                                     console.log("● Successfully wrote warning for user '" + member.displayName + "' to CSV file.")
+
+
+                                    embed = new Discord.RichEmbed("warning");
+                                    embed.setAuthor("ᴡᴀʀɴɪɴɢ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+                                    embed.setColor("#E5C01D");
 
                                     var msg = warnMember + "\n";
                                     embed.addField("**User**", msg);
@@ -693,7 +725,10 @@ function messageChecker(oldMessage, newMessage) {
                                     var msg = warnReason + "\n";
                                     embed.addField("**Reason**", msg);
 
-                                    message.channel.send(":white_check_mark: " + warnMember.displayName + " was succesfully warned.");
+                                    var msg = warningCount + 1 + "\n"; // Add 1 to warningCount to include this warning as well.
+                                    embed.addField("**Warning #**", msg);
+
+                                    message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully warned.");
                                     client.channels.get("300585564279799808").sendEmbed(embed);
                                     warnMember = null;
                                 });
@@ -703,6 +738,8 @@ function messageChecker(oldMessage, newMessage) {
                         } else {
                             return;
                         }
+
+
                     case "ban":
                         doNotDelete = true;
                         if (commandBan == "on") {
@@ -715,11 +752,11 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.setAuthor("ʙᴀɴ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
                                     embed.setColor("#af1c1c");
 
-                                    //begin attempt at csv write
+                                    //Write ban information to .csv file
                                     var writer = csvWriter({
                                         headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
                                         sendHeaders: false
-                                    }) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
+                                    })
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
@@ -736,7 +773,7 @@ function messageChecker(oldMessage, newMessage) {
                                     var msg = banReason + "\n";
                                     embed.addField("**Reason**", msg);
 
-                                    banMember.ban(7);
+                                    message.guild.ban(banMember, 7);
                                     message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully banned.");
                                     client.channels.get("300585564279799808").sendEmbed(embed);
                                     warnMember = null;
@@ -757,13 +794,13 @@ function messageChecker(oldMessage, newMessage) {
                                 message.guild.fetchMember(banMember).then(function(member) {
                                     embed = new Discord.RichEmbed("softban");
                                     embed.setAuthor("ꜱᴏꜰᴛʙᴀɴ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
-                                    embed.setColor("#af1c1c");
+                                    embed.setColor("#e08743");
 
-                                    //begin attempt at csv write
+                                    //Write softban information to .csv file
                                     var writer = csvWriter({
                                         headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
                                         sendHeaders: false
-                                    }) //{ headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "No. of Warnings", "Punished by", "Reason"]}
+                                    })
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
@@ -863,28 +900,27 @@ function messageChecker(oldMessage, newMessage) {
 
                             message.guild.fetchMember(command).then(function(member) {
                                 embed = new Discord.RichEmbed("test");
-                                embed.setAuthor(member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
-                                embed.setColor("#FF0000");
-                                embed.setDescription("User Information");
+                                embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+                                embed.setColor("#c64ed3");
 
                                 {
-                                    var msg = "**Created** " + member.user.createdAt.toUTCString() + "\n";
+                                    var msg = "**Created** » " + member.user.createdAt.toUTCString() + "\n";
                                     if (member.joinedAt.getTime() == 0) {
-                                        msg += "**Joined** -∞... and beyond! Discord seems to be giving incorrect info... :(";
+                                        msg += "**Joined** » -∞... and beyond! Discord seems to be giving incorrect info... :(";
                                     } else {
-                                        msg += "**Joined** " + member.joinedAt.toUTCString();
+                                        msg += "**Joined** » " + member.joinedAt.toUTCString();
                                     }
 
                                     embed.addField("Timestamps", msg);
                                 }
 
                                 {
-                                    var msg = "**Current Display Name** " + member.displayName + "\n";
-                                    msg += "**Username** " + member.user.username + "\n";
+                                    var msg = "**Current Display Name** » " + member.displayName + "\n";
+                                    msg += "**Username** » " + member.user.username + "\n";
                                     if (member.nickname != null) {
-                                        msg += "**Nickname** " + member.nickname;
+                                        msg += "**Nickname** » " + member.nickname;
                                     } else {
-                                        msg += "**Nickname** No nickname";
+                                        msg += "**Nickname** » *This user has no nickname.*";
                                     }
 
                                     embed.addField("Names", msg);
@@ -932,7 +968,7 @@ function messageChecker(oldMessage, newMessage) {
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
-                            //begin attempt at reason
+                            //Grab command and remove user argument to get reason
                             var reason = "";
                             var args = {};
                             var warning = "";
@@ -959,7 +995,72 @@ function messageChecker(oldMessage, newMessage) {
 
                                         moderatorWarn = message.author;
 
+
+                                        const rl = readline.createInterface({
+                                            input: fs.createReadStream('./punishment tracker.csv')
+
+                                            //Retrieve warning count info early so that it is ready to use when the user confirms the warn.
+
+                                        });
+                                        rl.on('line', function(line) {
+                                            console.log("» " + line);
+                                            if (line.includes("Warning") && line.includes(member.displayName + "#" + member.user.discriminator)) {
+                                                warningCount = warningCount + 1
+                                                console.log(warningCount);
+                                            }
+                                        });
+
                                         message.reply(':oncoming_police_car: You are about to warn **' + member.displayName + '** for *' + warning + '*. To confirm, type in `mod:warn`.');
+                                    }
+                                }
+                            }).catch(function(reason) {
+                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                    case 0:
+                                        message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
+                                        break;
+                                    case 1:
+                                        message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
+                                        break;
+                                    case 2:
+                                        message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
+                                        break;
+                                }
+                            });
+                            message.delete();
+
+                        } else if (command.startsWith("mute") && commandWarn == "on") {
+                            doNotDelete = true;
+                            command = command.substr(6);
+                            command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
+
+                            //Grab command and remove user argument to get reason
+                            var mute = "";
+                            var argsArray = message.content.split(" ").slice(1);
+                            var arrayLength = argsArray.length;
+
+                            if (arrayLength > 1) {
+                                for (var i = 0; i < arrayLength; i++) {
+                                    mute = (mute + argsArray[i] + " ");
+                                }
+                                mute = mute.replace(argsArray[0], "");
+                                mute = mute.trim();
+                                muteReason = mute;
+                            }
+
+                            message.guild.fetchMember(command).then(function(member) {
+                                muteMember = member;
+                                if (member.roles.find("name", "Fleece Police")) {
+                                    message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
+                                } else if (member.roles.find("name", "Muted")) {
+                                    message.reply(':no_entry_sign: **NOPE:** **' + member.displayName + '** is already muted.');
+                                } else {
+                                    if (mute == ("")) {
+                                        message.reply(':no_entry_sign: **NOPE:** You are muting **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are muting them.');
+                                    } else {
+
+                                        moderatorMute = message.author;
+
+                                        message.reply(':oncoming_police_car: You are about to mute **' + member.displayName + '** for *' + mute + '*.\n:no_entry: **This will prevent the user from talking in voice channels AND text channels.**\nTo confirm, type in `mod:mute`.');
                                     }
                                 }
                             }).catch(function(reason) {
@@ -981,7 +1082,7 @@ function messageChecker(oldMessage, newMessage) {
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
-                            //begin attempt at reason
+                            //Grab command and remove user argument to get reason
                             var ban = "";
                             var argsArray = message.content.split(" ").slice(1);
                             var arrayLength = argsArray.length;
@@ -1028,7 +1129,7 @@ function messageChecker(oldMessage, newMessage) {
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
-                            //begin attempt at reason
+                            //Grab command and remove user argument to get reason
                             var ban = "";
                             var argsArray = message.content.split(" ").slice(1);
                             var arrayLength = argsArray.length;
@@ -1129,9 +1230,9 @@ function messageChecker(oldMessage, newMessage) {
                             }
                             message.delete();
                             message.channel.send(":information_source: A poll has just been created! \n" + ":writing_hand: **" + pollm + "**\n:white_check_mark: Cast your votes to the poll by using reactions on this message!");
-                            
+
                             // Commented out to try and find solution.
-                            
+
                             // } else if (command.startsWith("endpoll")) {
                             //     console.log(messageReact.emoji);           
 
@@ -1252,7 +1353,7 @@ function messageChecker(oldMessage, newMessage) {
 
             if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 5) {
                 var auth = message.author;
-                if (message.guild.id == 300575580116746240) { //AstralPhaser
+                if (message.guild.id == 300575580116746240) { 
                     client.channels.get("300585564279799808").sendMessage(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
                 }
                 doNotDelete = false;
@@ -1350,6 +1451,20 @@ client.on('guildMemberAdd', function(guildMember) {
 
 client.on('guildMemberUpdate', function(oldUser, newUser) {
 
+    if (newUser.roles.find("name", "Muted")) {
+        newUser.sendMessage(":warning: You have just been muted on Rainbow Gaming. Your ability to talk in voice/text channels has been revoked.");
+        embed = new Discord.RichEmbed("mute");
+        embed.setAuthor("ᴍᴜᴛᴇ »  " + newUser.displayName + "#" + newUser.user.discriminator, newUser.user.displayAvatarURL);
+        embed.setColor("#E5C01D");
+        var msg = muteReason + "\n";
+        embed.addField("**Reason**", msg);
+
+        var msg = new Date().toUTCString() + "\n";
+        embed.addField("**Timestamp**", msg);
+
+        newUser.sendEmbed(embed);
+    }
+
     if (newUser.nickname != oldUser.nickname) {
         var channel = client.channels.get("300585564279799808"); //Admin Bot warnings
         if (newUser.nickname == null) {
@@ -1401,7 +1516,7 @@ client.on('userUpdate', function(oldUser, newUser) {
 });
 
 client.on('messageDelete', function(message) {
-    if (message.content.startsWith("bot:") || message.content.startsWith("mod:")) return; //Don't want to warn about AstralMod deleted messages
+    if (message.content.startsWith("bot:") || message.content.startsWith("mod:")) return;
     var channel = null;
 
     if (message.guild != null) {
@@ -1457,4 +1572,3 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
         }
     }
 });
-
