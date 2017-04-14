@@ -728,8 +728,9 @@ function messageChecker(oldMessage, newMessage) {
                                     var msg = warningCount + 1 + "\n"; // Add 1 to warningCount to include this warning as well.
                                     embed.addField("**Warning #**", msg);
 
-                                    message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully warned.");
+                                    message.channel.send(":white_check_mark: " + warnMember.displayName + " was successfully warned.");
                                     client.channels.get("300585564279799808").sendEmbed(embed);
+                                    warningCount = 0;
                                     warnMember = null;
                                 });
                             }
@@ -994,7 +995,6 @@ function messageChecker(oldMessage, newMessage) {
                                     } else {
 
                                         moderatorWarn = message.author;
-
 
                                         const rl = readline.createInterface({
                                             input: fs.createReadStream('./punishment tracker.csv')
