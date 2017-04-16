@@ -1,7 +1,8 @@
 /****************************************
  * 
- *   AstralMod: Moderation bot for AstralPhaser Central and other Discord servers
+ *   XailBot: Moderation bot designed for Rainbow Gaming.
  *   Copyright (C) 2017 Victor Tran and Rylan Arbour
+ *	 Rewritten by zBlake
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,13 +18,13 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * *************************************/
+ 
 const Discord = require('discord.js');
 const fs = require('fs');
 const client = new Discord.Client();
 const api = require('./keys.js');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
-
 
 
 const rl = readline.createInterface({
@@ -48,7 +49,7 @@ var banReason = {};
 var moderatorWarn = {};
 var moderatorBan = {};
 var doNotDelete = {};
-var muteMember = {};
+var muteMember = null;
 var moderatorMute = {};
 var muteReason = {};
 var warningCount = 0;
@@ -147,10 +148,10 @@ function setGame() {
             presence.game.name = "with sandwiches";
             break;
         case 14:
-            presence.game.name = "drawing pokemon";
+            presence.game.name = "with other bots";
             break;
         case 15:
-            presence.game.name = "obsessing";
+            presence.game.name = "Pokèmon";
             break;
         case 16:
             presence.game.name = "the waiting game";
@@ -191,6 +192,23 @@ client.on('ready', () => {
     doModeration[300575580116746240] = true;
 });
 
+
+//var WebSocket = require('ws');
+//var ws = new WebSocket('ws://localhost:3337/');
+//ws.on('open', function() {
+//   console.log('sending API registration');
+//    ws.send('api|register|EE3A7DJQOMKJFBBHGPdZafNWKbTIHBBadQECT');
+//});
+//
+//ws.on('close', function close() {
+//  console.log('disconnected');
+//});
+//ws.on('message', function(message) {
+//    console.log('Received: ' + message);
+//});
+
+//Commented out for later use
+
 function warningIcon(guild) {
     return ":warning:";
 }
@@ -199,10 +217,19 @@ function warningIcon(guild) {
 //IT'S JUST A PRANK BRO
 
 function reactionChecker(messageReaction, user) { // this function is never called
-    if (messageReaction.message.author.id == 300552374085222400 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
+    if (messageReaction.message.author.id == 303017211457568778 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
         messageReact = messageReaction;
     }
 
+}
+
+function aestTime() {
+    var localtime = new Date();
+    
+    var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + +10 * 60) * 60000);
+    var dateString = date.toString();
+    
+    localtime.setTime(localtime.getTime() + (60 * 60 * 1000));  
 }
 
 function messageChecker(oldMessage, newMessage) {
@@ -228,7 +255,7 @@ function messageChecker(oldMessage, newMessage) {
             message.delete();
             return;
         }
-        if (message.author.id == 300552374085222400 && doNotDelete == false) {
+        if (message.author.id == 303017211457568778 && doNotDelete == false) {
             console.log("▲ Bot is about to delete: " + message)
             message.delete(10000)
         }
@@ -257,12 +284,12 @@ function messageChecker(oldMessage, newMessage) {
         if (doModeration[message.guild.id]) { //Check if we should do moderation on this server
             if ((expletiveFilter && message.guild.id == 300575580116746240)) {
                 //Check for expletives
-                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(shit|shite|shitty|bullshit|fuck|fucking|ass|penis|cunt|faggot|fag|wank|wanker|nigger|nigga|bastard|thisisnotarealwordbutatestword)(\b|\s|$|\.|\,|\ )/i);
+                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(shit|shite|shitty|bullshit|fuck|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
                 if (exp != -1) { //Gah! They're not supposed to say that!
                     console.log("▲ Expletive caught at " + parseInt(exp));
-                    switch (Math.floor(Math.random() * 1000) % 7) {
+                    switch (Math.floor(Math.random() * 1000) % 21) {
                         case 0:
-                            message.reply("I'm very disappointed in you. This is me :angry:");
+                            message.reply("I'm very disappointed in you. :angry:");
                             break;
                         case 1:
                             message.reply("Hey! Let's not have any of that please.");
@@ -282,6 +309,48 @@ function messageChecker(oldMessage, newMessage) {
                         case 6:
                             message.reply("This situation calls for some passive resistance!");
                             break;
+						case 7:
+                            message.reply("Hey! Just cool it.");
+                            break;
+						case 8:
+                            message.reply("Watch your mouth.");
+                            break;
+						case 9:
+                            message.reply("I can't believe you've done this...");
+                            break;
+						case 10:
+                            message.reply("Did you have to say that?");
+                            break;
+						case 11:
+                            message.reply("You can't say that man!");
+                            break;
+						case 12:
+                            message.reply("You've triggered me!");
+                            break;
+						case 13:
+                            message.reply("Woah! Calm down buddy!");
+                            break;
+						case 14:
+                            message.reply("Won't somebody please just think about the children?");
+                            break;
+						case 15:
+                            message.reply("Was that necessary?");
+                            break;
+						case 16:
+                            message.reply("I think you might need to have a quick look at the rules again.");
+                            break;
+						case 17:
+                            message.reply("Gah! You can't say that!");
+                            break;
+						case 18:
+                            message.reply("You can't use those words here.");
+                            break;
+						case 19:
+                            message.reply("Get some soap, and wash your mouth out.");
+                            break;
+						case 20:
+                            message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
+                            break;
                     }
                     doNotDelete = false;
                     message.delete();
@@ -294,7 +363,7 @@ function messageChecker(oldMessage, newMessage) {
                     //Check for caps
                     if (msg.match(/[A-Z]/gm) != null && msg.match(/[A-Z]/gm).length > (parseFloat(msg.length) * 0.8)) {
                         console.log("▲ Caps filter kicking in!");
-                        switch (Math.floor(Math.random() * 1000) % 6) {
+                        switch (Math.floor(Math.random() * 1000) % 11) {
                             case 0:
                                 message.reply("Shh...");
                                 break;
@@ -313,6 +382,21 @@ function messageChecker(oldMessage, newMessage) {
                             case 5:
                                 message.reply("Whoa whoa, slow down my friend! No need for raised voices!");
                                 break;
+							case 6:
+                                message.reply("I think your CAPS LOCK might be stuck.");
+                                break;
+							case 7:
+                                message.reply("WHY ARE YOU SHOUTING");
+                                break;
+							case 8:
+                                message.reply("Hey! Inside voice please.");
+                                break;
+							case 9:
+                                message.reply("Have you tried turning off CAPS LOCK?");
+                                break;
+							case 10:
+                                message.reply("Writing your message in caps won't make it better.");
+                                break;
                         }
                         doNotDelete = false;
                         message.delete();
@@ -322,12 +406,21 @@ function messageChecker(oldMessage, newMessage) {
             }
         }
 
+        
+        if (message.author.id != 303017211457568778 && msg.search(/\b(kys|kill yourself)\b/i) != -1) {
+                var auth = message.author;
+                if (message.guild.id == 277922530973581312) { //AstralPhaser
+                    client.channels.get("300585564279799808").sendMessage(warningIcon(message.guild) + " **KYS:** <@" + auth.id + "> wrote \"kill yourself\" in " + message.channel.name + ".");
+                }
+                message.reply("Right. We don't appreciate that here. A notification has been sent to the mods.");
+                message.delete();
+            }
+        
+        
+        
         if (message.mentions != null && message.mentions.users != null) {
             doNotDelete = true;
-            if (message.mentions.users.has("300552374085222400")) {
-                if (message.author.id == 159310300275802112) {
-                    message.reply("BEGONE. You called my creator mean. :sob:"); //need to do something with this
-                } else {
+            if (message.mentions.users.has("303017211457568778")) {
                     if (msg.toLowerCase().includes("stop") || (msg.toLowerCase().includes("shut") && msg.toLowerCase().includes("up"))) {
 
                         switch (Math.floor(Math.random() * 1000) % 3) {
@@ -373,7 +466,6 @@ function messageChecker(oldMessage, newMessage) {
                     } else if (msg.toLowerCase().includes("hello") || msg.toLowerCase().includes("hi")) {
                         message.reply("Is it me you're looking for?");
                     }
-                }
             }
         }
 
@@ -425,8 +517,12 @@ function messageChecker(oldMessage, newMessage) {
                     break;
                 case "time":
                     var localtime = new Date();
+                    
+                    var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + +10 * 60) * 60000);
+                    var dateString = date.toString();
+                    
                     localtime.setTime(localtime.getTime() + (60 * 60 * 1000));
-                    message.channel.send(':arrow_forward: The time now is ' + localtime.toUTCString());
+                    message.channel.send(':arrow_forward: The time now is ' + dateString);
                     message.delete();
                     commandProcessed = true;
                     break;
@@ -482,7 +578,7 @@ function messageChecker(oldMessage, newMessage) {
         }
 
         if (msg.toLowerCase().startsWith("mod:") && !commandProcessed) {
-            if (message.member.roles.find("name", "Adept Fleece Police") || ("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                 var command = msg.substr(4);
                 switch (command) {
                     case "filter":
@@ -492,9 +588,9 @@ function messageChecker(oldMessage, newMessage) {
                                 message.reply(':no_entry_sign: ERROR: Unable to use that command in this server.');
                             } else {
                                 if (expletiveFilter) {
-                                    message.channel.send(':arrow_forward: Expletive Filter: on');
+                                    message.channel.send(':arrow_forward: **Expletive Filter:** *on*');
                                 } else {
-                                    message.channel.send(':arrow_forward: Expletive Filter: off');
+                                    message.channel.send(':arrow_forward: **Expletive Filter:** *off*');
                                 }
                                 message.delete();
                             }
@@ -547,9 +643,9 @@ function messageChecker(oldMessage, newMessage) {
                         doNotDelete = false;
                         if (commandMod == "on") {
                             if (doModeration[message.guild.id]) {
-                                message.channel.send(':arrow_forward: Moderation: on');
+                                message.channel.send(':arrow_forward: **Moderation:** *on*');
                             } else {
-                                message.channel.send(':arrow_forward: Moderation: off');
+                                message.channel.send(':arrow_forward: **Moderation:** *off*');
                             }
                             message.delete();
                             break;
@@ -649,7 +745,8 @@ function messageChecker(oldMessage, newMessage) {
                     case "mute":
                         doNotDelete = true;
                         if (commandWarn == "on") {
-                            if (muteMember == null) {
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                             if (muteMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to mute. See mod:help for more information.');
                             } else {
                                 message.guild.fetchMember(muteMember).then(function(member) {
@@ -657,6 +754,13 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.setAuthor("ᴍᴜᴛᴇ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
                                     embed.setColor("#E5C01D");
 
+                                    var localtime = new Date();
+                    
+                                    var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + +10 * 60) * 60000);
+                                    var dateString = date.toString();
+                    
+                                    localtime.setTime(localtime.getTime() + (60 * 60 * 1000));                                    
+                                    
                                     //Write mute information to .csv file
                                     var writer = csvWriter({
                                         headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
@@ -665,7 +769,7 @@ function messageChecker(oldMessage, newMessage) {
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
-                                    writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Mute", moderatorMute.username, muteReason])
+                                    writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Mute", moderatorMute.username, muteReason])
                                     writer.end()
                                     console.log("● Successfully wrote mute for user '" + member.displayName + "' to CSV file.")
 
@@ -685,7 +789,11 @@ function messageChecker(oldMessage, newMessage) {
                                     client.channels.get("300585564279799808").sendEmbed(embed);
                                     muteMember = null;
                                 });
+                            }    
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
                             }
+                           
                             message.delete();
                             break;
                         } else {
@@ -694,11 +802,19 @@ function messageChecker(oldMessage, newMessage) {
                     case "warn":
                         doNotDelete = true;
                         if (commandWarn == "on") {
-                            if (warnMember == null) {
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                             if (warnMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See mod:help for more information.');
                             } else {
                                 message.guild.fetchMember(warnMember).then(function(member) {
 
+                                    var localtime = new Date();
+                    
+                                    var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + +10 * 60) * 60000);
+                                    var dateString = date.toString();
+                    
+                                    localtime.setTime(localtime.getTime() + (60 * 60 * 1000));                                
+                                
                                     //Write warning information to .csv file
                                     var writer = csvWriter({
                                         headers: ["Discord Username", "Date (in GMT)", "Type of Punishment", "Punished by", "Reason"],
@@ -707,7 +823,7 @@ function messageChecker(oldMessage, newMessage) {
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
-                                    writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Warning", moderatorWarn.username, warnReason])
+                                    writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Warning", moderatorWarn.username, warnReason])
                                     writer.end()
                                     console.log("● Successfully wrote warning for user '" + member.displayName + "' to CSV file.")
 
@@ -734,6 +850,10 @@ function messageChecker(oldMessage, newMessage) {
                                     warnMember = null;
                                 });
                             }
+                            } else {
+                                message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
+                            }
+                           
                             message.delete();
                             break;
                         } else {
@@ -744,6 +864,7 @@ function messageChecker(oldMessage, newMessage) {
                     case "ban":
                         doNotDelete = true;
                         if (commandBan == "on") {
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                             if (banMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See mod:help for more information.');
 
@@ -753,6 +874,13 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.setAuthor("ʙᴀɴ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
                                     embed.setColor("#af1c1c");
 
+                                    var localtime = new Date();
+                    
+                                    var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + +10 * 60) * 60000);
+                                    var dateString = date.toString();
+                    
+                                    localtime.setTime(localtime.getTime() + (60 * 60 * 1000));                                    
+                                    
                                     //Write ban information to .csv file
                                     var writer = csvWriter({
                                         headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
@@ -761,7 +889,7 @@ function messageChecker(oldMessage, newMessage) {
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
-                                    writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Ban", moderatorBan, banReason])
+                                    writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Ban", moderatorBan, banReason])
                                     writer.end()
                                     console.log("● Successfully wrote ban for user '" + member.displayName + "' to CSV file.")
 
@@ -779,7 +907,11 @@ function messageChecker(oldMessage, newMessage) {
                                     client.channels.get("300585564279799808").sendEmbed(embed);
                                     warnMember = null;
                                 });
-                            }
+                            }    
+                            } else {
+                                message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
+                            }                            
+                            
                             message.delete();
                             break;
                         } else {
@@ -788,6 +920,7 @@ function messageChecker(oldMessage, newMessage) {
                     case "softban":
                         doNotDelete = true;
                         if (commandBan == "on") {
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                             if (banMember == null) {
                                 message.reply(':no_entry_sign: **ERROR:** You need to enter a user to softban. See mod:help for more information.');
 
@@ -797,6 +930,13 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.setAuthor("ꜱᴏꜰᴛʙᴀɴ »  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
                                     embed.setColor("#e08743");
 
+                                    var localtime = new Date();
+                    
+                                    var date = new Date(localtime.valueOf() + (localtime.getTimezoneOffset() + +10 * 60) * 60000);
+                                    var dateString = date.toString();
+                    
+                                    localtime.setTime(localtime.getTime() + (60 * 60 * 1000));
+                                    
                                     //Write softban information to .csv file
                                     var writer = csvWriter({
                                         headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
@@ -805,7 +945,7 @@ function messageChecker(oldMessage, newMessage) {
                                     writer.pipe(fs.createWriteStream('punishment tracker.csv', {
                                         flags: 'a'
                                     }))
-                                    writer.write([member.displayName + "#" + member.user.discriminator, message.createdAt.toUTCString(), "Softban", moderatorBan, banReason])
+                                    writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Softban", moderatorBan, banReason])
                                     writer.end()
                                     console.log("● Successfully wrote softban for user '" + member.displayName + "' to CSV file.")
 
@@ -824,7 +964,11 @@ function messageChecker(oldMessage, newMessage) {
                                     client.channels.get("300585564279799808").sendEmbed(embed);
                                     warnMember = null;
                                 });
+                            }    
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
                             }
+                            
                             message.delete();
                             break;
                         } else {
@@ -885,6 +1029,9 @@ function messageChecker(oldMessage, newMessage) {
                             } else if (banMember != null) {
                                 message.channel.send(':white_check_mark: **OK**, I won\'t ban ' + banMember.displayName);
                                 banMember = null;
+                            } else if (muteMember != null) {
+                                message.channel.send(':white_check_mark: **OK**, I won\'t mute ' + muteMember.displayName);
+                                muteMember = null;
                             } else {
                                 message.reply(':no_entry_sign: **ERROR:** Nothing to cancel.');
                             }
@@ -894,6 +1041,7 @@ function messageChecker(oldMessage, newMessage) {
                             return;
                         }
                     default:
+
                         if (command.startsWith("uinfo") && commandUinfo == "on") {
                             doNotDelete = true;
                             command = command.substr(6);
@@ -927,32 +1075,12 @@ function messageChecker(oldMessage, newMessage) {
                                     embed.addField("Names", msg);
                                 }
 
-                                /*if (member.lastMessageID != null) {
-                                    var lastMessage = null;
-                                    
-                                    message.channel.fetchMessage(member.lastMessage).then(function(retrievedMessage) {
-                                        lastMessage = retrievedMessage;
-                                    }).catch(function () {
-                                        lastMessage = -1;
-                                    });
-                                    
-                                    while (lastMessage == null) {}
-                                    
-                                    if (lastMessage != -1) {
-                                        var msg = "**ID** " + member.lastMessageID + "\n";
-                                        msg += "**Contents** " + lastMessage.content;
-                                        
-                                        embed.addField("Last Message", msg);
-                                    }
-                                }*/
-
                                 embed.setFooter("User ID: " + member.user.id);
-                                //embed.setDescription(msg);
+                                message.delete();
                                 message.channel.sendEmbed(embed);
-
                                 lastUserInteraction[message.guild.id] = command;
                             }).catch(function(reason) {
-                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
                                     case 0:
                                         message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
                                         break;
@@ -962,22 +1090,24 @@ function messageChecker(oldMessage, newMessage) {
                                     case 2:
                                         message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
                                         break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
                                 }
                             });
                         } else if (command.startsWith("warn") && commandWarn == "on") {
-                            doNotDelete = true;
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                                doNotDelete = true;
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
                             //Grab command and remove user argument to get reason
-                            var reason = "";
-                            var args = {};
                             var warning = "";
                             var argsArray = message.content.split(" ").slice(1);
                             var arrayLength = argsArray.length;
 
                             if (arrayLength > 1) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     warning = (warning + argsArray[i] + " ");
                                 }
                                 warning = warning.replace(argsArray[0], "");
@@ -1014,7 +1144,7 @@ function messageChecker(oldMessage, newMessage) {
                                     }
                                 }
                             }).catch(function(reason) {
-                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
                                     case 0:
                                         message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
                                         break;
@@ -1024,12 +1154,20 @@ function messageChecker(oldMessage, newMessage) {
                                     case 2:
                                         message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
                                         break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
                                 }
                             });
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
+                            }
+                            
                             message.delete();
 
                         } else if (command.startsWith("mute") && commandWarn == "on") {
-                            doNotDelete = true;
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                               doNotDelete = true;
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
@@ -1039,7 +1177,7 @@ function messageChecker(oldMessage, newMessage) {
                             var arrayLength = argsArray.length;
 
                             if (arrayLength > 1) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     mute = (mute + argsArray[i] + " ");
                                 }
                                 mute = mute.replace(argsArray[0], "");
@@ -1051,7 +1189,9 @@ function messageChecker(oldMessage, newMessage) {
                                 muteMember = member;
                                 if (member.roles.find("name", "Fleece Police")) {
                                     message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
-                                } else if (member.roles.find("name", "Muted")) {
+                                    return;
+                                } 
+                                if (member.roles.find("name", "Muted")) {
                                     message.reply(':no_entry_sign: **NOPE:** **' + member.displayName + '** is already muted.');
                                 } else {
                                     if (mute == ("")) {
@@ -1064,7 +1204,7 @@ function messageChecker(oldMessage, newMessage) {
                                     }
                                 }
                             }).catch(function(reason) {
-                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
                                     case 0:
                                         message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
                                         break;
@@ -1074,11 +1214,19 @@ function messageChecker(oldMessage, newMessage) {
                                     case 2:
                                         message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
                                         break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
                                 }
-                            });
+                            }); 
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
+                            }
+                            
                             message.delete();
                         } else if (command.startsWith("ban") && commandBan == "on") {
-                            doNotDelete = true;
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                               doNotDelete = true;
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
@@ -1088,7 +1236,7 @@ function messageChecker(oldMessage, newMessage) {
                             var arrayLength = argsArray.length;
 
                             if (arrayLength > 1) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     ban = (ban + argsArray[i] + " ");
                                 }
                                 ban = ban.replace(argsArray[0], "");
@@ -1111,7 +1259,7 @@ function messageChecker(oldMessage, newMessage) {
                                     }
                                 }
                             }).catch(function(reason) {
-                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
                                     case 0:
                                         message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
                                         break;
@@ -1121,11 +1269,19 @@ function messageChecker(oldMessage, newMessage) {
                                     case 2:
                                         message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
                                         break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
                                 }
-                            });
+                            }); 
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
+                            }
+                            
                             message.delete();
                         } else if (command.startsWith("softban") && commandBan == "on") {
-                            doNotDelete = true;
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                               doNotDelete = true;
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
@@ -1135,7 +1291,7 @@ function messageChecker(oldMessage, newMessage) {
                             var arrayLength = argsArray.length;
 
                             if (arrayLength > 1) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     ban = (ban + argsArray[i] + " ");
                                 }
                                 ban = ban.replace(argsArray[0], "");
@@ -1146,10 +1302,10 @@ function messageChecker(oldMessage, newMessage) {
                             message.guild.fetchMember(command).then(function(member) {
                                 banMember = member;
                                 if (member.roles.find("name", "Fleece Police")) {
-                                    message.channel.send(':no_entry_sign: **ERROR:** You can\'t ban other moderators.');
+                                    message.channel.send(':no_entry_sign: **ERROR:** You can\'t softban other moderators.');
                                 } else {
                                     if (ban == ("")) {
-                                        message.reply(':no_entry_sign: **NOPE:** You are softbanning **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are banning them.');
+                                        message.reply(':no_entry_sign: **NOPE:** You are softbanning **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are going to softban them.');
                                     } else {
 
                                         moderatorBan = message.author;
@@ -1158,7 +1314,7 @@ function messageChecker(oldMessage, newMessage) {
                                     }
                                 }
                             }).catch(function(reason) {
-                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
                                     case 0:
                                         message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
                                         break;
@@ -1168,8 +1324,15 @@ function messageChecker(oldMessage, newMessage) {
                                     case 2:
                                         message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
                                         break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
                                 }
-                            });
+                            }); 
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
+                            }
+                            
                             message.delete();
                         } else if (command.startsWith("rm") && commandRm == "on") {
                             doNotDelete = false;
@@ -1184,19 +1347,22 @@ function messageChecker(oldMessage, newMessage) {
 
                                     message.channel.send(":white_check_mark: **OK:** I successfully deleted " + command + " messages.");
                                     numDel = parseInt(num - 1);
-                                }).catch(function() {
-                                    switch (Math.floor(Math.random() * 1000) % 3) {
-                                        case 0:
-                                            message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
-                                            break;
-                                        case 1:
-                                            message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
-                                            break;
-                                        case 2:
-                                            message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
-                                            break;
-                                    }
-                                });
+                                }).catch(function(reason) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
+                                    case 0:
+                                        message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
+                                        break;
+                                    case 1:
+                                        message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
+                                        break;
+                                    case 2:
+                                        message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
+                                        break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
+                                }
+                            });
                             }
                         } else if (command.startsWith("say") && commandSay == "on") {
                             command = command.substr(4);
@@ -1206,7 +1372,7 @@ function messageChecker(oldMessage, newMessage) {
                             var arrayLength = argsArray.length;
 
                             if (arrayLength > 0) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     messagesay = (messagesay + argsArray[i] + " ");
                                 }
                                 messagesay = messagesay.trim();
@@ -1223,7 +1389,7 @@ function messageChecker(oldMessage, newMessage) {
                             var arrayLength = argsArray.length;
 
                             if (arrayLength > 0) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     pollm = (pollm + argsArray[i] + " ");
                                 }
                                 pollm = pollm.trim();
@@ -1254,7 +1420,8 @@ function messageChecker(oldMessage, newMessage) {
                             //     message.delete();
 
                         } else if (command.startsWith("setgame") && commandSetgame == "on") {
-                            doNotDelete = true;
+                            if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                               doNotDelete = true;
                             command = command.substr(6);
 
                             var gamemessage = "";
@@ -1266,23 +1433,19 @@ function messageChecker(oldMessage, newMessage) {
                             presence.afk = false;
 
                             if (arrayLength > 0) {
-                                for (var i = 0; i < arrayLength; i++) {
+                                for (let i = 0; i < arrayLength; i++) {
                                     gamemessage = (gamemessage + argsArray[i] + " ");
                                 }
                                 gamemessage = gamemessage.trim();
                             }
                             message.guild.fetchMember(message.author).then(function(member) {
 
-                                if (member.roles.find("name", "Fleece Police")) {
-                                    message.channel.send(':no_entry_sign: **ERROR:** You don\'t have access to this command.');
-                                } else {
                                     presence.game.name = gamemessage;
                                     client.user.setPresence(presence);
                                     message.delete()
                                     message.channel.send(":white_check_mark: **OK:** I successfully set the game to **" + gamemessage + "**. It may take a few seconds to register this change.\n:information_source: Please note that this change is only temporary, as after a while the game will automatically be overwritten by something else.");
-                                }
                             }).catch(function(reason) {
-                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
                                     case 0:
                                         message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
                                         break;
@@ -1292,8 +1455,15 @@ function messageChecker(oldMessage, newMessage) {
                                     case 2:
                                         message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
                                         break;
+									case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;	
                                 }
-                            });
+                            }); 
+                            } else {
+                               message.reply(":no_entry_sign: **NOPE:** You don't have access to this command."); 
+                            }
+                            
                         }
 
 
@@ -1325,7 +1495,7 @@ function messageChecker(oldMessage, newMessage) {
                                             break;
                                     }
                                 } else {
-                                    message.channel.send(':information_source: You are about to shut down any instance of Xail Bot. Are you sure you want to do this?');
+                                    message.channel.send(':information_source: You are about to shut down any instance of Xail Bot. To confirm this action, please type `mod:poweroff` again.');
                                     poweroff = true;
                                 }
                             } else {
@@ -1351,7 +1521,7 @@ function messageChecker(oldMessage, newMessage) {
             lastMessages[message.author.id] = msg
             sameMessageCount[message.author.id] += 1;
 
-            if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 5) {
+            if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 7) {
                 var auth = message.author;
                 if (message.guild.id == 300575580116746240) { 
                     client.channels.get("300585564279799808").sendMessage(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
@@ -1359,7 +1529,7 @@ function messageChecker(oldMessage, newMessage) {
                 doNotDelete = false;
                 message.reply("Quite enough of this. I'm not warning you any more. A notification has been sent to the mods.");
                 message.delete();
-            } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 5) {
+            } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 7) {
                 message.delete();
             } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
                 doNotDelete = false;
@@ -1437,6 +1607,29 @@ client.on('guildMemberAdd', function(guildMember) {
 
         var msg = guildMember.user.createdAt.toUTCString() + "\n";
         embed.addField("**User Created**", msg);
+
+        if (guildMember.joinedAt.toUTCString() == "Thu, 01 Jan 1970 00:00:00 GMT") {
+            msg = "Joined at: -∞... and beyond! Discord seems to be giving incorrect info... :(";
+        } else {
+            msg = guildMember.joinedAt.toUTCString();
+        }
+        embed.addField("**User Joined**", msg);
+        client.channels.get("300585564279799808").sendEmbed(embed);
+
+    }
+});
+
+client.on('guildMemberRemove', function(guildMember) {
+    if (guildMember.guild.id == 300575580116746240) {
+        var channel;
+        channel = client.channels.get("300585564279799808");
+
+        embed = new Discord.RichEmbed("info");
+        embed.setAuthor("ᴜꜱᴇʀ ʟᴇꜰᴛ » " + guildMember.displayName, guildMember.user.displayAvatarURL);
+        embed.setColor("#d16c2e");
+
+        var msg = guildMember.displayName + "#" + guildMember.user.discriminator + "\n"
+        embed.addField("**Username**", "#" + msg);
 
         if (guildMember.joinedAt.toUTCString() == "Thu, 01 Jan 1970 00:00:00 GMT") {
             msg = "Joined at: -∞... and beyond! Discord seems to be giving incorrect info... :(";
