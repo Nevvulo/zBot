@@ -367,14 +367,18 @@ function messageChecker(oldMessage, newMessage) {
 
             //ALL FUNCTION STUFF IS CHECKING IF THE FIRST WORD OF THE STRING IS PRESENT MORE THAN [X] AMOUNT OF TIMES, NEEDS MORE WORK
             function regexEscape(str) {
-                return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                if (str == null) return;
+                return str.toString().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
             }
 
             function reg(input) {
                 var flags;
                 //could be any combination of 'g', 'i', and 'm'
                 flags = 'gi';
-                //input = regexEscape(input);
+                
+                if (input == null) return;
+                input = regexEscape(input);
+
                 return new RegExp('[a-zA-Z ](' + input + '){10,}', flags);
             }
 
@@ -385,10 +389,12 @@ function messageChecker(oldMessage, newMessage) {
             if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
                 message.delete()
                 return;
-            } //else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) || [] == true) {
-              //  message.delete()
-              //  return;
-            //}
+            } else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)) !== undefined) {
+                if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) == true) {
+                message.delete()
+                return;
+            }
+        }
 
 
 
