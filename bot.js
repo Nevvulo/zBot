@@ -52,8 +52,24 @@ var muteMember = null;
 var moderatorMute = {};
 var muteReason = {};
 var warningCount = 0;
+var permitMember = {};
+var reactionMessage = {};
+var queue = [];
+var music = {};
+var skipCount = 3;
+var currentSong = {};
+var usersVotedSkip = [];
+var queueList = "";
+var tosend = [];
+const yt = require('ytdl-core');
 
-var commandMod = "off";
+var userAFK = [];
+
+var poll1Count;
+var poll2Count;
+
+
+var commandMod = "on";
 var commandFilter = "off";
 var commandRm = "off";
 var commandUinfo = "off";
@@ -64,10 +80,13 @@ var commandSetgame = "off";
 var commandPanic = "off";
 var commandCancel = "off";
 var commandHelp = "off";
+var capsFilter = "off";
 
 console.log('● Settings ●');
 console.log("");
 console.log('● You can change these settings as you want in "settings.txt".');
+
+doModeration[196793479899250688] = true;
 
 rl.on('line', function(line) {
     console.log("» " + line);
@@ -93,6 +112,8 @@ rl.on('line', function(line) {
         commandCancel = "on"
     } else if (line.includes("help:on")) {
         commandHelp = "on"
+    } else if (line.includes("capsfilter:on")) {
+        capsFilter = "on"
     }
 });
 
@@ -174,13 +195,14 @@ function setGame() {
     client.user.setPresence(presence);
 }
 
+doModeration[196793479899250688] = true;
+
 client.login(api.key()).catch(function() {
     console.log("[ERROR] Login failed.");
     console.log(api.key);
 });
 
 client.on('ready', () => {
-
     console.log(" ");
     console.log(" ");
     console.log("● XailBot is ready!");
@@ -188,7 +210,7 @@ client.on('ready', () => {
     console.log(" ");
     client.setInterval(setGame, 300000);
     setGame();
-    doModeration[196793479899250688] = true;
+
 });
 
 
@@ -215,9 +237,28 @@ function warningIcon(guild) {
 //var prank = true;
 //IT'S JUST A PRANK BRO
 
+
+
+
+function clean(text) {
+    if (typeof(text) === "string")
+        return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
+    else
+        return text;
+}
+
+
 function reactionChecker(messageReaction, user) { // this function is never called
     if (messageReaction.message.author.id == 303017211457568778 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
-        messageReact = messageReaction;
+        console.log(messageReaction);
+        if (messageReaction.emoji.name == '1️⃣') {
+        poll1Count = poll1Count + 1
+        } else if (messageReaction.emoji.name == '2️⃣') {
+        poll2Count = poll2Count + 1
+        }
+        
+        console.log("reaction added")
+        reactionMessage = messageReaction;
     }
 
 }
@@ -231,6 +272,11 @@ function aestTime() {
     localtime.setTime(localtime.getTime() + (60 * 60 * 1000));
 }
 
+function permitRemove() {
+    permitMember.removeRole(permitMember.guild.roles.get("304207299646586882"));
+    console.log("Permitted role revoked.");
+}
+
 function messageChecker(oldMessage, newMessage) {
     var message;
     if (newMessage == null) {
@@ -241,6 +287,37 @@ function messageChecker(oldMessage, newMessage) {
     var msg = message.content;
 
     if (message.guild == null) return;
+
+    if (message.mentions.users.size > 0 && message.author.bot == false) {
+        if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
+        message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while." );
+        }
+    } else {
+        
+    }
+    
+    const prefix = "+";
+    const args = message.content.split(" ").slice(1);
+
+    if (message.content.startsWith(prefix + "eval") && message.author.id == "246574843460321291") {
+
+        try {
+            var code = args.join(" ");
+            var evaled = eval(code);
+
+            if (typeof evaled !== "string")
+                evaled = require("util").inspect(evaled);
+
+            message.channel.sendCode("xl", clean(evaled));
+        } catch (err) {
+            message.channel.sendMessage(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
+        }
+    }
+
+
+    if (doModeration[message.guild.id] == null) {
+        doModeration[message.guild.id] = true;
+    }
 
     if (botDelMessage[message.guild.id] == null) {
         botDelMessage[message.guild.id] = false;
@@ -278,25 +355,46 @@ function messageChecker(oldMessage, newMessage) {
         message.delete();
     }
 
-    
 
 
 
-    if (message.author.id != 280495817901473793 && !message.author.bot) {
+    if (message.author.id != 303017211457568778 && !message.author.bot) {
         if (doModeration[message.guild.id]) { //Check if we should do moderation on this server
-        
-        
-                    console.log(/\w{23,}/i.test(message.content));        
-                    if (/\w{23,}/i.test(message.content) == true) {
-                        var auth = message.author;
-                        message.delete();
-                        return;
-                }
-        
-        
+
+            //exp = msg.search(/(http(s)?:\/\/.)?(www\.)[-a-zA-Z0-9@:%._\+~#=]{5,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i);
+
+
+
+            //ALL FUNCTION STUFF IS CHECKING IF THE FIRST WORD OF THE STRING IS PRESENT MORE THAN [X] AMOUNT OF TIMES, NEEDS MORE WORK
+            function regexEscape(str) {
+                return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            }
+
+            function reg(input) {
+                var flags;
+                //could be any combination of 'g', 'i', and 'm'
+                flags = 'gi';
+                //input = regexEscape(input);
+                return new RegExp('[a-zA-Z ](' + input + '){10,}', flags);
+            }
+
+
+
+            //This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
+            //Check for spam in a single message
+            if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
+                message.delete()
+                return;
+            } //else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) || [] == true) {
+              //  message.delete()
+              //  return;
+            //}
+
+
+
             if ((expletiveFilter && message.guild.id == 196793479899250688)) {
                 //Check for expletives
-                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(shit|shite|shitty|bullshit|fuck|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
+                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
                 if (exp != -1) { //Gah! They're not supposed to say that!
                     console.log("▲ Expletive caught at " + parseInt(exp));
                     switch (Math.floor(Math.random() * 1000) % 21) {
@@ -358,10 +456,10 @@ function messageChecker(oldMessage, newMessage) {
                             message.reply("You can't use those words here.");
                             break;
                         case 19:
-                            message.reply("Get some soap, and wash your mouth out.");
+                            message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
                             break;
                         case 20:
-                            message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
+                            message.reply("♫ God I wish I never spoke, now I gotta wash my mouth out with soap ♫");
                             break;
                     }
                     doNotDelete = false;
@@ -369,54 +467,50 @@ function messageChecker(oldMessage, newMessage) {
                     return;
                 }
 
-
-                
-                
-                
-                
-                
                 if (message.guild.id == 196793479899250688) {
                     //Check for caps
-                    if (msg.match(/[A-Z]/gm) != null && msg.match(/[A-Z]/gm).length > (parseFloat(msg.length) * 0.8)) {
-                        console.log("▲ Caps filter kicking in!");
-                        switch (Math.floor(Math.random() * 1000) % 11) {
-                            case 0:
-                                message.reply("Shh...");
-                                break;
-                            case 1:
-                                message.reply("The community likes peace and quiet.");
-                                break;
-                            case 2:
-                                message.reply("Isn't it weird when you're reading... and then you see a bunch of caps?");
-                                break;
-                            case 3:
-                                message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
-                                break;
-                            case 4:
-                                message.reply("DON'T SHOUT IN HERE K");
-                                break;
-                            case 5:
-                                message.reply("Whoa whoa, slow down my friend! No need for raised voices!");
-                                break;
-                            case 6:
-                                message.reply("I think your CAPS LOCK might be stuck.");
-                                break;
-                            case 7:
-                                message.reply("WHY ARE YOU SHOUTING");
-                                break;
-                            case 8:
-                                message.reply("Hey! Inside voice please.");
-                                break;
-                            case 9:
-                                message.reply("Have you tried turning off CAPS LOCK?");
-                                break;
-                            case 10:
-                                message.reply("Writing your message in caps won't make it better.");
-                                break;
+                    if (capsFilter == true) {
+                        if (msg.match(/[A-Z]/gm) != null && msg.match(/[A-Z]/gm).length > (parseFloat(msg.length) * 0.8)) {
+                            console.log("▲ Caps filter kicking in!");
+                            switch (Math.floor(Math.random() * 1000) % 11) {
+                                case 0:
+                                    message.reply("Shh...");
+                                    break;
+                                case 1:
+                                    message.reply("The community likes peace and quiet.");
+                                    break;
+                                case 2:
+                                    message.reply("Isn't it weird when you're reading... and then you see a bunch of caps?");
+                                    break;
+                                case 3:
+                                    message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
+                                    break;
+                                case 4:
+                                    message.reply("DON'T SHOUT IN HERE K");
+                                    break;
+                                case 5:
+                                    message.reply("Whoa whoa, slow down my friend! No need for raised voices!");
+                                    break;
+                                case 6:
+                                    message.reply("I think your CAPS LOCK might be stuck.");
+                                    break;
+                                case 7:
+                                    message.reply("WHY ARE YOU SHOUTING");
+                                    break;
+                                case 8:
+                                    message.reply("Hey! Inside voice please.");
+                                    break;
+                                case 9:
+                                    message.reply("Have you tried turning off CAPS LOCK?");
+                                    break;
+                                case 10:
+                                    message.reply("Writing your message in caps won't make it better.");
+                                    break;
+                            }
+                            doNotDelete = false;
+                            message.delete();
+                            return;
                         }
-                        doNotDelete = false;
-                        message.delete();
-                        return;
                     }
                 }
             }
@@ -434,6 +528,52 @@ function messageChecker(oldMessage, newMessage) {
         }
 
 
+        if (message.member != null) { //*!(message.member.roles.find("name", "Fleece Police"))
+            exp = msg.search(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{5,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i);
+            if (exp != -1) { //This is a link.
+                console.log(message.channel.name)
+                if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {
+
+                } else if (message.channel.name == "self_promos_and_shoutouts" || message.channel.name == "music" || message.channel.name == "bot_testing") {
+
+                } else if (msg.toLowerCase().includes("https://twitch.tv/xailran") || msg.toLowerCase().includes("https://www.youtube.com")) {
+
+                } else {
+
+
+                    console.log("Link caught at " + parseInt(exp));
+                    switch (Math.floor(Math.random() * 1000) % 6) {
+                        case 0:
+                            message.reply("I've replaced your link with a not-so-link-like link: click here");
+                            message.delete();
+                            break;
+                        case 1:
+                            message.reply("Whatever that link was... I hope it didn't contain some bad stuff...");
+                            message.delete();
+                            break;
+                        case 2:
+                            message.reply("I don't know man, the internet is a dangerous place.");
+                            message.delete();
+                            break;
+                        case 3:
+                            message.reply("Cool. Now let's not forget the rules.");
+                            message.delete();
+                            break;
+                        case 4:
+                            message.reply("If I'm not going to delete it, a mod will. Let's save them some work.");
+                            message.delete();
+                            break;
+                        case 5:
+                            message.reply("We don't want to download your FREE RAM.");
+                            message.delete();
+                            break;
+                    }
+                }
+
+            }
+        }
+
+
 
         if (message.mentions != null && message.mentions.users != null) {
             doNotDelete = true;
@@ -442,15 +582,16 @@ function messageChecker(oldMessage, newMessage) {
 
                     switch (Math.floor(Math.random() * 1000) % 3) {
                         case 0:
-                            message.reply(":no_entry_sign: NOPE: I shall talk as much as I like.");
+                            message.reply(":no_entry_sign: **NOPE**: I shall talk as much as I like.");
                             break;
                         case 1:
-                            message.reply(":no_entry_sign: NOPE: You shu... I'd better not say that actually");
+                            message.reply(":no_entry_sign: **NOPE**: You shu... I'd better not say that actually.");
                             break;
                         case 2:
-                            message.reply(":no_entry_sign: NOPE: Just no.");
+                            message.reply(":no_entry_sign: **NOPE**: Just no.");
                             break;
                     }
+                    //CONVERSATION COMMANDS
                 } else if (msg.toLowerCase().includes("fuck you") || msg.toLowerCase().includes("fuck off") || msg.toLowerCase().includes("shit")) {
                     message.reply("Want a :hammer:?");
                 } else if (msg.toLowerCase().includes("how") && msg.toLowerCase().includes("you")) {
@@ -459,36 +600,445 @@ function messageChecker(oldMessage, newMessage) {
                     message.reply("Well, I suppose so.");
                 } else if (msg.toLowerCase().includes("no") || msg.toLowerCase().includes("nope")) {
                     message.reply("I guess not.");
-                } else if (msg.toLowerCase().includes("?")) {
+                } else if (msg.toLowerCase().includes("do you")) {
                     message.reply("Erm... Maybe? I dunno.");
                 } else if (msg.toLowerCase().includes("what is")) {
                     message.reply("It's probably 42.");
-                } else if (msg.toLowerCase().includes("but first")) {
-                    message.reply("We need to talk about parallel universes.");
-                } else if (msg.toLowerCase().includes("shut down") || msg.toLowerCase().includes("shut off") || msg.toLowerCase().includes("turn off") || msg.toLowerCase().includes("go away") || msg.toLowerCase().includes("shutdown")) {
-                    message.reply(":white_check_mark: XailBot is now exiting. Goodbye!");
-                    message.reply("Haha, just kidding.");
+                } else if (msg.toLowerCase().includes("donate")) {
+                    message.reply("Did I hear 'donate'?\n:information_source: Fear no longer! You can donate to Xailran by clicking this link: https://twitch.streamlabs.com/xailran#/ \n:no_entry_sign: Please note that you are absolutely not required to donate to Xail. All donations, no matter the size, are massively welcomed though.");
+                } else if (msg.toLowerCase().includes("are you")) {
+                    message.reply("If that's what you want, okay.");
                 } else if (msg.toLowerCase().includes("why is")) {
                     message.reply("I don't know, it's probably because of something Xail did.");
                 } else if (msg.toLowerCase().includes("can i")) {
                     message.reply("It's up to you, mate.");
-                } else if (msg.toLowerCase().includes("+") || msg.toLowerCase().includes("divided") || msg.toLowerCase().includes("-") || msg.toLowerCase().includes("plus") || msg.toLowerCase().includes("subtract") || msg.toLowerCase().includes("minus") || msg.toLowerCase().includes("times") || msg.toLowerCase().includes("*") || msg.toLowerCase().includes("/") || msg.toLowerCase().includes("=")) {
-                    message.reply("Sorry, I don't know what it is. Go ask Xail, he'd probably know.");
+                } else if (msg.toLowerCase().includes("hello") || msg.toLowerCase().includes("hi")) {
+
+
+                    switch (Math.floor(Math.random() * 1000) % 6) {
+                        case 0:
+                            message.reply("Is it me you're looking for?");
+                            break;
+                        case 1:
+                            message.reply("Hey there! If you ever need help using Xail Bot, just type `bot:help`!");
+                            break;
+                        case 2:
+                            message.reply("Hello there!");
+                            break;
+                        case 3:
+                            message.reply("Woah, hey there " + message.author + "! Didn't know you were here!");
+                            break;
+                        case 4:
+                            message.reply("A wild " + message.author + " appeared!");
+                            break;
+                    }
+
+                    //USER-SPECIFIC COMMANDS
                 } else if (msg.toLowerCase().includes("xail") || msg.toLowerCase().includes("xailran")) {
                     message.reply("Did you know I am actually based off of that guy?");
                 } else if (msg.toLowerCase().includes("zblake") || msg.toLowerCase().includes("blake")) {
                     message.reply("Oh, I know that guy! He's an absolute legend.");
+                } else if (msg.toLowerCase().includes("jariomin") || msg.toLowerCase().includes("jario")) {
+                    message.reply("Oh, I know that guy! He's the biggest nerd on planet Earth.");
                 } else if (msg.toLowerCase().includes("puma") || msg.toLowerCase().includes("pumacatrun2")) {
-                    message.reply("same");
-                } else if (msg.toLowerCase().includes("hello") || msg.toLowerCase().includes("hi")) {
-                    message.reply("Is it me you're looking for?");
+                    switch (Math.floor(Math.random() * 1000) % 4) {
+                        case 0:
+                            message.reply("same");
+                            break;
+                        case 1:
+                            message.reply(":^)))))))))");
+                            break;
+                        case 2:
+                            message.reply("same u nerd :^)))");
+                            break;
+                        case 3:
+                            message.reply("puma exposed");
+                            break;
+                    }
+                } else if (msg.toLowerCase().includes("rocker")) {
+                    switch (Math.floor(Math.random() * 1000) % 4) {
+                        case 0:
+                            if (message.author.id == 213776985581813760) {
+                                switch (Math.floor(Math.random() * 1000) % 3) {
+                                    case 0:
+                                        message.author.sendMessage("IMMA FITEACHU LETS GO")
+                                        break;
+                                    case 1:
+                                        message.author.sendMessage("you're a derp")
+                                        break;
+                                    case 2:
+                                        message.author.sendMessage("https://www.youtube.com/watch?v=4ZaYk7X9KAU\nTHE MUUUSIICCC <3 <3 <3")
+                                        break;
+                                }
+                            } else {
+                                message.reply("rocker is smol");
+                            }
+                            break;
+                        case 1:
+                            message.reply("i like yo face " + message.author);
+                            break;
+                        case 2:
+                            message.reply("boi.");
+                            break;
+                        case 3:
+                            message.reply("*mew mew mew mew mew mew mew mew mew mew MEEWW*");
+                            break;
+                    }
+                    //MEME COMMANDS
+                } else if (msg.toLowerCase().includes("boy i sure do wish i could give money to xailran, he is just such a smart, funny guy that i want to give him funds to help his channel.")) {
+                    message.reply("That is a very specific request you have there!");
+                } else if (msg.toLowerCase().includes("+") || msg.toLowerCase().includes("divided") || msg.toLowerCase().includes("-") || msg.toLowerCase().includes("plus") || msg.toLowerCase().includes("subtract") || msg.toLowerCase().includes("minus") || msg.toLowerCase().includes("times") || msg.toLowerCase().includes("*") || msg.toLowerCase().includes("/") || msg.toLowerCase().includes("=")) {
+                    message.reply("Sorry, I don't know what it is. Go ask Xail, he'd probably know.");
+                } else if (msg.toLowerCase().includes("shut down") || msg.toLowerCase().includes("shut off") || msg.toLowerCase().includes("turn off") || msg.toLowerCase().includes("go away") || msg.toLowerCase().includes("shutdown")) {
+                    message.reply(":white_check_mark: XailBot is now exiting. Goodbye!");
+                    message.reply("Haha, just kidding.");
+                } else if (msg.toLowerCase().includes("but first")) {
+                    message.reply("We need to talk about parallel universes.");
+
                 }
             }
         }
 
         var commandProcessed = false;
         if (msg.toLowerCase().startsWith("mod:") || msg.toLowerCase().startsWith("bot:")) {
+
             var command = msg.substr(4);
+
+            if (command.startsWith("music")) {
+                    const music = command.substr(6);
+
+                    doNotDelete = false;
+                    const voiceChannel = message.member.voiceChannel;
+
+                    if (music == "end") {
+                        if (voiceChannel.members.size < 2 || message.member.roles.find("name", "Fleece Police")) {
+                        queue = [];
+                        voiceChannel.leave();
+                        message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
+                        message.delete();
+                        return;
+                        }
+                    }
+                
+                    if (message.channel.name !== "music") {
+                        message.delete();
+                        message.reply(":no_entry_sign: **NOPE:** You can only do music commands in the music channel.");
+                        return;
+                    }   
+                    
+
+                    if (!voiceChannel) {
+                        message.delete();
+                        message.reply(":no_entry_sign: **ERROR:** You aren't currently in a voice channel.");
+                        return;
+                    }
+                        
+                    if (queue == null) {
+                        queue.push(music);
+                    }
+
+                    voiceChannel.join()
+                        .then(connection => {
+                            
+                              if (music == "skip") {
+                              if (voiceChannel.members.size < 2 || skipCount < 2 || message.member.roles.find("name", "Fleece Police")) {
+                                  if (usersVotedSkip.includes(message.author.id)) {
+                                            message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+                                            return;
+                                          }
+                                  usersVotedSkip = [];
+                                  skipCount = 3
+                                   yt.getInfo(currentSong, function(err, info) {                      
+                                message.channel.send(":white_check_mark: **OK:** " + message.author + " skipped **" + info.title + "**.").then(() => {dispatcher.end();});
+                                message.delete();
+                                });
+                                    return; 
+                                  } else {
+                                      if (skipCount == 3) {
+                                          
+                                          if (usersVotedSkip.includes(message.author.id)) {
+                                            message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+                                            return;
+                                          }
+                                      usersVotedSkip.push(message.author.id);   
+                                      skipCount = skipCount - 1
+                                      message.channel.send(":white_check_mark: **OK:** " + message.author + " has started a vote to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
+                                      return;
+                                      } else {
+                                          
+                                          if (usersVotedSkip.includes(message.author.id)) {
+                                            message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+                                            return;
+                                          }
+                                      usersVotedSkip.push(message.author.id);   
+                                      skipCount = skipCount - 1
+                                      message.channel.send(":white_check_mark: **OK:** " + message.author + " has voted to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
+                                      return;
+                                      }
+                                  }
+                              }
+                              
+                            
+                              
+                            if (music == "queue") {
+                                
+                                console.log("In queue command, queue = " + queue);
+                                if (queue == "") {
+                                message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
+                                return;
+                                }
+                                
+                                
+                                console.log("About to do forEach queue");                       
+                                queue.forEach((item, i) => { 
+
+                                console.log("In forEach queue for index " + i);
+                                    yt.getInfo(item, function(err, info) { 
+                                    console.log("In yt get info queue, info.title = " + info.title);
+
+                                    tosend.splice(i, 0, `${i+1}. ${info.title}\n`)
+
+                                    
+                                    
+                                    console.log("Index[" + i + "]");
+                                    console.log("Queue length = " + queue.length)
+                                    //THIS WORKS PERFECTLY, EXCEPT AT THE START WHEN IT RETURNS 2 INSTEAD OF 1, INVESTIGATE MORE.
+                                    //TRY TO DEBUG THIS MORE AS SOMETIMES THE ORDERING ISNT CORRECT AND LIKE STATED BEFORE FIRST USE IS SKETCHY
+                                    console.log("tosend.push = " + tosend);
+                                    console.log("tosend.length = " + tosend.length);
+                                    
+                                    if (tosend.length == queue.length) {
+                                    queueMessage(tosend);
+                                    }
+                                    });
+                                });
+                                
+                                function queueMessage(mSend) {
+                                mSend.sort();
+                                console.log("mSend = " + mSend);
+                                message.channel.send(`__**${message.guild.name}'s Music Queue:**__ Currently **${mSend.length}** songs queued ${(mSend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${mSend.slice(0,15).join('\n')}\`\`\``);
+                                console.log("Message " + mSend + " sent");
+                                tosend = [];
+                                }
+                                return;
+                           }
+                            
+                            
+                            if (music == "next") {
+                                yt.getInfo(queue[0], function(err, info) { 
+                                message.channel.send(":fast_forward: **NEXT SONG:** " + info.title);
+                                message.delete();
+                                });
+                                
+                            return;
+                                }         
+                                
+
+                            if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next") {
+                                queue.push(music);
+                                return message.reply(":white_check_mark: **OK:** Your song has been placed in the queue.");
+                            }    
+                            
+                            console.log("Check if bot is already playing music");
+                            queue.push(music);
+                            console.log(queue);
+                            console.log("Push music to queue");
+                            //const streamOptions = { seek: 0, volume: 1 };
+                            //const streamyt = yt(queue[0], {filter : 'audioonly'});
+                            console.log("Set stream options");
+                            queueMusic();
+                            console.log("Call function");
+
+                            function queueMusic() {
+                                if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next") {
+                                    console.log(music);
+                                    queue.push(music);
+                                    return message.reply(":white_check_mark: **OK:** Your song has been placed in the queue.");
+                                }
+                                                
+                                yt.getInfo(queue[0], function(err, info) {
+                                    console.log(info.title)
+                                    message.channel.send(":headphones: **NOW PLAYING:** " + info.title);
+                                });
+
+                                console.log("Function called successfully");
+                                
+                                console.log("Check if bot is already playing music again");
+                                console.log(queue);
+                                console.log("Log queue");
+                                const streamOptions = {
+                                    seek: 0,
+                                    volume: 0.7
+                                };
+                                const streamfunc = yt(queue[0], {
+                                    filter: 'audioonly'
+                                });
+                                console.log("Set options again");
+                                dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
+                                currentSong = queue[0];
+                                queue.shift();
+                                console.log("Get rid of currently playing song so it doesn't play again");
+
+                                console.log("Set dispatcher in function");
+
+                                dispatcher.on('end', () => {
+                                    
+                                
+                                    console.log(queue);
+                                    console.log("Log queue to check if there are any more songs to play");
+
+                                    queueMusic(streamfunc);
+
+
+                                    console.log("On end, call function again.");
+                                });
+                            }
+
+                        });
+                    message.delete();
+                    return;
+            }
+
+            
+            
+                    
+                    if (command.startsWith("afk")) {
+                    doNotDelete = true;
+                    
+                    if (userAFK.includes(message.author.id)) {
+                    message.reply(":white_check_mark: **OK:** You are no longer AFK.");
+                    var index = userAFK.indexOf(message.author.id);
+                    if (index !== -1) {
+                        userAFK.splice(index, 1);
+                    }
+                    message.delete();
+                    return;
+                    }
+                    
+                    var afkmsg = "";
+                    var argsArray = message.content.split(" ").slice(1);
+                    var arrayLength = argsArray.length;
+
+                    if (arrayLength > 1) {
+                        for (let i = 0; i < arrayLength; i++) {
+                            afkmsg = (afkmsg + argsArray[i] + " ");
+                        }
+                        afkmsg = afkmsg.trim();
+                    }
+                    
+                    message.reply(":white_check_mark: **OK:** I've set your status to AFK. If people mention you in their message, I'll notify them that you are AFK.");
+                    userAFK.push(message.author.id);
+                    message.delete();
+                    return;
+                    }
+                    
+
+            
+            
+                    if (command.startsWith("8ball")) {
+                    doNotDelete = true;
+                    
+                    var ball = "";
+                    var argsArray = message.content.split(" ").slice(1);
+                    var arrayLength = argsArray.length;
+
+                    if (arrayLength > 1) {
+                        for (let i = 0; i < arrayLength; i++) {
+                            ball = (ball + argsArray[i] + " ");
+                        }
+                        ball = ball.trim();
+                    } else {
+                       message.channel.send(":no_entry_sign: **ERROR:** You need to specify a question/message.");
+                       message.delete();
+                       return;
+                    }
+                    
+                    message.channel.send(":grey_question: **" + ball + "**  -  *Asked by " + message.author + ".*")       
+                    
+                    switch (Math.floor(Math.random() * 1000) % 3) {
+                        case 0:
+                            switch (Math.floor(Math.random() * 1000) % 10) {
+                                case 0:    
+                                message.channel.send(":8ball: It is certain.");
+                                break;
+                                case 1:    
+                                message.channel.send(":8ball: It is decidedly so.");
+                                break;
+                                case 2:    
+                                message.channel.send(":8ball: Without a doubt.");
+                                break;
+                                case 3:    
+                                message.channel.send(":8ball: Yes, definitely.");
+                                break;
+                                case 4:    
+                                message.channel.send(":8ball: You may rely on it.");
+                                break;
+                                case 5:    
+                                message.channel.send(":8ball: As I see it, yes.");
+                                break;
+                                case 6:    
+                                message.channel.send(":8ball: Most likely.");
+                                break;
+                                case 7:    
+                                message.channel.send(":8ball: Outlook is good.");
+                                break;
+                                case 8:    
+                                message.channel.send(":8ball: Yes.");
+                                break;
+                                case 9:    
+                                message.channel.send(":8ball: Signs point to yes.");
+                                break;
+                            }
+                            message.delete();
+                            break;
+                        case 1:
+                            switch (Math.floor(Math.random() * 1000) % 5) {
+                                case 0:    
+                                message.channel.send(":8ball: Reply hazy, try again later.");
+                                break;
+                                case 1:    
+                                message.channel.send(":8ball: Ask again later.");
+                                break;
+                                case 2:    
+                                message.channel.send(":8ball: Better not tell you now.");
+                                break;
+                                case 3:    
+                                message.channel.send(":8ball: Cannot predict now.");
+                                break;
+                                case 4:    
+                                message.channel.send(":8ball: Concentrate and ask again.");
+                                break;
+                            }
+                            message.delete();
+                            break;
+                        case 2:
+                            switch (Math.floor(Math.random() * 1000) % 5) {
+                                case 0:    
+                                message.channel.send(":8ball: Don't count on it.");
+                                break;
+                                case 1:    
+                                message.channel.send(":8ball: My reply is no.");
+                                break;
+                                case 2:    
+                                message.channel.send(":8ball: My sources say no.");
+                                break;
+                                case 3:    
+                                message.channel.send(":8ball: Outlook is not so good.");
+                                break;
+                                case 4:    
+                                message.channel.send(":8ball: Very doubtful.");
+                                break;
+                            }
+                            break;
+                    message.delete();
+                    break;
+
+                        }
+                        message.delete();
+                        return;
+                    }
+            
+            
             switch (command) {
                 case "ping":
                     doNotDelete = true;
@@ -547,11 +1097,14 @@ function messageChecker(oldMessage, newMessage) {
                     doNotDelete = false;
                     message.channel.send(
                         "Here are some things you can try:\n```\n" +
-                        "copyright         Tells you about XailBot\n" +
-                        "warranty          Tells you about XailBot\n\n" +
-                        "egg               Have an egg.\n" +
-                        "ping|pong         Asks XailBot to reply with a message\n\n" +
-                        "These commands need to be prefixed with bot:\n" +
+                        "copyright                                           Tells you about XailBot's copyright and license.\n" +
+                        "warranty                                            Tells you about XailBot's warranty.\n\n" +
+                        "egg                                                 Have an egg.\n" +
+                        "ping|pong                                           Asks XailBot to reply with a message.\n" +
+                        "music [link to video | queue | next | skip]         Plays music when given a YouTube link.\n" +
+                        "8ball [message]                                     An 8 ball which can tell your future and other information.\n" +
+                        "afk                                                 Notifies people if you are mentioned whilst AFK.\n\n\n" +
+                        "All of these commands need to be prefixed with 'bot:'.\n" +
                         "```")
                     break;
                 case "copyright":
@@ -591,7 +1144,8 @@ function messageChecker(oldMessage, newMessage) {
                     message.delete();
                     commandProcessed = true;
                     break;
-            }
+                
+        }
         }
 
         if (msg.toLowerCase().startsWith("mod:") && !commandProcessed) {
@@ -669,25 +1223,8 @@ function messageChecker(oldMessage, newMessage) {
                         } else {
                             return;
                         }
-                        //Test command for joining voice channels. Used for testing features with voice chat, only temporary command.
-                    case "random":
-                        doNotDelete = false;
-                        var channel = client.channels.get("300575580116746241");
-                        channel.join()
-                            .then(connection => {
-                                const dispatcher = connection.playFile('./nope.wav', {
-                                    volume: 0.6
-                                });
-                            })
-                            .then(dispatcher => {
-                                dispatcher.on('end', () => {
-                                    message.channel.send("Song finished.");
-                                });
-                                dispatcher.on('error', console.error);
-                            })
-                            .catch(console.error);
-                        message.delete();
-                        break;
+
+
                     case "mod on":
                         doNotDelete = false;
                         if (commandMod == "on") {
@@ -798,20 +1335,20 @@ function messageChecker(oldMessage, newMessage) {
                                         muteMember.addRole(muteMember.guild.roles.get("302285092036935680"));
                                         muteMember.setVoiceChannel(muteMember.guild.channels.get(muteMember.guild.afkChannelID));
 
-                                        
+
                                         muteMember.sendMessage(":warning: You have just been muted on Rainbow Gaming. Your ability to talk in voice/text channels has been revoked.");
                                         embeduser = new Discord.RichEmbed("mute-for-user");
                                         embeduser.setAuthor("ᴍᴜᴛᴇ »  " + muteMember.displayName + "#" + muteMember.user.discriminator, muteMember.user.displayAvatarURL);
                                         embeduser.setColor("#983bef");
                                         var msg = muteReason + "\n";
                                         embeduser.addField("**Reason**", msg);
-                                
+
                                         var msg = dateString + "\n";
                                         embeduser.addField("**Timestamp**", msg);
-                                
+
                                         muteMember.sendEmbed(embeduser);
-                                        
-                                        
+
+
                                         message.channel.send(":white_check_mark: " + muteMember.displayName + " was succesfully muted.");
                                         client.channels.get("229575537444651009").sendEmbed(embed);
                                         muteMember = null;
@@ -866,23 +1403,23 @@ function messageChecker(oldMessage, newMessage) {
 
                                         var msg = warningCount + 1 + "\n"; // Add 1 to warningCount to include this warning as well.
                                         embed.addField("**Warning #**", msg);
-                                        
+
                                         embed.setFooter(dateString);
 
-                                        
+
                                         warnMember.sendMessage(":warning: You have just received a warning on Rainbow Gaming.");
                                         embeduser = new Discord.RichEmbed("warn-for-user");
                                         embeduser.setAuthor("ᴡᴀʀɴɪɴɢ »  " + warnMember.displayName + "#" + warnMember.user.discriminator, warnMember.user.displayAvatarURL);
                                         embeduser.setColor("#E5C01D");
                                         var msg = warnReason + "\n";
                                         embeduser.addField("**Reason**", msg);
-                                
+
                                         var msg = dateString + "\n";
                                         embeduser.addField("**Timestamp**", msg);
-                                
+
                                         warnMember.sendEmbed(embeduser);
-                                        
-                                        
+
+
                                         message.channel.send(":white_check_mark: " + warnMember.displayName + " was successfully warned.");
                                         client.channels.get("229575537444651009").sendEmbed(embed);
                                         warningCount = 0;
@@ -937,20 +1474,20 @@ function messageChecker(oldMessage, newMessage) {
                                         var msg = banReason + "\n";
                                         embed.addField("**Reason**", msg);
                                         embed.setFooter(dateString);
-                                        
-                                        
+
+
                                         banMember.sendMessage(":warning: You have been permanently banned from Rainbow Gaming.");
                                         embeduser = new Discord.RichEmbed("ban-for-user");
                                         embeduser.setAuthor("ʙᴀɴ »  " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
                                         embeduser.setColor("#af1c1c");
                                         var msg = banReason + "\n";
                                         embeduser.addField("**Reason**", msg);
-                                
+
                                         var msg = dateString + "\n";
                                         embeduser.addField("**Timestamp**", msg);
-                                
+
                                         banMember.sendEmbed(embeduser);
-                                        
+
                                         message.guild.ban(banMember, 7);
                                         message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully banned.");
                                         client.channels.get("229575537444651009").sendEmbed(embed);
@@ -1003,20 +1540,20 @@ function messageChecker(oldMessage, newMessage) {
                                         var msg = banReason + "\n";
                                         embed.addField("**Reason**", msg);
                                         embed.setFooter(dateString);
-                                        
-                                        
+
+
                                         banMember.sendMessage(":warning: You have been permanently banned from Rainbow Gaming.");
                                         embeduser = new Discord.RichEmbed("ban-for-user");
                                         embeduser.setAuthor("ʙᴀɴ »  " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
                                         embeduser.setColor("#e08743");
                                         var msg = banReason + "\n";
                                         embeduser.addField("**Reason**", msg);
-                                
+
                                         var msg = dateString + "\n";
                                         embeduser.addField("**Timestamp**", msg);
-                                
+
                                         banMember.sendEmbed(embeduser);
-                                        
+
                                         message.guild.ban(banMember, 7);
                                         message.guild.unban(banMember);
                                         message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully softbanned.");
@@ -1106,17 +1643,20 @@ function messageChecker(oldMessage, newMessage) {
                             command = command.substr(6);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "");
 
+                            //console.log(message.server.detailsOfUser(message.author).nick);
+
                             message.guild.fetchMember(command).then(function(member) {
+
                                 embed = new Discord.RichEmbed("test");
-                                embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+                                embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + member.user.username + "#" + member.user.discriminator, member.user.displayAvatarURL);
                                 embed.setColor("#c64ed3");
 
                                 {
-                                    var msg = "**Created** » " + member.user.createdAt.toUTCString() + "\n";
+                                    var msg = "**Created** » " + member.user.createdAt.toDateString() + " at " + member.user.createdAt.toLocaleTimeString() + "\n";
                                     if (member.joinedAt.getTime() == 0) {
                                         msg += "**Joined** » -∞... and beyond! Discord seems to be giving incorrect info... :(";
                                     } else {
-                                        msg += "**Joined** » " + member.joinedAt.toUTCString();
+                                        msg += "**Joined** » " + member.joinedAt.toDateString() + " at " + member.joinedAt.toLocaleTimeString();
                                     }
 
                                     embed.addField("Timestamps", msg);
@@ -1393,6 +1933,44 @@ function messageChecker(oldMessage, newMessage) {
                             }
 
                             message.delete();
+
+                        } else if (command.startsWith("permit")) {
+                            doNotDelete = true;
+                            command = command.substr(10);
+                            command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
+                            // console.log(command.toString());
+                            console.log(command);
+                            console.log(message.guild.members.find(member => member.username === command));
+                            //     if (message.guild.members.filter(member => member.displayName === command)) {
+                            //     message.channel.send(":white_check_mark: **" + "dude" + "** is now permitted to post *any* links for 3 minutes.");
+                            //     return;
+                            //     }
+
+                            var num = 180000
+                            message.guild.fetchMember(command).then(function(member) {
+                                permitMember = member;
+                                message.channel.send(":white_check_mark: **" + permitMember.displayName + "** is now permitted to post *any* links for 3 minutes.");
+                                permitMember.addRole(permitMember.guild.roles.get("304207299646586882"));
+                                console.log("Permitted role assigned.");
+                                client.setTimeout(permitRemove, num);
+                                message.delete();
+                            }).catch(function(reason) {
+                                switch (Math.floor(Math.random() * 1000) % 4) {
+                                    case 0:
+                                        message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
+                                        break;
+                                    case 1:
+                                        message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
+                                        break;
+                                    case 2:
+                                        message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
+                                        break;
+                                    case 3:
+                                        message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
+                                        break;
+                                }
+                            });
+
                         } else if (command.startsWith("rm") && commandRm == "on") {
                             doNotDelete = false;
                             command = command.substr(3);
@@ -1407,6 +1985,7 @@ function messageChecker(oldMessage, newMessage) {
                                     message.channel.send(":white_check_mark: **OK:** I successfully deleted " + command + " messages.");
                                     numDel = parseInt(num - 1);
                                 }).catch(function(reason) {
+                                    console.log(reason);
                                     switch (Math.floor(Math.random() * 1000) % 4) {
                                         case 0:
                                             message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
@@ -1440,6 +2019,7 @@ function messageChecker(oldMessage, newMessage) {
                             message.channel.send(":warning: " + messagesay);
                             message.delete();
 
+
                         } else if (command.startsWith("poll") && commandSay == "on") {
                             command = command.substr(4);
                             doNotDelete = true;
@@ -1455,29 +2035,24 @@ function messageChecker(oldMessage, newMessage) {
                             }
                             message.delete();
                             message.channel.send(":information_source: A poll has just been created! \n" + ":writing_hand: **" + pollm + "**\n:white_check_mark: Cast your votes to the poll by using reactions on this message!");
-
                             // Commented out to try and find solution.
 
-                            // } else if (command.startsWith("endpoll")) {
-                            //     console.log(messageReact.emoji);           
+                        } else if (command.startsWith("endpoll")) {
+                            message.channel.send(":information_source: Here are the results:\n:one: **-** " + poll1Count + "\n:two: **-** " + poll2Count);
+                            console.log("▲ Poll has ended.");
+                            message.delete();
+                        } else if (command.startsWith("reward")) {
+                            doNotDelete = true;
+                            
+                            command = command.substr(10);
+                            command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
-                            //     var pollm = "";
-                            //     var argsArray = messageReact.emoji;
-                            //     var arrayLength = 1;
-
-                            //     message.channel.send(":information_source: Here are the results:");
-
-                            //     if (arrayLength > 0) {
-                            //         for (var i = 0; i < arrayLength; i++) {
-                            //             message.channel.send(messageReact.emoji.name + " - " + messageReact.count);
-                            //         }
-                            //     }
-
-                            //     message.channel.send(messageReact.emoji.name + " - " + messageReact.count);
-
-                            //     console.log("▲ Poll has ended.");
-                            //     message.delete();
-
+                            message.guild.fetchMember(command).then(function(member) {
+   
+                                    message.channel.send("Congratulations " + member.displayName + "! You get a gold star.");
+                                    member.lastMessageID.react('⭐');
+                                    });      
+                            
                         } else if (command.startsWith("setgame") && commandSetgame == "on") {
                             if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                                 doNotDelete = true;
@@ -1523,46 +2098,44 @@ function messageChecker(oldMessage, newMessage) {
                                 message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
                             }
 
-                        }
-
-
-                        if (command == "poweroff") {
-                            doNotDelete = true;
-                            if (message.author.id == 196792235654774784 || message.author.id == 246574843460321291) {
-                                if (poweroff) {
-                                    switch (Math.floor(Math.random() * 1000) % 3) {
-                                        case 0:
-                                            message.channel.send(':white_check_mark: XailBot is now exiting. Goodbye!').then(function() {
-                                                process.exit(0);
-                                            }).catch(function() {
-                                                process.exit(0);
-                                            });
-                                            break;
-                                        case 1:
-                                            message.channel.send(':white_check_mark: See you next time!').then(function() {
-                                                process.exit(0);
-                                            }).catch(function() {
-                                                process.exit(0);
-                                            });
-                                            break;
-                                        case 2:
-                                            message.channel.send(':white_check_mark: They saw... right through me...').then(function() {
-                                                process.exit(0);
-                                            }).catch(function() {
-                                                process.exit(0);
-                                            });
-                                            break;
+                            if (command == "poweroff") {
+                                doNotDelete = true;
+                                if (message.author.id == 196792235654774784 || message.author.id == 246574843460321291) {
+                                    if (poweroff) {
+                                        switch (Math.floor(Math.random() * 1000) % 3) {
+                                            case 0:
+                                                message.channel.send(':white_check_mark: XailBot is now exiting. Goodbye!').then(function() {
+                                                    process.exit(0);
+                                                }).catch(function() {
+                                                    process.exit(0);
+                                                });
+                                                break;
+                                            case 1:
+                                                message.channel.send(':white_check_mark: See you next time!').then(function() {
+                                                    process.exit(0);
+                                                }).catch(function() {
+                                                    process.exit(0);
+                                                });
+                                                break;
+                                            case 2:
+                                                message.channel.send(':white_check_mark: They saw... right through me...').then(function() {
+                                                    process.exit(0);
+                                                }).catch(function() {
+                                                    process.exit(0);
+                                                });
+                                                break;
+                                        }
+                                    } else {
+                                        message.channel.send(':information_source: You are about to shut down any instance of Xail Bot. To confirm this action, please type `mod:poweroff` again.');
+                                        poweroff = true;
                                     }
                                 } else {
-                                    message.channel.send(':information_source: You are about to shut down any instance of Xail Bot. To confirm this action, please type `mod:poweroff` again.');
-                                    poweroff = true;
+                                    doNotDelete = false;
+                                    message.reply(':no_entry_sign: **NOPE:** Only administrators are allowed to power off the bot.');
                                 }
                             } else {
-                                doNotDelete = false;
-                                message.reply(':no_entry_sign: **NOPE:** Only administrators are allowed to power off the bot.');
+                                poweroff = false;
                             }
-                        } else {
-                            poweroff = false;
                         }
                 }
             } else {
@@ -1574,7 +2147,7 @@ function messageChecker(oldMessage, newMessage) {
 
         if (doModeration[message.guild.id]) { //Check if we should do moderation on this server
             //Spam limiting
-            
+
             if (lastMessages[message.author.id] != msg) {
                 sameMessageCount[message.author.id] = 0;
             }
@@ -1650,6 +2223,9 @@ function messageChecker(oldMessage, newMessage) {
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
+client.on('messageReactionAdd', reactionChecker);
+
+
 
 client.on('guildMemberAdd', function(guildMember) {
     if (guildMember.guild.id == 196793479899250688) {
@@ -1758,17 +2334,23 @@ client.on('messageDelete', function(message) {
     if (message.guild != null) {
         if (panicMode[message.guild.id]) return; //Don't want to be doing this in panic mode!
         if (botDelMessage[message.guild.id]) return;
+        if (message.author.id == 303017211457568778) return;
+        if (message.author.id == 155149108183695360) return; //Dyno
 
         if (message.guild.id == 196793479899250688) { //General chat for testbot
             channel = client.channels.get("229575537444651009");
         }
-
+        
         if (channel != null) {
+            if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+                return;
+            } else {
             channel.sendMessage(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> at " + message.createdAt.toDateString() + ", " + message.createdAt.toLocaleTimeString() + " was deleted.\n" +
                 "```\n" +
                 message.cleanContent + "\n" +
                 "```"
             );
+            }
         }
     }
 });
@@ -1796,6 +2378,9 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
         }
 
         if (channel != null) {
+            if (oldMessage.member.roles.find("name", "Fleece Police") || oldMessage.member.roles.find("name", "Head of the Flock")) {
+                return;
+            } else {
             channel.sendMessage(":pencil2: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> at " + oldMessage.createdAt.toDateString() + ", " + oldMessage.createdAt.toLocaleTimeString() + " was edited.\n" +
                 "**Original Content** ```\n" +
                 oldMessage.cleanContent + "\n" +
@@ -1804,6 +2389,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
                 newMessage.cleanContent + "\n" +
                 "```\n"
             );
+            }
         }
     }
 });
