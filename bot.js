@@ -1,5 +1,5 @@
 /****************************************
- * 
+ *
  *   XailBot: Moderation bot designed for Rainbow Gaming.
  *   Copyright (C) 2017 Victor Tran and Rylan Arbour
  *	 Rewritten by zBlake
@@ -16,7 +16,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * *************************************/
 const Discord = require('discord.js');
 const fs = require('fs');
@@ -24,7 +24,7 @@ const client = new Discord.Client();
 const api = require('./keys.js');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
-
+const yt = require('ytdl-core');
 
 const rl = readline.createInterface({
     input: fs.createReadStream('settings.txt')
@@ -60,8 +60,10 @@ var skipCount = 3;
 var currentSong = {};
 var usersVotedSkip = [];
 var queueList = "";
+var songRepeat = false;
 var tosend = [];
-const yt = require('ytdl-core');
+var musicEnd = false;
+
 
 var userAFK = [];
 
@@ -254,13 +256,13 @@ function reactionAddChecker(messageReaction, user) {
     if (messageReaction.message.author.id == 303017211457568778 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
         console.log(messageReaction.emoji.name);
         if (messageReaction.emoji.name == "1⃣") {
-        poll1Count = poll1Count + 1
-        console.log("poll count 1: " + poll1Count);
+            poll1Count = poll1Count + 1
+            console.log("poll count 1: " + poll1Count);
         } else if (messageReaction.emoji.name == "2⃣") {
-        poll2Count = poll2Count + 1
-        console.log("poll count 2: " + poll2Count);
+            poll2Count = poll2Count + 1
+            console.log("poll count 2: " + poll2Count);
         }
-        
+
         console.log("reaction added")
         reactionMessage = messageReaction;
     }
@@ -268,16 +270,16 @@ function reactionAddChecker(messageReaction, user) {
 }
 
 function reactionRemoveChecker(messageReaction, user) {
-        if (messageReaction.emoji.name == "1⃣") {
+    if (messageReaction.emoji.name == "1⃣") {
         poll1Count = poll1Count - 1
         console.log("poll count 1: " + poll1Count);
-        } else if (messageReaction.emoji.name == "2⃣") {
+    } else if (messageReaction.emoji.name == "2⃣") {
         poll2Count = poll2Count - 1
         console.log("poll count 2: " + poll2Count);
-        }
-        
-        console.log("reaction removed")
-        reactionMessage = messageReaction;
+    }
+
+    console.log("reaction removed")
+    reactionMessage = messageReaction;
 }
 
 function aestTime() {
@@ -307,12 +309,12 @@ function messageChecker(oldMessage, newMessage) {
 
     if (message.mentions.users.size > 0 && message.author.bot == false) {
         if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
-        message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while." );
+            message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while.");
         }
     } else {
-        
+
     }
-    
+
     const prefix = "+";
     const args = message.content.split(" ").slice(1);
 
@@ -392,7 +394,7 @@ function messageChecker(oldMessage, newMessage) {
                 var flags;
                 //could be any combination of 'g', 'i', and 'm'
                 flags = 'gi';
-                
+
                 if (input == null) return;
                 input = regexEscape(input);
 
@@ -404,16 +406,16 @@ function messageChecker(oldMessage, newMessage) {
             //This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
             //Check for spam in a single message
             if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
-				caughtSpam = true;
+                caughtSpam = true;
                 message.delete()
                 return;
             } else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)) !== undefined) {
                 if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) == true) {
-				ignoreMessage = true;
-                message.delete()
-                return;
+                    ignoreMessage = true;
+                    message.delete()
+                    return;
+                }
             }
-        }
 
 
 
@@ -488,7 +490,7 @@ function messageChecker(oldMessage, newMessage) {
                             break;
                     }
                     doNotDelete = false;
-					caughtSwear = true;
+                    caughtSwear = true;
                     message.delete();
                     return;
                 }
@@ -534,7 +536,7 @@ function messageChecker(oldMessage, newMessage) {
                                     break;
                             }
                             doNotDelete = false;
-							message.delete();
+                            message.delete();
                             return;
                         }
                     }
@@ -731,206 +733,185 @@ function messageChecker(oldMessage, newMessage) {
             var command = msg.substr(4);
 
             if (command.startsWith("music")) {
-                    const music = command.substr(6);
+                const music = command.substr(6);
 
-                    doNotDelete = false;
-                    const voiceChannel = message.member.voiceChannel;
+                doNotDelete = false;
+                const voiceChannel = message.member.voiceChannel;
 
-                    if (music == "end") {
-                        if (voiceChannel.members.size < 2 || message.member.roles.find("name", "Fleece Police")) {
-                        queue = [];
-                        voiceChannel.leave();
-                        message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
-                        message.delete();
-                        return;
-                        }
-                    }
-                
-                    if (message.channel.name !== "music") {
-                        message.delete();
-                        message.reply(":no_entry_sign: **NOPE:** You can only do music commands in the #music channel.");
-                        return;
-                    }   
-                    
+                if (message.channel.name !== "music") {
+                    message.delete();
+                    message.reply(":no_entry_sign: **NOPE:** You can only do music commands in the <#224405843016155136> channel.");
+                    return;
+                }
 
-                    if (!voiceChannel) {
-                        message.delete();
-                        message.reply(":no_entry_sign: **ERROR:** You aren't currently in a voice channel.");
-                        return;
-                    }
-                        
-                    if (queue == null) {
-                        queue.push(music);
-                    }
+                if (!voiceChannel) {
+                    message.reply(":no_entry_sign: **ERROR:** You aren't currently in a voice channel.");
+					message.delete();
+                    return;
+                }
 
-                    voiceChannel.join()
-                        .then(connection => {
-                            
-                              if (music == "skip") {
-                              if (voiceChannel.members.size < 2 || skipCount < 2 || message.member.roles.find("name", "Fleece Police")) {
-                                  if (usersVotedSkip.includes(message.author.id)) {
-                                            message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
-                                            return;
-                                          }
-                                  usersVotedSkip = [];
-                                  skipCount = 3
-                                   yt.getInfo(currentSong, function(err, info) {                      
-                                message.channel.send(":white_check_mark: **OK:** " + message.author + " skipped **" + info.title + "**.").then(() => {dispatcher.end();});
-                                message.delete();
+                if (queue == null) {
+                    queue.push(music);
+                }
+
+                voiceChannel.join()
+                    .then(connection => {
+
+                        if (music == "skip") {
+                            if (voiceChannel.members.size < 2 || skipCount < 2 || message.member.roles.find("name", "Fleece Police")) {
+                                if (usersVotedSkip.includes(message.author.id)) {
+                                    message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+                                    return;
+                                }
+                                usersVotedSkip = [];
+                                skipCount = 3
+                                yt.getInfo(currentSong, function(err, info) {
+                                    message.channel.send(":white_check_mark: **OK:** " + message.author + " skipped **" + info.title + "**.").then(() => {
+                                        dispatcher.end();
+                                    });
+                                    message.delete();
                                 });
-                                    return; 
-                                  } else {
-                                      if (skipCount == 3) {
-                                          
-                                          if (usersVotedSkip.includes(message.author.id)) {
-                                            message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
-                                            return;
-                                          }
-                                      usersVotedSkip.push(message.author.id);   
-                                      skipCount = skipCount - 1
-                                      message.channel.send(":white_check_mark: **OK:** " + message.author + " has started a vote to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
-                                      return;
-                                      } else {
-                                          
-                                          if (usersVotedSkip.includes(message.author.id)) {
-                                            message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
-                                            return;
-                                          }
-                                      usersVotedSkip.push(message.author.id);   
-                                      skipCount = skipCount - 1
-                                      message.channel.send(":white_check_mark: **OK:** " + message.author + " has voted to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
-                                      return;
-                                      }
-                                  }
-                              }
-                              
-                            
-                              
-                            if (music == "queue") {
-                                
-                                console.log("In queue command, queue = " + queue);
-                                if (queue == "") {
+                                return;
+                            } else {
+                                if (skipCount == 3) {
+
+                                    if (usersVotedSkip.includes(message.author.id)) {
+                                        message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+                                        return;
+                                    }
+                                    usersVotedSkip.push(message.author.id);
+                                    skipCount = skipCount - 1
+                                    message.channel.send(":white_check_mark: **OK:** " + message.author + " has started a vote to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
+                                    return;
+                                } else {
+
+                                    if (usersVotedSkip.includes(message.author.id)) {
+                                        message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+                                        return;
+                                    }
+                                    usersVotedSkip.push(message.author.id);
+                                    skipCount = skipCount - 1
+                                    message.channel.send(":white_check_mark: **OK:** " + message.author + " has voted to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
+                                    return;
+                                }
+                            }
+                        }
+
+
+
+                        if (music == "queue") {
+                            if (queue == "") {
                                 message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
                                 return;
-                                }
-                                
-                                
-                                console.log("About to do forEach queue");                       
-                                queue.forEach((item, i) => { 
-
-                                console.log("In forEach queue for index " + i);
-                                    yt.getInfo(item, function(err, info) { 
-                                    console.log("In yt get info queue, info.title = " + info.title);
-
+                            }
+                            queue.forEach((item, i) => {
+                                yt.getInfo(item, function(err, info) {
                                     tosend.splice(i, 0, `${i+1}. ${info.title}\n`)
-
-                                    
-                                    
-                                    console.log("Index[" + i + "]");
-                                    console.log("Queue length = " + queue.length)
-                            
-                                    console.log("tosend.push = " + tosend);
-                                    console.log("tosend.length = " + tosend.length);
-                                    
                                     if (tosend.length == queue.length) {
-                                    queueMessage(tosend);
+                                       queueMessage(tosend);
                                     }
-                                    });
                                 });
-                                
-                                function queueMessage(mSend) {
+                            });
+
+                            function queueMessage(mSend) {
                                 mSend.sort();
-                                console.log("mSend = " + mSend);
                                 message.channel.send(`__**${message.guild.name}'s Music Queue:**__ Currently **${mSend.length}** songs queued ${(mSend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${mSend.slice(0,15).join('\n')}\`\`\``);
-                                console.log("Message " + mSend + " sent");
                                 tosend = [];
-                                }
-                                return;
-                           }
-                            
-                            
-                            if (music == "next") {
-                                yt.getInfo(queue[0], function(err, info) { 
+                            }
+                            return;
+                        }
+
+
+                        if (music == "next") {
+                            yt.getInfo(queue[0], function(err, info) {
                                 message.channel.send(":fast_forward: **NEXT SONG:** " + info.title);
                                 message.delete();
-                                });
-                                
+                            });
                             return;
-                                }         
-                                
+                        }
 
-                            if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next") {
-                                queue.push(music);
-                                return message.reply(":white_check_mark: **OK:** Your song has been placed in the queue.");
-                            }    
-                            
-                            console.log("Check if bot is already playing music");
-                            queue.push(music);
-                            console.log(queue);
-                            console.log("Push music to queue");
-                            //const streamOptions = { seek: 0, volume: 1 };
-                            //const streamyt = yt(queue[0], {filter : 'audioonly'});
-                            console.log("Set stream options");
-                            queueMusic();
-                            console.log("Call function");
-
-                            function queueMusic() {
-                                if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next") {
-                                    console.log(music);
-                                    queue.push(music);
-                                    return message.reply(":white_check_mark: **OK:** Your song has been placed in the queue.");
-                                }
-                                                
-                                yt.getInfo(queue[0], function(err, info) {
-                                    console.log(info.title)
-                                    message.channel.send(":headphones: **NOW PLAYING:** " + info.title);
-                                });
-
-                                console.log("Function called successfully");
-                                
-                                console.log("Check if bot is already playing music again");
-                                console.log(queue);
-                                console.log("Log queue");
-                                const streamOptions = {
-                                    seek: 0,
-                                    volume: 0.7
-                                };
-                                const streamfunc = yt(queue[0], {
-                                    filter: 'audioonly'
-                                });
-                                console.log("Set options again");
-                                dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
-                                currentSong = queue[0];
-                                queue.shift();
-                                console.log("Get rid of currently playing song so it doesn't play again");
-
-                                console.log("Set dispatcher in function");
-
-                                dispatcher.on('end', () => {
-                                    
-                                
-                                    console.log(queue);
-                                    console.log("Log queue to check if there are any more songs to play");
-
-                                    queueMusic(streamfunc);
-
-
-                                    console.log("On end, call function again.");
+                        if (music == "repeat") {
+                            if (songRepeat == true) {
+                                songRepeat = false;
+                                message.channel.send(":repeat_one: Repeat is now turned off.");
+                            } else {
+                                yt.getInfo(currentSong, function(err, info) {
+                                    message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `bot:music repeat` again to toggle off.");
+                                    message.delete();
+                                    songRepeat = true;
                                 });
                             }
+                            return;
+                        }
+						
+						
+						if (music == "end") {
+							if (voiceChannel.members.size < 2 || message.member.roles.find("name", "Fleece Police")) {
+								queue = [];
+								musicEnd = true;
+								voiceChannel.leave();
+								message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
+								return;
+							}
+						}
 
-                        });
-                    message.delete();
-                    return;
+
+                        if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
+                            queue.push(music);
+                            return message.reply(":white_check_mark: **OK:** Your song has been placed in the queue.");
+                        }
+
+                        queue.push(music);
+                        queueMusic();
+
+                        function queueMusic() {
+                            if (songRepeat == true) {
+                                queue.push(currentSong);
+                            }
+
+                            if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
+                                queue.push(music);
+                                return message.reply(":white_check_mark: **OK:** Your song has been placed in the queue.");
+                            }
+
+                            yt.getInfo(queue[0], function(err, info) {
+                                console.log("Now playing " + info.title)
+                                message.channel.send(":headphones: **NOW PLAYING:** " + info.title);
+                            });
+
+                            const streamOptions = {
+                                seek: 0,
+                                volume: 0.7
+                            };
+                            const streamfunc = yt(queue[0], {
+                                filter: 'audioonly'
+                            });
+
+                            dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
+                            currentSong = queue[0];
+
+                            if (songRepeat == false) {
+                                queue.shift();
+                            }
+
+                            dispatcher.on('end', () => {
+								if (musicEnd !== true) {
+                                queueMusic(streamfunc);
+								} else {
+								console.log("Music ended.");
+								}
+                            });
+                        }
+
+                    });
+                message.delete();
+                return;
             }
 
-            
-            
-                    
-                    if (command.startsWith("afk")) {
-                    doNotDelete = true;
-                    
-                    if (userAFK.includes(message.author.id)) {
+            if (command.startsWith("afk")) {
+                doNotDelete = true;
+
+                if (userAFK.includes(message.author.id)) {
                     message.reply(":white_check_mark: **OK:** You are no longer AFK.");
                     var index = userAFK.indexOf(message.author.id);
                     if (index !== -1) {
@@ -938,132 +919,128 @@ function messageChecker(oldMessage, newMessage) {
                     }
                     message.delete();
                     return;
-                    }
-                    
-                    var afkmsg = "";
-                    var argsArray = message.content.split(" ").slice(1);
-                    var arrayLength = argsArray.length;
+                }
 
-                    if (arrayLength > 1) {
-                        for (let i = 0; i < arrayLength; i++) {
-                            afkmsg = (afkmsg + argsArray[i] + " ");
-                        }
-                        afkmsg = afkmsg.trim();
+                var afkmsg = "";
+                var argsArray = message.content.split(" ").slice(1);
+                var arrayLength = argsArray.length;
+
+                if (arrayLength > 1) {
+                    for (let i = 0; i < arrayLength; i++) {
+                        afkmsg = (afkmsg + argsArray[i] + " ");
                     }
-                    
-                    message.reply(":white_check_mark: **OK:** I've set your status to AFK. If people mention you in their message, I'll notify them that you are AFK.");
-                    userAFK.push(message.author.id);
+                    afkmsg = afkmsg.trim();
+                }
+
+                message.reply(":white_check_mark: **OK:** I've set your status to AFK. If people mention you in their message, I'll notify them that you are AFK.");
+                userAFK.push(message.author.id);
+                message.delete();
+                return;
+            }
+
+            if (command.startsWith("8ball")) {
+                doNotDelete = true;
+
+                var ball = "";
+                var argsArray = message.content.split(" ").slice(1);
+                var arrayLength = argsArray.length;
+
+                if (arrayLength > 1) {
+                    for (let i = 0; i < arrayLength; i++) {
+                        ball = (ball + argsArray[i] + " ");
+                    }
+                    ball = ball.trim();
+                } else {
+                    message.channel.send(":no_entry_sign: **ERROR:** You need to specify a question/message.");
                     message.delete();
                     return;
-                    }
-                    
+                }
 
-            
-            
-                    if (command.startsWith("8ball")) {
-                    doNotDelete = true;
-                    
-                    var ball = "";
-                    var argsArray = message.content.split(" ").slice(1);
-                    var arrayLength = argsArray.length;
+                message.channel.send(":grey_question: **" + ball + "**  -  *Asked by " + message.author + ".*")
 
-                    if (arrayLength > 1) {
-                        for (let i = 0; i < arrayLength; i++) {
-                            ball = (ball + argsArray[i] + " ");
-                        }
-                        ball = ball.trim();
-                    } else {
-                       message.channel.send(":no_entry_sign: **ERROR:** You need to specify a question/message.");
-                       message.delete();
-                       return;
-                    }
-                    
-                    message.channel.send(":grey_question: **" + ball + "**  -  *Asked by " + message.author + ".*")       
-                    
-                    switch (Math.floor(Math.random() * 1000) % 3) {
-                        case 0:
-                            switch (Math.floor(Math.random() * 1000) % 10) {
-                                case 0:    
+                switch (Math.floor(Math.random() * 1000) % 3) {
+                    case 0:
+                        switch (Math.floor(Math.random() * 1000) % 10) {
+                            case 0:
                                 message.channel.send(":8ball: It is certain.");
                                 break;
-                                case 1:    
+                            case 1:
                                 message.channel.send(":8ball: It is decidedly so.");
                                 break;
-                                case 2:    
+                            case 2:
                                 message.channel.send(":8ball: Without a doubt.");
                                 break;
-                                case 3:    
+                            case 3:
                                 message.channel.send(":8ball: Yes, definitely.");
                                 break;
-                                case 4:    
+                            case 4:
                                 message.channel.send(":8ball: You may rely on it.");
                                 break;
-                                case 5:    
+                            case 5:
                                 message.channel.send(":8ball: As I see it, yes.");
                                 break;
-                                case 6:    
+                            case 6:
                                 message.channel.send(":8ball: Most likely.");
                                 break;
-                                case 7:    
+                            case 7:
                                 message.channel.send(":8ball: Outlook is good.");
                                 break;
-                                case 8:    
+                            case 8:
                                 message.channel.send(":8ball: Yes.");
                                 break;
-                                case 9:    
+                            case 9:
                                 message.channel.send(":8ball: Signs point to yes.");
                                 break;
-                            }
-                            message.delete();
-                            break;
-                        case 1:
-                            switch (Math.floor(Math.random() * 1000) % 5) {
-                                case 0:    
-                                message.channel.send(":8ball: Reply hazy, try again later.");
-                                break;
-                                case 1:    
-                                message.channel.send(":8ball: Ask again later.");
-                                break;
-                                case 2:    
-                                message.channel.send(":8ball: Better not tell you now.");
-                                break;
-                                case 3:    
-                                message.channel.send(":8ball: Cannot predict now.");
-                                break;
-                                case 4:    
-                                message.channel.send(":8ball: Concentrate and ask again.");
-                                break;
-                            }
-                            message.delete();
-                            break;
-                        case 2:
-                            switch (Math.floor(Math.random() * 1000) % 5) {
-                                case 0:    
-                                message.channel.send(":8ball: Don't count on it.");
-                                break;
-                                case 1:    
-                                message.channel.send(":8ball: My reply is no.");
-                                break;
-                                case 2:    
-                                message.channel.send(":8ball: My sources say no.");
-                                break;
-                                case 3:    
-                                message.channel.send(":8ball: Outlook is not so good.");
-                                break;
-                                case 4:    
-                                message.channel.send(":8ball: Very doubtful.");
-                                break;
-                            }
-                            break;
-                    message.delete();
-                    break;
-
                         }
                         message.delete();
-                        return;
-                    }
-            
-            
+                        break;
+                    case 1:
+                        switch (Math.floor(Math.random() * 1000) % 5) {
+                            case 0:
+                                message.channel.send(":8ball: Reply hazy, try again later.");
+                                break;
+                            case 1:
+                                message.channel.send(":8ball: Ask again later.");
+                                break;
+                            case 2:
+                                message.channel.send(":8ball: Better not tell you now.");
+                                break;
+                            case 3:
+                                message.channel.send(":8ball: Cannot predict now.");
+                                break;
+                            case 4:
+                                message.channel.send(":8ball: Concentrate and ask again.");
+                                break;
+                        }
+                        message.delete();
+                        break;
+                    case 2:
+                        switch (Math.floor(Math.random() * 1000) % 5) {
+                            case 0:
+                                message.channel.send(":8ball: Don't count on it.");
+                                break;
+                            case 1:
+                                message.channel.send(":8ball: My reply is no.");
+                                break;
+                            case 2:
+                                message.channel.send(":8ball: My sources say no.");
+                                break;
+                            case 3:
+                                message.channel.send(":8ball: Outlook is not so good.");
+                                break;
+                            case 4:
+                                message.channel.send(":8ball: Very doubtful.");
+                                break;
+                        }
+                        break;
+                        message.delete();
+                        break;
+
+                }
+                message.delete();
+                return;
+            }
+
             switch (command) {
                 case "ping":
                     doNotDelete = true;
@@ -1152,7 +1129,7 @@ function messageChecker(oldMessage, newMessage) {
                         "along with this program.  If not, see <http://www.gnu.org/licenses/>"
                     );
                     commandProcessed = true;
-					message.delete();
+                    message.delete();
                     break;
                 case "warranty":
                     doNotDelete = false;
@@ -1163,7 +1140,7 @@ function messageChecker(oldMessage, newMessage) {
                         "GNU General Public License for more details.\n"
                     );
                     commandProcessed = true;
-					message.delete();
+                    message.delete();
                     break;
                 case "egg":
                     doNotDelete = true;
@@ -1171,8 +1148,8 @@ function messageChecker(oldMessage, newMessage) {
                     message.delete();
                     commandProcessed = true;
                     break;
-                
-        }
+
+            }
         }
 
         if (msg.toLowerCase().startsWith("mod:") && !commandProcessed) {
@@ -2072,20 +2049,20 @@ function messageChecker(oldMessage, newMessage) {
                             message.delete();
                         } else if (command.startsWith("reward")) {
                             doNotDelete = true;
-                            
+
                             command = command.substr(7);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
                             message.guild.fetchMember(command).then(function(member) {
-									console.log(member.lastMessageID);
-                                    message.channel.send(":tada: Congratulations **" + member.displayName + "**! You get a gold star.");
-									message.channel.fetchMessage(member.lastMessageID)
-										.then(rmessage => {
-									console.log(rmessage);
-									rmessage.react('⭐');
-                                    });  
-								}); 
-                            
+                                console.log(member.lastMessageID);
+                                message.channel.send(":tada: Congratulations **" + member.displayName + "**! You get a gold star.");
+                                message.channel.fetchMessage(member.lastMessageID)
+                                    .then(rmessage => {
+                                        console.log(rmessage);
+                                        rmessage.react('⭐');
+                                    });
+                            });
+
                         } else if (command.startsWith("setgame") && commandSetgame == "on") {
                             if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                                 doNotDelete = true;
@@ -2364,81 +2341,81 @@ client.on('messageDelete', function(message) {
     var channel = null;
 
     if (message.guild != null) {
-		
-		if (message.guild.id == 196793479899250688) { //General chat for testbot
+
+        if (message.guild.id == 196793479899250688) { //General chat for testbot
             channel = client.channels.get("229575537444651009");
-		}
-		
+        }
+
         if (panicMode[message.guild.id]) return; //Don't want to be doing this in panic mode!
         if (botDelMessage[message.guild.id]) return;
         if (message.author.id == 303017211457568778) return;
         if (message.author.id == 155149108183695360) return; //Dyno
-		if (ignoreMessage) return;
-		
-		console.log(caughtSpam);
-		console.log(caughtSwear);
-		
-		if (caughtSpam == true) {
-			caughtSpam = false;
-			
-			embed = new Discord.RichEmbed("spamming");
-			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
-			embed.setColor("#e08743");
-			embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
-			
-			var date = new Date();
-			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+        if (ignoreMessage) return;
 
-			var msg = message.cleanContent;
-			embed.addField("**Message**", msg);
-			
-			var msg = "Duplicated words/letters.\n";
-			embed.addField("**Reason**", msg);
+        console.log(caughtSpam);
+        console.log(caughtSwear);
 
-			embed.setFooter(dateString);
-			client.channels.get("229575537444651009").sendEmbed(embed);
-		} else if (caughtSwear == true) {
-			caughtSwear = false;
-			
-			embed = new Discord.RichEmbed("swearing");
-			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
-			embed.setColor("#e08743");
-			embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
-			
-			var date = new Date();
-			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+        if (caughtSpam == true) {
+            caughtSpam = false;
 
-			var msg = message.cleanContent;
-			embed.addField("**Message**", msg);
-			
-			var msg = "Expletives found in message.\n";
-			embed.addField("**Reason**", msg);
+            embed = new Discord.RichEmbed("spamming");
+            embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+            embed.setColor("#e08743");
+            embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
 
-			embed.setFooter(dateString);
-			client.channels.get("229575537444651009").sendEmbed(embed);
-			return;
-			
+            var date = new Date();
+            var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+            var msg = message.cleanContent;
+            embed.addField("**Message**", msg);
+
+            var msg = "Duplicated words/letters.\n";
+            embed.addField("**Reason**", msg);
+
+            embed.setFooter(dateString);
+            client.channels.get("229575537444651009").sendEmbed(embed);
+        } else if (caughtSwear == true) {
+            caughtSwear = false;
+
+            embed = new Discord.RichEmbed("swearing");
+            embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+            embed.setColor("#e08743");
+            embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
+
+            var date = new Date();
+            var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+            var msg = message.cleanContent;
+            embed.addField("**Message**", msg);
+
+            var msg = "Expletives found in message.\n";
+            embed.addField("**Reason**", msg);
+
+            embed.setFooter(dateString);
+            client.channels.get("229575537444651009").sendEmbed(embed);
+            return;
+
         } else if (channel != null) {
             if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                 return;
             } else {
-            embed = new Discord.RichEmbed("manual");
-			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
-			embed.setColor("#e08743");
-			embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
-			
-			var date = new Date();
-			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+                embed = new Discord.RichEmbed("manual");
+                embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+                embed.setColor("#e08743");
+                embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
 
-			var msg = message.cleanContent;
-			embed.addField("**Message**", msg);
-			
-			var msg = "Message deleted by user.\n";
-			embed.addField("**Reason**", msg);
+                var date = new Date();
+                var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
 
-			embed.setFooter(dateString);
-			client.channels.get("229575537444651009").sendEmbed(embed);
-			return;
+                var msg = message.cleanContent;
+                embed.addField("**Message**", msg);
+
+                var msg = "Message deleted by user.\n";
+                embed.addField("**Reason**", msg);
+
+                embed.setFooter(dateString);
+                client.channels.get("229575537444651009").sendEmbed(embed);
+                return;
             }
         }
     }
@@ -2470,23 +2447,23 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
             if (oldMessage.member.roles.find("name", "Fleece Police") || oldMessage.member.roles.find("name", "Head of the Flock")) {
                 return;
             } else {
-            embed = new Discord.RichEmbed("spamming");
-			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.username + "#" + oldMessage.member.user.discriminator, oldMessage.member.user.displayAvatarURL);
-			embed.setColor("#f4c242");
-			embed.setDescription(":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n")
-			
-			var date = new Date();
-			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+                embed = new Discord.RichEmbed("spamming");
+                embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.username + "#" + oldMessage.member.user.discriminator, oldMessage.member.user.displayAvatarURL);
+                embed.setColor("#f4c242");
+                embed.setDescription(":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n")
 
-			var msg = oldMessage.cleanContent;
-			embed.addField("**Old Content**", msg);
-			
-			var msg = newMessage.cleanContent;
-			embed.addField("**New Content**", msg);
+                var date = new Date();
+                var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
 
-			embed.setFooter(dateString);
-			client.channels.get("229575537444651009").sendEmbed(embed);
-			return;
+                var msg = oldMessage.cleanContent;
+                embed.addField("**Old Content**", msg);
+
+                var msg = newMessage.cleanContent;
+                embed.addField("**New Content**", msg);
+
+                embed.setFooter(dateString);
+                client.channels.get("229575537444651009").sendEmbed(embed);
+                return;
             }
         }
     }
