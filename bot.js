@@ -65,9 +65,12 @@ const yt = require('ytdl-core');
 
 var userAFK = [];
 
-var poll1Count;
-var poll2Count;
+var poll1Count = 0;
+var poll2Count = 0;
 
+var caughtSwear = false;
+var caughtSpam = false;
+var ignoreMessage = false;
 
 var commandMod = "on";
 var commandFilter = "off";
@@ -239,7 +242,6 @@ function warningIcon(guild) {
 
 
 
-
 function clean(text) {
     if (typeof(text) === "string")
         return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
@@ -248,19 +250,34 @@ function clean(text) {
 }
 
 
-function reactionChecker(messageReaction, user) { // this function is never called
+function reactionAddChecker(messageReaction, user) {
     if (messageReaction.message.author.id == 303017211457568778 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
-        console.log(messageReaction);
-        if (messageReaction.emoji.name == '1️⃣') {
+        console.log(messageReaction.emoji.name);
+        if (messageReaction.emoji.name == "1⃣") {
         poll1Count = poll1Count + 1
-        } else if (messageReaction.emoji.name == '2️⃣') {
+        console.log("poll count 1: " + poll1Count);
+        } else if (messageReaction.emoji.name == "2⃣") {
         poll2Count = poll2Count + 1
+        console.log("poll count 2: " + poll2Count);
         }
         
         console.log("reaction added")
         reactionMessage = messageReaction;
     }
 
+}
+
+function reactionRemoveChecker(messageReaction, user) {
+        if (messageReaction.emoji.name == "1⃣") {
+        poll1Count = poll1Count - 1
+        console.log("poll count 1: " + poll1Count);
+        } else if (messageReaction.emoji.name == "2⃣") {
+        poll2Count = poll2Count - 1
+        console.log("poll count 2: " + poll2Count);
+        }
+        
+        console.log("reaction removed")
+        reactionMessage = messageReaction;
 }
 
 function aestTime() {
@@ -387,10 +404,12 @@ function messageChecker(oldMessage, newMessage) {
             //This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
             //Check for spam in a single message
             if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
+				caughtSpam = true;
                 message.delete()
                 return;
             } else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)) !== undefined) {
                 if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) == true) {
+				ignoreMessage = true;
                 message.delete()
                 return;
             }
@@ -400,7 +419,7 @@ function messageChecker(oldMessage, newMessage) {
 
             if ((expletiveFilter && message.guild.id == 196793479899250688)) {
                 //Check for expletives
-                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
+                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucks|fuckin|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
                 if (exp != -1) { //Gah! They're not supposed to say that!
                     console.log("▲ Expletive caught at " + parseInt(exp));
                     switch (Math.floor(Math.random() * 1000) % 21) {
@@ -469,6 +488,7 @@ function messageChecker(oldMessage, newMessage) {
                             break;
                     }
                     doNotDelete = false;
+					caughtSwear = true;
                     message.delete();
                     return;
                 }
@@ -514,7 +534,7 @@ function messageChecker(oldMessage, newMessage) {
                                     break;
                             }
                             doNotDelete = false;
-                            message.delete();
+							message.delete();
                             return;
                         }
                     }
@@ -728,7 +748,7 @@ function messageChecker(oldMessage, newMessage) {
                 
                     if (message.channel.name !== "music") {
                         message.delete();
-                        message.reply(":no_entry_sign: **NOPE:** You can only do music commands in the music channel.");
+                        message.reply(":no_entry_sign: **NOPE:** You can only do music commands in the #music channel.");
                         return;
                     }   
                     
@@ -808,8 +828,7 @@ function messageChecker(oldMessage, newMessage) {
                                     
                                     console.log("Index[" + i + "]");
                                     console.log("Queue length = " + queue.length)
-                                    //THIS WORKS PERFECTLY, EXCEPT AT THE START WHEN IT RETURNS 2 INSTEAD OF 1, INVESTIGATE MORE.
-                                    //TRY TO DEBUG THIS MORE AS SOMETIMES THE ORDERING ISNT CORRECT AND LIKE STATED BEFORE FIRST USE IS SKETCHY
+                            
                                     console.log("tosend.push = " + tosend);
                                     console.log("tosend.length = " + tosend.length);
                                     
@@ -1133,6 +1152,7 @@ function messageChecker(oldMessage, newMessage) {
                         "along with this program.  If not, see <http://www.gnu.org/licenses/>"
                     );
                     commandProcessed = true;
+					message.delete();
                     break;
                 case "warranty":
                     doNotDelete = false;
@@ -1143,6 +1163,7 @@ function messageChecker(oldMessage, newMessage) {
                         "GNU General Public License for more details.\n"
                     );
                     commandProcessed = true;
+					message.delete();
                     break;
                 case "egg":
                     doNotDelete = true;
@@ -2040,24 +2061,30 @@ function messageChecker(oldMessage, newMessage) {
                                 pollm = pollm.trim();
                             }
                             message.delete();
-                            message.channel.send(":information_source: A poll has just been created! \n" + ":writing_hand: **" + pollm + "**\n:white_check_mark: Cast your votes to the poll by using reactions on this message!");
+                            message.channel.send(":information_source: A poll has just been created! \n" + ":writing_hand: **" + pollm + "**\n:white_check_mark: Cast your votes to the poll by using the reactions ':one:' or ':two:' on this message!");
                             // Commented out to try and find solution.
 
                         } else if (command.startsWith("endpoll")) {
                             message.channel.send(":information_source: Here are the results:\n:one: **-** " + poll1Count + "\n:two: **-** " + poll2Count);
                             console.log("▲ Poll has ended.");
+                            poll1Count = 0;
+                            poll2Count = 0;
                             message.delete();
                         } else if (command.startsWith("reward")) {
                             doNotDelete = true;
                             
-                            command = command.substr(10);
+                            command = command.substr(7);
                             command = command.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
                             message.guild.fetchMember(command).then(function(member) {
-   
-                                    message.channel.send("Congratulations " + member.displayName + "! You get a gold star.");
-                                    member.lastMessageID.react('⭐');
-                                    });      
+									console.log(member.lastMessageID);
+                                    message.channel.send(":tada: Congratulations **" + member.displayName + "**! You get a gold star.");
+									message.channel.fetchMessage(member.lastMessageID)
+										.then(rmessage => {
+									console.log(rmessage);
+									rmessage.react('⭐');
+                                    });  
+								}); 
                             
                         } else if (command.startsWith("setgame") && commandSetgame == "on") {
                             if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
@@ -2229,9 +2256,8 @@ function messageChecker(oldMessage, newMessage) {
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
-client.on('messageReactionAdd', reactionChecker);
-
-
+client.on('messageReactionRemove', reactionRemoveChecker);
+client.on('messageReactionAdd', reactionAddChecker);
 
 client.on('guildMemberAdd', function(guildMember) {
     if (guildMember.guild.id == 196793479899250688) {
@@ -2338,24 +2364,81 @@ client.on('messageDelete', function(message) {
     var channel = null;
 
     if (message.guild != null) {
+		
+		if (message.guild.id == 196793479899250688) { //General chat for testbot
+            channel = client.channels.get("229575537444651009");
+		}
+		
         if (panicMode[message.guild.id]) return; //Don't want to be doing this in panic mode!
         if (botDelMessage[message.guild.id]) return;
         if (message.author.id == 303017211457568778) return;
         if (message.author.id == 155149108183695360) return; //Dyno
+		if (ignoreMessage) return;
+		
+		console.log(caughtSpam);
+		console.log(caughtSwear);
+		
+		if (caughtSpam == true) {
+			caughtSpam = false;
+			
+			embed = new Discord.RichEmbed("spamming");
+			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+			embed.setColor("#e08743");
+			embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
+			
+			var date = new Date();
+			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
 
-        if (message.guild.id == 196793479899250688) { //General chat for testbot
-            channel = client.channels.get("229575537444651009");
-        }
-        
-        if (channel != null) {
+			var msg = message.cleanContent;
+			embed.addField("**Message**", msg);
+			
+			var msg = "Duplicated words/letters.\n";
+			embed.addField("**Reason**", msg);
+
+			embed.setFooter(dateString);
+			client.channels.get("229575537444651009").sendEmbed(embed);
+		} else if (caughtSwear == true) {
+			caughtSwear = false;
+			
+			embed = new Discord.RichEmbed("swearing");
+			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+			embed.setColor("#e08743");
+			embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
+			
+			var date = new Date();
+			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+			var msg = message.cleanContent;
+			embed.addField("**Message**", msg);
+			
+			var msg = "Expletives found in message.\n";
+			embed.addField("**Reason**", msg);
+
+			embed.setFooter(dateString);
+			client.channels.get("229575537444651009").sendEmbed(embed);
+			return;
+			
+        } else if (channel != null) {
             if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                 return;
             } else {
-            channel.sendMessage(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> at " + message.createdAt.toDateString() + ", " + message.createdAt.toLocaleTimeString() + " was deleted.\n" +
-                "```\n" +
-                message.cleanContent + "\n" +
-                "```"
-            );
+            embed = new Discord.RichEmbed("manual");
+			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+			embed.setColor("#e08743");
+			embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
+			
+			var date = new Date();
+			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+			var msg = message.cleanContent;
+			embed.addField("**Message**", msg);
+			
+			var msg = "Message deleted by user.\n";
+			embed.addField("**Reason**", msg);
+
+			embed.setFooter(dateString);
+			client.channels.get("229575537444651009").sendEmbed(embed);
+			return;
             }
         }
     }
@@ -2387,14 +2470,23 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
             if (oldMessage.member.roles.find("name", "Fleece Police") || oldMessage.member.roles.find("name", "Head of the Flock")) {
                 return;
             } else {
-            channel.sendMessage(":pencil2: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> at " + oldMessage.createdAt.toDateString() + ", " + oldMessage.createdAt.toLocaleTimeString() + " was edited.\n" +
-                "**Original Content** ```\n" +
-                oldMessage.cleanContent + "\n" +
-                "```" +
-                "**Edited Content** ```\n" +
-                newMessage.cleanContent + "\n" +
-                "```\n"
-            );
+            embed = new Discord.RichEmbed("spamming");
+			embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.username + "#" + oldMessage.member.user.discriminator, oldMessage.member.user.displayAvatarURL);
+			embed.setColor("#f4c242");
+			embed.setDescription(":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n")
+			
+			var date = new Date();
+			var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+			var msg = oldMessage.cleanContent;
+			embed.addField("**Old Content**", msg);
+			
+			var msg = newMessage.cleanContent;
+			embed.addField("**New Content**", msg);
+
+			embed.setFooter(dateString);
+			client.channels.get("229575537444651009").sendEmbed(embed);
+			return;
             }
         }
     }
