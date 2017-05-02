@@ -4,8 +4,17 @@ function warningIcon(guild) {
     return ":warning:";
 }
 
+	if (message.author.id == "246574843460321291") {
+	message.channel.send('Pinging...').then(sent => {
+		sent.edit((warningIcon(message.guild)) + ` **PING!** Xail Bot took **__${sent.createdTimestamp - message.createdTimestamp}ms__** to respond.`);
+	});
+	return;
+	}
+	
+
 doNotDelete = true;
 switch (Math.floor(Math.random() * 1000) % 5) {
+	
 	case 0:
 		message.channel.send(warningIcon(message.guild) + ' **PING!** Pings are also cool!');
 		break;
