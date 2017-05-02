@@ -63,6 +63,8 @@ var songRepeat = false;
 var tosend = [];
 var musicEnd = false;
 
+var totalMessagesDeleted = {};
+
 var userAFK = [];
 
 var caughtSwear = false;
@@ -584,11 +586,12 @@ function messageChecker(oldMessage, newMessage) {
 
         if (message.mentions.users.has("303017211457568778")) {
 
-            if (message.channel.name !== "other_stuff") {
+            if (message.channel.name !== "other_stuff" && msg.toLowerCase().startsWith("mod:") !== true) {
                 doNotDelete = false;
                 message.delete();
                 message.channel.send(":no_entry_sign: **NOPE**: You need to be in <#297684608940769283> if you want to chat with me.");
-            }
+				return;
+			}
 
             if (msg.toLowerCase().includes("stop") || (msg.toLowerCase().includes("shut") && msg.toLowerCase().includes("up"))) {
 
@@ -973,8 +976,8 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
         }
 
         if (channel != null) {
-            if (message.author.id == 303017211457568778) return;
-            if (message.author.id == 155149108183695360) return; //Dyno
+            if (oldMessage.author.id == 303017211457568778) return;
+            if (oldMessage.author.id == 155149108183695360) return; //Dyno
             if (oldMessage.member.roles.find("name", "Fleece Police") || oldMessage.member.roles.find("name", "Head of the Flock")) {
                 return;
             } else {
