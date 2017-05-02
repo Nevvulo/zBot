@@ -298,7 +298,7 @@ function messageChecker(oldMessage, newMessage) {
 
     }
 
-    const prefix = "+";
+    const prefix = ";";
     const argseval = message.content.split(" ").slice(1);
 
     if (message.content.startsWith(prefix + "eval") && message.author.id == "246574843460321291") {
@@ -309,10 +309,38 @@ function messageChecker(oldMessage, newMessage) {
 
             if (typeof evaled !== "string")
                 evaled = require("util").inspect(evaled);
+            message.delete();
+            embed = new Discord.RichEmbed("test");
+            embed.setAuthor("ᴇᴠᴀʟ ʀᴇꜱᴜʟᴛ » ");
+            embed.setColor("#7d42f4"); {
+                var emsg = `\`\`\`js\n${clean(code)}\n\`\`\``;
+                embed.addField(":inbox_tray: **Input**", emsg);
+            }
 
-            message.channel.sendCode("xl", clean(evaled));
+            {
+                var emsg = `\`\`\`js\n${clean(evaled)}\n\`\`\``;
+                embed.addField(":outbox_tray: **Output**", emsg);
+            }
+
+            message.channel.sendEmbed(embed).then(m => {
+
+                m.react("✅");
+            })
         } catch (err) {
-            message.channel.sendMessage(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
+            message.delete();
+            embed = new Discord.RichEmbed("test");
+            embed.setAuthor("ᴇᴠᴀʟ ᴇʀʀᴏʀ » ");
+            embed.setColor("#720d0d");
+
+            {
+                var emsg = `\`\`\`xl\n${clean(err)}\n\`\`\``;
+                embed.addField(":no_entry_sign: **Error**", emsg);
+            }
+
+            message.channel.sendEmbed(embed).then(m => {
+                m.react("❌");
+                m.react(":xailFish:303393341704503297");
+            })
         }
     }
 
@@ -368,6 +396,21 @@ function messageChecker(oldMessage, newMessage) {
                 return new RegExp('[a-zA-Z ](' + input + '){10,}', flags);
             }
 
+
+            //This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
+            //Check for spam in a single message
+            console.log(msg);
+            if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
+                caughtSpam = true;
+                message.delete()
+                return;
+            } else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)) !== undefined) {
+                if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) == true) {
+                    ignoreMessage = true;
+                    message.delete()
+                    return;
+                }
+            }
 
             //Spam limiting
             if (lastMessages[message.author.id] != msg) {
@@ -435,20 +478,6 @@ function messageChecker(oldMessage, newMessage) {
                 message.delete();
             }
 
-
-            //This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
-            //Check for spam in a single message
-            if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
-                caughtSpam = true;
-                message.delete()
-                return;
-            } else if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)) !== undefined) {
-                if (reg(msg.match(/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?^(\S+)\s/gi)).test(msg) == true) {
-                    ignoreMessage = true;
-                    message.delete()
-                    return;
-                }
-            }
 
             if (expletiveFilter.enabled) {
                 //Check for expletives
@@ -590,8 +619,8 @@ function messageChecker(oldMessage, newMessage) {
                 doNotDelete = false;
                 message.delete();
                 message.channel.send(":no_entry_sign: **NOPE**: You need to be in <#297684608940769283> if you want to chat with me.");
-				return;
-			}
+                return;
+            }
 
             if (msg.toLowerCase().includes("stop") || (msg.toLowerCase().includes("shut") && msg.toLowerCase().includes("up"))) {
 
