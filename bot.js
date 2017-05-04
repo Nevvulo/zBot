@@ -25,6 +25,8 @@ const api = require('./keys.js');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
 const yt = require('ytdl-core');
+//This is just to make the console look fancier
+var colors = require('colors');
 
 const rl = readline.createInterface({
     input: fs.createReadStream('settings.txt')
@@ -33,7 +35,9 @@ const rl = readline.createInterface({
 const expletiveFilter = require('./commands/moderator/filter.js');
 const doModeration = require('./commands/moderator/mod.js');
 const panicMode = require('./commands/moderator/panic.js');
+const debug = require('./commands/debug/toggle.js');
 
+var npToggle = false;
 var lastMessages = {};
 var sameMessageCount = {};
 var smallMessageCount = {};
@@ -72,53 +76,7 @@ var caughtSpam = false;
 var caughtLink = false;
 var ignoreMessage = false;
 
-var commandMod = "on";
-var commandFilter = "off";
-var commandRm = "off";
-var commandUinfo = "off";
-var commandWarn = "off";
-var commandBan = "off";
-var commandSay = "off";
-var commandSetgame = "off";
-var commandPanic = "off";
-var commandCancel = "off";
-var commandHelp = "off";
-var capsFilter = "off";
-
-console.log('● Settings ●');
-console.log("");
-console.log('● You can change these settings as you want in "settings.txt".');
-
 doModeration[196793479899250688] = true;
-
-rl.on('line', function(line) {
-    console.log("» " + line);
-    if (line.includes("mod:on")) {
-        commandMod = "on"
-    } else if (line.includes("filter:on")) {
-        commandFilter = "on"
-    } else if (line.includes("rm:on")) {
-        commandRm = "on"
-    } else if (line.includes("uinfo:on")) {
-        commandUinfo = "on"
-    } else if (line.includes("warn:on")) {
-        commandWarn = "on"
-    } else if (line.includes("ban:on")) {
-        commandBan = "on"
-    } else if (line.includes("say:on")) {
-        commandSay = "on"
-    } else if (line.includes("setgame:on")) {
-        commandSetgame = "on"
-    } else if (line.includes("panic:on")) {
-        commandPanic = "on"
-    } else if (line.includes("cancel:on")) {
-        commandCancel = "on"
-    } else if (line.includes("help:on")) {
-        commandHelp = "on"
-    } else if (line.includes("capsfilter:on")) {
-        capsFilter = "on"
-    }
-});
 
 function setGame() {
     var presence = {};
@@ -225,49 +183,6 @@ function clean(text) {
         return text;
 }
 
-
-function reactionAddChecker(messageReaction, user) {
-    if (messageReaction.message.author.id == 303017211457568778 && messageReaction.message.content.includes("poll") && messageReaction.message.content.includes("created")) {
-        console.log(messageReaction.emoji.name);
-        if (messageReaction.emoji.name == "1⃣") {
-            poll1Count = poll1Count + 1
-            console.log("poll count 1: " + poll1Count);
-        } else if (messageReaction.emoji.name == "2⃣") {
-            poll2Count = poll2Count + 1
-            console.log("poll count 2: " + poll2Count);
-        }
-
-        var reactionAdd = function() {
-            return poll1Count + " " + poll2Count;
-        };
-
-        exports.reactionAdd = reactionAdd;
-
-        console.log("reaction added")
-        reactionMessage = messageReaction;
-    }
-
-}
-
-function reactionRemoveChecker(messageReaction, user) {
-    if (messageReaction.emoji.name == "1⃣") {
-        poll1Count = poll1Count - 1
-        console.log("poll count 1: " + poll1Count);
-    } else if (messageReaction.emoji.name == "2⃣") {
-        poll2Count = poll2Count - 1
-        console.log("poll count 2: " + poll2Count);
-    }
-
-    var reactionRemove = function() {
-        return poll1Count + " " + poll2Count;
-    };
-
-    exports.reactionRemove = reactionRemove;
-
-    console.log("reaction removed")
-    reactionMessage = messageReaction;
-}
-
 function aestTime() {
     var localtime = new Date();
 
@@ -298,6 +213,64 @@ function messageChecker(oldMessage, newMessage) {
 
     }
 
+	
+	if (debug.debugEnabled == true) {
+	if (message.content.startsWith("debug.ToggleNowPlaying")) {
+		message.delete();
+		if (npToggle == true) {
+			npToggle = false;
+			exports.npEnabled = true;
+			embed = new Discord.RichEmbed("test");
+            embed.setAuthor("ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴠᴇ ᴛᴏᴏʟꜱ");
+            embed.setColor("#f4bf42"); {
+			message.channel.send();
+			var emsg = ":white_check_mark: **Music: Now Playing function** has been toggled *on*.";
+                embed.addField("Function toggled", emsg);
+			}
+			message.channel.sendEmbed(embed);
+		} else {
+			npToggle = true;
+			exports.npEnabled = false;
+			embed = new Discord.RichEmbed("test");
+            embed.setAuthor("ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴠᴇ ᴛᴏᴏʟꜱ");
+            embed.setColor("#f4bf42"); {
+			var fmsg = ":white_check_mark: **Music: Now Playing function** has been toggled *off*.";
+                embed.addField("Function toggled", fmsg);
+			}
+			message.channel.sendEmbed(embed);
+		}
+	
+	} else if (message.content.startsWith("debug.ListModerators")) {
+		embed = new Discord.RichEmbed("test");
+            embed.setAuthor("ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴠᴇ ᴛᴏᴏʟꜱ");
+            embed.setColor("#f4bf42"); {
+			var emsg = ":white_check_mark: Currently there are **" + message.guild.roles.get("268886465927315457").members.size + "** members with the 'Fleece Police' role (meaning they are moderators).\n";
+                embed.addField("Current list of moderators", emsg);
+			}
+			message.channel.sendEmbed(embed);
+		} 
+		
+		else if (message.content.startsWith("debug.BotInfo")) {
+		embed = new Discord.RichEmbed("test");
+            embed.setAuthor("ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴠᴇ ᴛᴏᴏʟꜱ");
+            embed.setColor("#f4bf42"); {
+			
+			var uptime = Math.round(client.uptime / 60000);
+			var minOrHour = "minutes";
+			
+			if (client.uptime > 3600000) {
+			uptime = Math.round(client.uptime / 600000);
+			minOrHour = "hours";
+			}
+			
+			var emsg = "**Uptime**: " + uptime + " " + minOrHour + "\n**Logged in as user:** " + client.user.username;
+                embed.addField("Bot Debug Information", emsg);
+			}
+			message.channel.sendEmbed(embed);
+		}
+	}
+	
+	
     const prefix = ";";
     const argseval = message.content.split(" ").slice(1);
 
@@ -358,7 +331,7 @@ function messageChecker(oldMessage, newMessage) {
 
     if (botDelMessage) {
         if (message.author.id == "303017211457568778" && doNotDelete == false) {
-            console.log("▲ Bot is about to delete: " + message)
+            console.log(colors.yellow("▲ Bot is about to delete: " + colors.grey(message)));
             message.delete(10000)
         }
     }
@@ -399,7 +372,8 @@ function messageChecker(oldMessage, newMessage) {
 
             //This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
             //Check for spam in a single message
-            console.log(msg);
+            console.log(colors.gray("MESSAGE: " + message.author.username + " » " + msg));
+			
             if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
                 caughtSpam = true;
                 message.delete()
@@ -429,7 +403,7 @@ function messageChecker(oldMessage, newMessage) {
                 message.delete();
             } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
                 doNotDelete = false;
-                console.log("▲ Spam limits kicking in!");
+                console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
                 switch (Math.floor(Math.random() * 1000) % 5) {
                     case 0:
                         message.reply("Well... We all heard you.");
@@ -458,7 +432,7 @@ function messageChecker(oldMessage, newMessage) {
             } else if (smallMessageCount[message.author.id] > 6) {
                 message.delete();
             } else if (smallMessageCount[message.author.id] > 5) {
-                console.log("▲ Spam limits kicking in!");
+                console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
                 doNotDelete = false;
                 switch (Math.floor(Math.random() * 1000) % 4) {
                     case 0:
@@ -483,7 +457,7 @@ function messageChecker(oldMessage, newMessage) {
                 //Check for expletives
                 var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucks|fuckin|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
                 if (exp != -1) { //Gah! They're not supposed to say that!
-                    console.log("▲ Expletive caught at " + parseInt(exp));
+                    console.log(colors.bold(colors.yellow("▲ Expletive caught at " + parseInt(exp))));
                     switch (Math.floor(Math.random() * 1000) % 21) {
                         case 0:
                             message.reply("I'm very disappointed in you. :angry:");
@@ -568,13 +542,13 @@ function messageChecker(oldMessage, newMessage) {
                 if (exp != -1) { //This is a link.
                     if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {
 
-                    } else if (message.channel.name == "self_promos_and_shoutouts" || message.channel.name == "music" || message.channel.name == "bot_testing") {
+                    } else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing") {
 
                     } else if (msg.toLowerCase().includes("https://twitch.tv/xailran") || msg.toLowerCase().includes("https://www.youtube.com")) {
 
                     } else {
                         caughtLink = true;
-                        console.log("Link caught at " + parseInt(exp));
+                        console.log(colors.yellow(colors.bold("Link caught at " + parseInt(exp))));
                         switch (Math.floor(Math.random() * 1000) % 6) {
                             case 0:
                                 message.reply("I've replaced your link with a not-so-link-like link: click here");
@@ -748,11 +722,14 @@ function messageChecker(oldMessage, newMessage) {
         var command = msg.substr(4).split(" ").slice(0, 1);
         var args = msg.split(" ").slice(1);
 
+		console.log(colors.bold(colors.bgBlue(colors.white(message.author.username + " issued command " + command))));
+		
         try {
             let commandFile = require(`./commands/${command}.js`);
             commandFile.run(client, message, args);
         } catch (err) {
-            console.error(err);
+			console.error(colors.bold(colors.bgRed(colors.white(err))));
+            console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
         }
     }
 
@@ -761,15 +738,39 @@ function messageChecker(oldMessage, newMessage) {
             var command = msg.substr(4).split(" ").slice(0, 1);
             var args = msg.split(" ").slice(1);
 
+			console.log(colors.bold(colors.bgBlue(colors.yellow(message.author.username + " issued moderator command " + command))));
+			
             try {
                 let commandFile = require(`./commands/moderator/${command}.js`);
                 commandFile.run(client, message, args);
             } catch (err) {
-                console.error(err);
+                console.error(colors.bold(colors.bgRed(colors.white(err))));
+				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
             }
         } else {
             doNotDelete = false;
             message.reply(':no_entry_sign: **NOPE:** What? You\'re not a member of the staff! Why would you be allowed to type that!?');
+            message.delete();
+        }
+    }
+	
+	    if (msg.toLowerCase().startsWith("debug:")) {
+        if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
+            var command = msg.substr(6).split(" ").slice(0, 1);
+            var args = msg.split(" ").slice(1);
+
+			console.log(colors.bold(colors.bgBlue(colors.red(message.author.username + " issued debug command " + command))));
+			
+            try {
+                let commandFile = require(`./commands/debug/${command}.js`);
+                commandFile.run(client, message, args);
+            } catch (err) {
+                console.error(colors.bold(colors.bgRed(colors.white(err))));
+				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+            }
+        } else {
+            doNotDelete = false;
+            message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
             message.delete();
         }
     }
@@ -778,8 +779,6 @@ function messageChecker(oldMessage, newMessage) {
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
-client.on('messageReactionRemove', reactionRemoveChecker);
-client.on('messageReactionAdd', reactionAddChecker);
 
 client.on('guildMemberAdd', function(guildMember) {
     if (guildMember.guild.id == 196793479899250688) {
@@ -813,7 +812,7 @@ client.on('guildMemberRemove', function(guildMember) {
         channel = client.channels.get("247177027839459338");
 
         embed = new Discord.RichEmbed("info");
-        embed.setAuthor("ᴜꜱᴇʀ ʟᴇꜰᴛ » " + guildMember.displayName, guildMember.user.displayAvatarURL);
+        embed.setAuthor("ᴜꜱᴇʀ ʀᴇᴍᴏᴠᴇᴅ » " + guildMember.displayName, guildMember.user.displayAvatarURL);
         embed.setColor("#d16c2e");
 
         var msg = guildMember.displayName + "#" + guildMember.user.discriminator + "\n"
@@ -991,7 +990,7 @@ client.on('messageDeleteBulk', function(messages) {
     channel = client.channels.get("229575537444651009");
 
     if (channel != null) {
-        console.log("▲ " + numDel + " messages deleted using mod:rm.");
+		console.log(colors.bold(colors.yellow("▲ " + numDel + " messages deleted using mod:rm.")));
     }
 
 });
@@ -1033,11 +1032,11 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 });
 
 process.on("unhandledRejection", err => {
-    console.error("[UNCAUGHT PROMISE] " + err.stack);
+    console.error(colors.bold(colors.bgRed(colors.white("[UNCAUGHT PROMISE] " + err.stack))));
 });
 
 
 client.login(api.key()).catch(function() {
-    console.log("[ERROR] Login failed.");
+    console.log(colors.bold(colors.bgRed(colors.white("[ERROR] Login failed."))));
     console.log(api.key);
 });
