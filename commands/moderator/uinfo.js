@@ -97,7 +97,7 @@ input: fs.createReadStream('./punishment tracker.csv')
 			if (member.presence.status == "online") {
 				msg += "**Presence** » *Online*";
 			} else if (member.presence.status == "offline") {
-				msg += "**Presence** » *Offline*";
+				msg += "**Presence** » *Invisible / Offline*";
 			} else if (member.presence.status == "idle") {
 				msg += "**Presence** » *Idle*";
 			} else if (member.presence.status == "dnd") {
@@ -107,6 +107,31 @@ input: fs.createReadStream('./punishment tracker.csv')
 			embed.addField("Identification", msg);
 			}
 			
+			{
+			msg = null;	
+			
+			if (member.selfMute == true) {
+			var msg = "This user is **self-muted**.\n";	
+			} 
+			
+			if (member.selfDeaf == true) {
+			msg += "This user is **self-deafened**.\n";	
+			} 
+			
+			if (member.serverMute == true) {
+			msg += "This user is **server-muted**.\n";	
+			}
+			
+			if (member.serverDeaf == true) {
+			msg += "This user is **server-deafened**.\n";	
+			}
+			
+			if (msg == null || undefined) {
+			var msg = "No extra information.\n";
+			}
+			
+			embed.addField("More Information", msg);
+			}
 		
 			embed.setFooter("User ID: " + member.user.id);
 			message.channel.sendEmbed(embed);
