@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+var colors = require('colors');
 
 var moderatorMute = {};
 var muteReason = {};
@@ -15,7 +16,7 @@ muteConfirm = false;
 doNotDelete = true;
 			message.guild.fetchMember(muteMember).then(function(member) {
 				embed = new Discord.RichEmbed("mute");
-				embed.setAuthor("???? �  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+				embed.setAuthor("ᴍᴜᴛᴇ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
 				embed.setColor("#983bef");
 
 				var date = new Date();
@@ -31,7 +32,7 @@ doNotDelete = true;
 				}))
 				writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Mute", moderatorMute.username, muteReason])
 				writer.end()
-				console.log("? Successfully wrote mute for user '" + member.displayName + "' to CSV file.")
+				console.log(colors.green("* Successfully wrote mute for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
 				var msg = muteMember + "\n";
 				embed.addField("**User**", msg);
@@ -50,7 +51,7 @@ doNotDelete = true;
 
 				muteMember.sendMessage(":warning: You have just been muted on Rainbow Gaming. Your ability to talk in voice/text channels has been revoked.");
 				embeduser = new Discord.RichEmbed("mute-for-user");
-				embeduser.setAuthor("???? �  " + muteMember.displayName + "#" + muteMember.user.discriminator, muteMember.user.displayAvatarURL);
+				embeduser.setAuthor("ᴍᴜᴛᴇ » " + muteMember.displayName + "#" + muteMember.user.discriminator, muteMember.user.displayAvatarURL);
 				embeduser.setColor("#983bef");
 				var msg = muteReason + "\n";
 				embeduser.addField("**Reason**", msg);

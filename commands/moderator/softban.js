@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+var colors = require('colors');
 
 var banReason = {};
 var moderatorBan = {};
@@ -13,7 +14,7 @@ exports.run = (client, message, args) => {
 if (softbanConfirm == true) {
 message.guild.fetchMember(banMember).then(function(member) {
 	embed = new Discord.RichEmbed("softban");
-	embed.setAuthor("??????? �  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+	embed.setAuthor("sᴏғᴛʙᴀɴ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
 	embed.setColor("#e08743");
 
 	var date = new Date();
@@ -29,7 +30,7 @@ message.guild.fetchMember(banMember).then(function(member) {
 	}))
 	writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Softban", moderatorBan, banReason])
 	writer.end()
-	console.log("? Successfully wrote softban for user '" + member.displayName + "' to CSV file.")
+	console.log(colors.green("* Successfully wrote softban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
 	var msg = banMember + "\n";
 	embed.addField("**User**", msg);
@@ -44,7 +45,7 @@ message.guild.fetchMember(banMember).then(function(member) {
 
 	banMember.sendMessage(":warning: You have been softbanned from Rainbow Gaming.");
 	embeduser = new Discord.RichEmbed("ban-for-user");
-	embeduser.setAuthor("??? �  " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
+	embeduser.setAuthor("sᴏғᴛʙᴀɴ » " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
 	embeduser.setColor("#e08743");
 	var msg = banReason + "\n";
 	embeduser.addField("**Reason**", msg);
@@ -54,7 +55,7 @@ message.guild.fetchMember(banMember).then(function(member) {
 
 	banMember.sendEmbed(embeduser);
 
-	message.guild.ban(banMember, 7);
+	message.guild.ban(banMember, 7, banReason);
 	message.guild.unban(banMember);
 	message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully softbanned.");
 	client.channels.get("229575537444651009").sendEmbed(embed);

@@ -2,6 +2,8 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+const cancel = require('./cancel.js');
+var colors = require('colors');
 
 var moderatorWarn = {};
 var warnReason = {};
@@ -10,6 +12,7 @@ var warningCount = 0;
 var warnConfirm = false;
 
 exports.run = (client, message, args) => {
+	
     if (warnConfirm == true && warnMember !== null) {
         doNotDelete = true;
         warnConfirm = false;
@@ -28,11 +31,11 @@ exports.run = (client, message, args) => {
             }))
             writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Warning", moderatorWarn.username, warnReason])
             writer.end()
-            console.log("? Successfully wrote warning for user '" + member.displayName + "' to CSV file.")
+            console.log(colors.green("* Successfully wrote warning for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
 
             embed = new Discord.RichEmbed("warning");
-            embed.setAuthor("??????? �  " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+            embed.setAuthor("ᴡᴀʀɴɪɴɢ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
             embed.setColor("#E5C01D");
 
             var msg = warnMember + "\n";
@@ -52,7 +55,7 @@ exports.run = (client, message, args) => {
 
             warnMember.sendMessage(":warning: You have just received a warning on Rainbow Gaming.");
             embeduser = new Discord.RichEmbed("warn-for-user");
-            embeduser.setAuthor("??????? �  " + warnMember.displayName + "#" + warnMember.user.discriminator, warnMember.user.displayAvatarURL);
+            embeduser.setAuthor("ᴡᴀʀɴɪɴɢ » " + warnMember.displayName + "#" + warnMember.user.discriminator, warnMember.user.displayAvatarURL);
             embeduser.setColor("#E5C01D");
             var msg = warnReason + "\n";
             embeduser.addField("**Reason**", msg);

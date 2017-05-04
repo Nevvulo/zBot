@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+var colors = require('colors');
 
 var banReason = {};
 var moderatorBan = {};
@@ -9,13 +10,13 @@ var banMember = null;
 var banConfirm = false;
 
 exports.run = (client, message, args) => {
-
-    console.log(banConfirm);
+	message.delete();
+	
     if (banConfirm == true) {
         banConfirm = false;
         message.guild.fetchMember(banMember).then(function(member) {
             embed = new Discord.RichEmbed("ban");
-            embed.setAuthor("??? � " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
+            embed.setAuthor("ʙᴀɴ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
             embed.setColor("#af1c1c");
 
             var date = new Date();
@@ -31,7 +32,7 @@ exports.run = (client, message, args) => {
             }))
             writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Ban", moderatorBan, banReason])
             writer.end()
-            console.log("* Successfully wrote ban for user '" + member.displayName + "' to CSV file.")
+            console.log(colors.green("* Successfully wrote ban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
             var msg = banMember + "\n";
             embed.addField("**User**", msg);
@@ -46,7 +47,7 @@ exports.run = (client, message, args) => {
 
             banMember.sendMessage(":warning: You have been permanently banned from Rainbow Gaming.");
             embeduser = new Discord.RichEmbed("ban-for-user");
-            embeduser.setAuthor("??? �  " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
+            embeduser.setAuthor("ʙᴀɴ » " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
             embeduser.setColor("#af1c1c");
             var msg = banReason + "\n";
             embeduser.addField("**Reason**", msg);
@@ -58,7 +59,7 @@ exports.run = (client, message, args) => {
 
             message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully banned.");
             client.channels.get("229575537444651009").sendEmbed(embed);
-            message.guild.ban(banMember, 7);
+            message.guild.ban(banMember, 7, banReason);
             banMember = null;
 
         });
@@ -68,7 +69,6 @@ exports.run = (client, message, args) => {
     doNotDelete = true;
     if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
         doNotDelete = true;
-
         args = args.toString();
         args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
@@ -123,6 +123,4 @@ exports.run = (client, message, args) => {
     } else {
         message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
     }
-
-    message.delete();
 }
