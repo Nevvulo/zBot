@@ -74,6 +74,7 @@ var userAFK = [];
 var caughtSwear = false;
 var caughtSpam = false;
 var caughtLink = false;
+var caughtKYS = false;
 var ignoreMessage = false;
 
 doModeration[196793479899250688] = true;
@@ -216,6 +217,7 @@ function messageChecker(oldMessage, newMessage) {
 	
 	if (debug.debugEnabled == true) {
 	if (message.content.startsWith("debug.ToggleNowPlaying")) {
+		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
 		message.delete();
 		if (npToggle == true) {
 			npToggle = false;
@@ -239,8 +241,12 @@ function messageChecker(oldMessage, newMessage) {
 			}
 			message.channel.sendEmbed(embed);
 		}
+		} else {
+			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
+		}
 	
 	} else if (message.content.startsWith("debug.ListModerators")) {
+		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
 		embed = new Discord.RichEmbed("test");
             embed.setAuthor("ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴠᴇ ᴛᴏᴏʟꜱ");
             embed.setColor("#f4bf42"); {
@@ -248,9 +254,13 @@ function messageChecker(oldMessage, newMessage) {
                 embed.addField("Current list of moderators", emsg);
 			}
 			message.channel.sendEmbed(embed);
+		} else {
+			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
+		}
 		} 
 		
 		else if (message.content.startsWith("debug.BotInfo")) {
+			if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
 		embed = new Discord.RichEmbed("test");
             embed.setAuthor("ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴠᴇ ᴛᴏᴏʟꜱ");
             embed.setColor("#f4bf42"); {
@@ -267,7 +277,11 @@ function messageChecker(oldMessage, newMessage) {
                 embed.addField("Bot Debug Information", emsg);
 			}
 			message.channel.sendEmbed(embed);
+			} else {
+			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
 		}
+		}
+		
 	}
 	
 	
@@ -275,7 +289,7 @@ function messageChecker(oldMessage, newMessage) {
     const argseval = message.content.split(" ").slice(1);
 
     if (message.content.startsWith(prefix + "eval") && message.author.id == "246574843460321291") {
-
+		ignoreMessage = true;
         try {
             var code = argseval.join(" ");
             var evaled = eval(code);
@@ -395,13 +409,16 @@ function messageChecker(oldMessage, newMessage) {
 
             if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 6) {
                 var auth = message.author;
-                client.channels.get("229575537444651009").sendMessage(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
+                client.channels.get("229575537444651009").send(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
                 doNotDelete = false;
                 message.reply("Quite enough of this. I'm not warning you any more. A notification has been sent to the mods.");
-                message.delete();
+    			caughtSpam = true;
+				message.delete();
             } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 6) {
-                message.delete();
+				ignoreMessage = true;
+				message.delete();
             } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
+				ignoreMessage = true;
                 doNotDelete = false;
                 console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
                 switch (Math.floor(Math.random() * 1000) % 5) {
@@ -425,14 +442,17 @@ function messageChecker(oldMessage, newMessage) {
                 message.delete();
             } else if (smallMessageCount[message.author.id] == 6) {
                 var auth = message.author;
-                client.channels.get("229575537444651009").sendMessage(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
+                client.channels.get("229575537444651009").send(warningIcon(message.guild) + " **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
                 doNotDelete = false;
                 message.reply("Quite enough of this. I'm not warning you any more. A notification has been sent to the mods.");
-                message.delete();
+                caughtSpam = true;
+				message.delete();
             } else if (smallMessageCount[message.author.id] > 6) {
-                message.delete();
+                ignoreMessage = true;
+				message.delete();
             } else if (smallMessageCount[message.author.id] > 5) {
-                console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
+                ignoreMessage = true;
+				console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
                 doNotDelete = false;
                 switch (Math.floor(Math.random() * 1000) % 4) {
                     case 0:
@@ -448,7 +468,7 @@ function messageChecker(oldMessage, newMessage) {
                         message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
                         break;
                 }
-
+				
                 message.delete();
             }
 
@@ -893,9 +913,32 @@ client.on('messageDelete', function(message) {
         if (panicMode[message.guild.id]) return; //Don't want to be doing this in panic mode!
         if (message.author.id == 303017211457568778) return;
         if (message.author.id == 155149108183695360) return; //Dyno
-        if (ignoreMessage) return;
+        if (ignoreMessage) {
+		ignoreMessage = false;	
+		return;
+		}
+			
+		if (caughtKYS == true) {
+            caughtKYS = false;
 
-        if (caughtSpam == true) {
+            embed = new Discord.RichEmbed("spamming");
+            embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+            embed.setColor("#e08743");
+            embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
+
+            var date = new Date();
+            var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+            var msg = message.cleanContent;
+            embed.addField("**Message**", msg);
+
+            var msg = "Death threat contained in message.\n";
+            embed.addField("**Reason**", msg);
+
+            embed.setFooter(dateString);
+            client.channels.get("229575537444651009").sendEmbed(embed);
+		return;
+		} else if (caughtSpam == true) {
             caughtSpam = false;
 
             embed = new Discord.RichEmbed("spamming");
@@ -914,7 +957,7 @@ client.on('messageDelete', function(message) {
 
             embed.setFooter(dateString);
             client.channels.get("229575537444651009").sendEmbed(embed);
-
+		return;
         } else if (caughtSwear == true) {
             caughtSwear = false;
 
@@ -934,7 +977,7 @@ client.on('messageDelete', function(message) {
 
             embed.setFooter(dateString);
             client.channels.get("229575537444651009").sendEmbed(embed);
-
+		return;
         } else if (caughtLink == true) {
             caughtLink = false;
 
@@ -954,7 +997,7 @@ client.on('messageDelete', function(message) {
 
             embed.setFooter(dateString);
             client.channels.get("229575537444651009").sendEmbed(embed);
-
+		return;
         } else if (channel != null) {
             if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
                 return;
