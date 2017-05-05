@@ -998,31 +998,34 @@ client.on('messageDelete', function(message) {
             embed.setFooter(dateString);
             client.channels.get("229575537444651009").sendEmbed(embed);
 		return;
-        } else if (channel != null) {
-            if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
-                return;
-            } else {
-                embed = new Discord.RichEmbed("manual");
-                embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
-                embed.setColor("#e08743");
-                embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
-
-                var date = new Date();
-                var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
-
-                var msg = message.cleanContent;
-                embed.addField("**Message**", msg);
-
-                var msg = "Message manually deleted by user.\n";
-                embed.addField("**Reason**", msg);
-
-                embed.setFooter(dateString);
-                client.channels.get("229575537444651009").sendEmbed(embed);
-                return;
-            }
-        }
-    }
+		    }
+	}
 });
+	//Commented out to try and find fix.
+		
+       // } else if (channel != null) {
+       //     if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+       //         return;
+       //     } else {
+       //        embed = new Discord.RichEmbed("manual");
+       //         embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
+       //         embed.setColor("#e08743");
+       //         embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
+
+       //         var date = new Date();
+       //         var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
+       //         var msg = message.cleanContent;
+       //         embed.addField("**Message**", msg);
+
+       //         var msg = "Message manually deleted by user.\n";
+       //         embed.addField("**Reason**", msg);
+       //         embed.setFooter(dateString);
+       //         client.channels.get("229575537444651009").sendEmbed(embed);
+       //         return;
+       //     }
+       // }
+
 
 client.on('messageDeleteBulk', function(messages) {
     var channel = null;
