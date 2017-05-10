@@ -27,16 +27,19 @@ const csvWriter = require('csv-write-stream');
 const yt = require('ytdl-core');
 //This is just to make the console look fancier
 var colors = require('colors');
-
-const rl = readline.createInterface({
-    input: fs.createReadStream('settings.txt')
-});
+const replace = require("replace");
 
 const expletiveFilter = require('./commands/moderator/filter.js');
 const doModeration = require('./commands/moderator/mod.js');
 const panicMode = require('./commands/moderator/panic.js');
 const debug = require('./commands/debug/toggle.js');
 
+var newLevelReplace = {}
+var lineExists = {};
+var level = {};
+var levelExp = {};
+var oldLevelExp = {};
+var activityScore = {};
 var npToggle = false;
 var lastMessages = {};
 var sameMessageCount = {};
@@ -206,6 +209,8 @@ function messageChecker(oldMessage, newMessage) {
 
     if (message.guild == null) return;
 
+	exports.userAFK = userAFK;
+	
     if (message.mentions.users.size > 0 && message.author.bot == false) {
         if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
             message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while.");
@@ -214,6 +219,205 @@ function messageChecker(oldMessage, newMessage) {
 
     }
 
+	//Activity tracker
+	message.guild.fetchMember(message.author).then(function(member) {
+	if (message.author.bot) {
+		return;
+	}
+	const filter = message => message.author.id === member.user.id && member.user.bot == false;
+	message.channel.fetchMessages({ limit: 100 }).then(messages => {
+		const filteredMessages = messages.filter(filter);
+		var messageCount = filteredMessages.size;
+		activityScore[message.author.id] = filteredMessages.size / 10;
+		
+		exports.totalScore = activityScore[message.author.id];
+		exports.messageCount = messageCount;
+		
+
+		let experience = JSON.parse(fs.readFileSync('./statistics.json', 'utf8'));
+
+		  // if the experience don't exist, init to 0;
+		  if (!experience[message.author.id]) experience[message.author.id] = {
+			experience: 0,
+			level: 0
+		  };		
+			let userData = experience[message.author.id];
+		
+			userData.experience++;
+
+			if (message.content.toLowerCase().startsWith("bot:music")) {
+				//Add an extra point of experience if using music command.
+				userData.experience++;
+			}
+			
+			if (message.member.roles.find("name", "Subscribers")) {
+				//Double the experience rate if you are a subscriber.
+				userData.experience++;
+			}
+			
+			console.log(userData.experience);
+			
+			//Leveling up system
+			let levelUp = false;
+			let curLevel = experience[message.author.id].level;
+				if (userData.experience > 100 && curLevel == 0) {
+				curLevel = 1;
+				levelUp = true;
+				} else if (userData.experience > 250 && curLevel == 1) {
+					curLevel = 2;
+					levelUp = true;
+				} else if (userData.experience > 500 && curLevel == 2) {
+					curLevel = 3;
+					levelUp = true;
+				} else if (userData.experience > 750 && curLevel == 3) {
+					curLevel = 4;
+					levelUp = true;
+				} else if (userData.experience > 1000 && curLevel == 4) {
+					curLevel = 5;
+					levelUp = true;
+				} else if (userData.experience > 1250 && curLevel == 5) {
+					curLevel = 6;
+					levelUp = true;
+				} else if (userData.experience > 1500 && curLevel == 6) {
+					curLevel = 7;
+					levelUp = true;
+				} else if (userData.experience > 1750 && curLevel == 7) {
+					curLevel = 8;
+					levelUp = true;
+				} else if (userData.experience > 2000 && curLevel == 8) {
+					curLevel = 9;
+					levelUp = true;
+				} else if (userData.experience > 2500 && curLevel == 9) {
+					curLevel = 10;
+					levelUp = true;
+				} else if (userData.experience > 3000 && curLevel == 10) {
+					curLevel = 11;
+					levelUp = true;
+				} else if (userData.experience > 4000 && curLevel == 11) {
+					curLevel = 12;
+					levelUp = true;
+				} else if (userData.experience > 5000 && curLevel == 12) {
+					curLevel = 13;
+					levelUp = true;
+				} else if (userData.experience > 6000 && curLevel == 13) {
+					curLevel = 14;
+					levelUp = true;
+				} else if (userData.experience > 7000 && curLevel == 14) {
+					curLevel = 15;
+					levelUp = true;
+				} else if (userData.experience > 8000 && curLevel == 15) {
+					curLevel = 16;
+					levelUp = true;
+				} else if (userData.experience > 9001 && curLevel == 16) {
+					curLevel = 17;
+					levelUp = true;
+				} else if (userData.experience > 10000 && curLevel == 17) {
+					curLevel = 18;
+					levelUp = true;
+				} else if (userData.experience > 11000 && curLevel == 18) {
+					curLevel = 19;
+					levelUp = true;
+				} else if (userData.experience > 12000 && curLevel == 19) {
+					curLevel = 20;
+					levelUp = true;
+				}
+			  if (levelUp == true) {
+				// Level up!
+				levelUp = false;
+				userData.level = curLevel;
+				message.author.send(`:tada: You've leveled up to level **${curLevel}** on *Rainbow Gaming*!`);
+				
+				//Send an embed via DM's to notify user about level up
+				embed = new Discord.RichEmbed("levelup");
+				embed.setAuthor("ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ » " + member.user.tag);
+				embed.setColor("#f4bf42"); 
+				var msg = "From the *100* most recent messages, **" + messageCount + "** of them were created by *you*.";
+				embed.addField("**Message Count**", msg);
+
+				if (curLevel == 1) {
+					expToNextLevel = "250";
+					embed.setColor("#22447a"); 
+				} else if (curLevel == 2) {
+					expToNextLevel = "500";
+					embed.setColor("#274f8e"); 
+				} else if (curLevel == 3) {
+					expToNextLevel = "750";
+					embed.setColor("#2a5599"); 
+				} else if (curLevel == 4) {
+					expToNextLevel = "1000";
+					embed.setColor("#3162af"); 
+				} else if (curLevel == 5) {
+					expToNextLevel = "1250";
+					embed.setColor("#376fc6"); 
+				} else if (curLevel == 6) {
+					expToNextLevel = "1500";
+					embed.setColor("#3e7ee0"); 
+				} else if (curLevel == 7) {
+					expToNextLevel = "1750";
+					embed.setColor("#428cff"); 
+				} else if (curLevel == 8) {
+					expToNextLevel = "2000";
+					embed.setColor("#41b0ff"); 
+				} else if (curLevel == 9) {
+					expToNextLevel = "2500";
+					embed.setColor("#41c6ff"); 
+				} else if (curLevel == 10) {
+					expToNextLevel = "3000";
+					embed.setColor("#41d8ff"); 
+				} else if (curLevel == 11) {
+					expToNextLevel = "4000";
+					embed.setColor("#41ffb3"); 
+				} else if (curLevel == 12) {
+					expToNextLevel = "5000";
+					embed.setColor("#41ff73"); 
+				} else if (curLevel == 13) {
+					expToNextLevel = "6000";
+					embed.setColor("#41ff47"); 
+				} else if (curLevel == 14) {
+					expToNextLevel = "7000";
+					embed.setColor("#79ff41"); 
+				} else if (curLevel == 15) {
+					expToNextLevel = "8000";
+					embed.setColor("#b6ff41"); 
+				} else if (curLevel == 16) {
+					expToNextLevel = "9001";
+					embed.setColor("#dcff41"); 
+				} else if (curLevel == 17) {
+					expToNextLevel = "10000";
+					embed.setColor("#f4d238"); 
+				} else if (curLevel == 18) {
+					expToNextLevel = "11000";
+					embed.setColor("#efaf2f"); 
+				} else if (curLevel == 19) {
+					expToNextLevel = "12000";
+					embed.setColor("#ef882f"); 
+				} else if (curLevel == 20) {
+					expToNextLevel = "13000";
+					embed.setColor("#ef4b2f"); 
+				} else if (curLevel == 0) {
+					expToNextLevel = "100";
+					embed.setColor("#ef4b2f"); 
+				}
+
+				if (isNaN(curLevel)) {
+					message.channel.send(":no_entry_sign: **ERROR:** A critical error occured whilst attempting to perform this command. `(networkLevel is not a number.)`");
+				}
+				 
+				var msg = "You are currently level **" + curLevel + "** on *Rainbow Gaming*.\n\nYou currently have **" + userData.experience + "** experience, and need **" + parseInt(expToNextLevel - userData.experience) + "** more until you level up to level **" + parseInt(curLevel + 1) + "**.";
+				embed.addField("**Level**", msg);
+				message.author.sendEmbed(embed);
+			  }
+		  
+		  // And then, we save the edited file.
+		  fs.writeFile('./statistics.json', JSON.stringify(experience), (err) => {
+			if (err) console.error(err)
+		  });
+			exports.networkLevelExp = userData.experience;
+			exports.networkLevel = curLevel;
+
+	})
+	})
+	
 	
 	if (debug.debugEnabled == true) {
 	if (message.content.startsWith("debug.ToggleNowPlaying")) {
@@ -273,9 +477,11 @@ function messageChecker(oldMessage, newMessage) {
 			minOrHour = "hours";
 			}
 			
-			var emsg = "**Uptime**: " + uptime + " " + minOrHour + "\n**Logged in as user:** " + client.user.username;
+			let data = `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} / ${Math.round(process.memoryUsage().heapTotal / 1024)}MB`;
+			var emsg = "**Uptime**: " + uptime + " " + minOrHour + "\n**Logged in as user:** " + client.user.username + "\n**Memory Usage:** " + data;
                 embed.addField("Bot Debug Information", emsg);
 			}
+	
 			message.channel.sendEmbed(embed);
 			} else {
 			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
@@ -475,7 +681,7 @@ function messageChecker(oldMessage, newMessage) {
 
             if (expletiveFilter.enabled) {
                 //Check for expletives
-                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucks|fuckin|fucking|ass|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
+                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucks|fuckin|fucking|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
                 if (exp != -1) { //Gah! They're not supposed to say that!
                     console.log(colors.bold(colors.yellow("▲ Expletive caught at " + parseInt(exp))));
                     switch (Math.floor(Math.random() * 1000) % 21) {
@@ -741,7 +947,8 @@ function messageChecker(oldMessage, newMessage) {
 
         var command = msg.substr(4).split(" ").slice(0, 1);
         var args = msg.split(" ").slice(1);
-
+		
+		exports.commandIssuer = message.author.id;
 		console.log(colors.bold(colors.bgBlue(colors.white(message.author.username + " issued command " + command))));
 		
         try {
@@ -753,6 +960,8 @@ function messageChecker(oldMessage, newMessage) {
         }
     }
 
+	
+	
     if (msg.toLowerCase().startsWith("mod:")) {
         if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
             var command = msg.substr(4).split(" ").slice(0, 1);
@@ -913,6 +1122,7 @@ client.on('messageDelete', function(message) {
         if (panicMode[message.guild.id]) return; //Don't want to be doing this in panic mode!
         if (message.author.id == 303017211457568778) return;
         if (message.author.id == 155149108183695360) return; //Dyno
+        if (message.author.id == 184405311681986560) return; //FredBoat
         if (ignoreMessage) {
 		ignoreMessage = false;	
 		return;
@@ -1052,6 +1262,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
         if (channel != null) {
             if (oldMessage.author.id == 303017211457568778) return;
             if (oldMessage.author.id == 155149108183695360) return; //Dyno
+			if (oldMessage.author.id == 184405311681986560) return; //FredBoat
             if (oldMessage.member.roles.find("name", "Fleece Police") || oldMessage.member.roles.find("name", "Head of the Flock")) {
                 return;
             } else {
