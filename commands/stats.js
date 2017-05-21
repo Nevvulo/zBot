@@ -1,117 +1,155 @@
-const Discord = require('discord.js');
+const Canvas = require('canvas');
 const userStats = require('./../bot.js');
-const fs = require('fs');
-var colors = require('colors');
-var expToNextLevel = null;
+const path = require('path');
+const request = require('request-promise');
+const { promisifyAll } = require('tsubaki');
+var expToNextLevel = 0;
+const fs = promisifyAll(require('fs'));
+const sql = require('sqlite');
+sql.open('./score.sqlite');
 
 exports.run = (client, message, args) => {
-var maxLevel = false;
-let experience = JSON.parse(fs.readFileSync('./statistics.json', 'utf8'));
 args = args.toString();
 args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
-if (args == null || args == "" || args == " ") {
-args = userStats.commandIssuer;
-}	
-
-console.log(userStats.commandIssuer);
 message.guild.fetchMember(args.split(" ").toString()).then(function(member) {
+sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
 
-const filter = message => message.author.id === member.user.id && member.user.bot == false;
-	message.channel.fetchMessages({ limit: 100 }).then(messages => {
-		const filteredMessages = messages.filter(filter);
-		const messageCount = filteredMessages.size;
-console.log(messageCount);
-embed = new Discord.RichEmbed("test");
-embed.setAuthor("ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ » " + member.user.tag);
-embed.setColor("#f4bf42"); 
-console.log(messageCount);
-var msg = "From the *100* most recent messages, **" + messageCount + "** of them were created by *you*.";
-embed.addField("**Message Count**", msg);
+async function drawStats () {
+message.delete();	
 
-if (experience[message.author.id].level == 1) {
+if (`${row.level}` == 1) {
 	expToNextLevel = "250";
-	embed.setColor("#22447a"); 
-} else if (experience[message.author.id].level == 2) {
+} else if (`${row.level}` == 2) {
 	expToNextLevel = "500";
-	embed.setColor("#275ca5"); 
-} else if (experience[message.author.id].level == 3) {
+} else if (`${row.level}` == 3) {
 	expToNextLevel = "750";
-	embed.setColor("#2f6ac6"); 
-} else if (experience[message.author.id].level == 4) {
+} else if (`${row.level}` == 4) {
 	expToNextLevel = "1000";
-	embed.setColor("#3475db"); 
-} else if (experience[message.author.id].level == 5) {
+} else if (`${row.level}` == 5) {
 	expToNextLevel = "1250";
-	embed.setColor("#377be5"); 
-} else if (experience[message.author.id].level == 6) {
+} else if (`${row.level}` == 6) {
 	expToNextLevel = "1500";
-	embed.setColor("#448eff"); 
-} else if (experience[message.author.id].level == 7) {
+} else if (`${row.level}` == 7) {
 	expToNextLevel = "1750";
-	embed.setColor("#41a3ff"); 
-} else if (experience[message.author.id].level == 8) {
+} else if (`${row.level}` == 8) {
 	expToNextLevel = "2000";
-	embed.setColor("#56bbff"); 
-} else if (experience[message.author.id].level == 9) {
+} else if (`${row.level}` == 9) {
 	expToNextLevel = "2500";
-	embed.setColor("#41c6ff"); 
-} else if (experience[message.author.id].level == 10) {
+} else if (`${row.level}` == 10) {
 	expToNextLevel = "3000";
-	embed.setColor("#41e5ff"); 
-} else if (experience[message.author.id].level == 11) {
+} else if (`${row.level}` == 11) {
 	expToNextLevel = "4000";
-	embed.setColor("#41ffb3"); 
-} else if (experience[message.author.id].level == 12) {
+} else if (`${row.level}` == 12) {
 	expToNextLevel = "5000";
-	embed.setColor("#41ff73"); 
-} else if (experience[message.author.id].level == 13) {
+} else if (`${row.level}` == 13) {
 	expToNextLevel = "6000";
-	embed.setColor("#41ff47"); 
-} else if (experience[message.author.id].level == 14) {
+} else if (`${row.level}` == 14) {
 	expToNextLevel = "7000";
-	embed.setColor("#79ff41"); 
-} else if (experience[message.author.id].level == 15) {
+} else if (`${row.level}` == 15) {
 	expToNextLevel = "8000";
-	embed.setColor("#b6ff41"); 
-} else if (experience[message.author.id].level == 16) {
+} else if (`${row.level}` == 16) {
 	expToNextLevel = "9001";
-	embed.setColor("#dcff41"); 
-} else if (experience[message.author.id].level == 17) {
+} else if (`${row.level}` == 17) {
 	expToNextLevel = "10000";
-	embed.setColor("#f4d238"); 
-} else if (experience[message.author.id].level == 18) {
+} else if (`${row.level}` == 18) {
 	expToNextLevel = "11000";
-	embed.setColor("#efaf2f"); 
-} else if (experience[message.author.id].level == 19) {
+} else if (`${row.level}` == 19) {
 	expToNextLevel = "12000";
-	embed.setColor("#ef882f"); 
-} else if (experience[message.author.id].level == 20) {
+} else if (`${row.level}` == 20) {
 	expToNextLevel = "13000";
-	embed.setColor("#ef4b2f"); 
-} else if (experience[message.author.id].level == 0) {
+} else if (`${row.level}` == 0) {
 	expToNextLevel = "100";
-	embed.setColor("#53565b"); 
 }
 
-if (experience[message.author.id].level > 20) {
-	embed.setColor("#e02000"); 
-	maxLevel = true;
+if (`${row.level}` > 20) {
+expToNextLevel = "MAX";
 }
 
-if (messageCount < 1) {
-	message.channel.send(":no_entry_sign: **ERROR:** I couldn't retrieve your 'message count' from the most recent 100 messages. Sorry about that.");
+function fontFile (name) {
+  return path.join(__dirname, '..','/assets/', 'stats', 'fonts', name)
 }
 
-var msg = "You are currently level **" + experience[message.author.id].level + "** on *Rainbow Gaming*.\n\nYou currently have **" + experience[message.author.id].experience + "** experience, and need **" + parseInt(expToNextLevel - experience[message.author.id].experience) + "** more until you level up to level **" + parseInt(experience[message.author.id].level + 1) + "**.";
+Canvas.registerFont(fontFile('UniSansHeavy.ttf'), { family: "Uni Sans CAPS"}) // eslint-disable-line max-len
+Canvas.registerFont(fontFile('Roboto.ttf'), { family: 'Roboto'}) // eslint-disable-line max-len
+const Image = Canvas.Image;
 
-if (maxLevel == true) {
-var msg = "You are currently level **" + experience[message.author.id].level + "** on *Rainbow Gaming*.\nYou currently have **" + experience[message.author.id].experience + "** experience.\n:tada: **__You are at the maximum level! Congratulations!__**";
+var canvas = new Canvas(300, 120)
+var ctx = canvas.getContext('2d')
+const base = new Image();
+const cond = new Image();
+
+const generate = () => {
+// Environment Variables
+			ctx.drawImage(base, 0, 0, 300, 300);
+			ctx.scale(1, 1);
+			ctx.patternQuality = 'billinear';
+			ctx.filter = 'bilinear';
+			ctx.antialias = 'subpixel';
+			ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+			ctx.shadowOffsetY = 2;
+			ctx.shadowBlur = 3;
+			
+// Username
+			ctx.font = '16px Roboto';
+			ctx.fillStyle = member.displayHexColor;
+			ctx.fillText(member.displayName, 75, 35);
+			
+// Role
+			ctx.font = '12px Roboto';
+			ctx.fillStyle = member.displayHexColor;
+			ctx.fillText(member.highestRole.name.toUpperCase(), 75, 50);
+
+// EXP TITLE
+			ctx.font = '22px Uni Sans Heavy CAPS';
+			ctx.textAlign = 'left';
+			ctx.fillStyle = '#E5E5E5';
+			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+			ctx.fillText('EXP.', 150, 87);			
+			
+// EXP
+			ctx.font = '16px Roboto';
+			ctx.textAlign = 'left';
+			ctx.fillStyle = '#d1d1d1';
+			ctx.shadowColor = 'rgba(0, 0, 0, 0)';
+			ctx.fillText(`${row.experience}/${expToNextLevel}`, 150, 105);
+
+// LVL
+			ctx.font = '22px Uni Sans Heavy CAPS';
+			ctx.textAlign = 'left';
+			ctx.fillStyle = '#E5E5E5';
+			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+			ctx.fillText('LVL.', 74, 87);
+
+// LVL Number
+			ctx.font = '19px Roboto';
+			ctx.fillStyle = '#E5E5E5';
+			ctx.fillText(`${row.level}`, 74, 107);
+			
+		
+// Image
+			ctx.beginPath();
+			ctx.arc(40, 40, 25, 0, 2 * Math.PI, true);
+			ctx.closePath();
+			ctx.clip();
+			ctx.shadowBlur = 5;
+			ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+			ctx.drawImage(cond, 15, 15, 50, 50);
+};
+
+base.src = await fs.readFileAsync('./assets/stats/backgrounds/default.png');
+cond.src = await request({
+			uri: member.user.avatarURL() ? member.user.avatarURL('png') : member.user.displayAvatarURL,
+			encoding: null
+		});
+
+generate();
+
+return message.channel.send({ files: [{ attachment: canvas.toBuffer(), name: 'stats.png' }] });
 }
 
-embed.addField("**Level**", msg);
-message.channel.sendEmbed(embed);
+drawStats();
+
+});	
 })
-})
-message.delete();
 }
