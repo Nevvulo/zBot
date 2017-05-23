@@ -920,13 +920,13 @@ function messageChecker(oldMessage, newMessage) {
 		
         try {
             let commandFile = require(`./commands/${command}.js`);
-			if (command.toString().toLowerCase().includes("." || "/" || "moderator" || "debug")) {
+			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 			message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 			} else {
             commandFile.run(client, message, args);
 			}
         } catch (err) {
-			if (command.toString().toLowerCase().includes("." || "/" || "moderator" || "debug")) {
+			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 			message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 			}
 			message.reply(":no_entry_sign: **NOPE**: That is not a valid command. You can type `bot:help` to see a list of all available commands.");
