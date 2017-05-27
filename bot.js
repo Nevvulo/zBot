@@ -35,6 +35,7 @@ const expletiveFilter = require('./commands/moderator/filter.js');
 const doModeration = require('./commands/moderator/mod.js');
 const panicMode = require('./commands/moderator/panic.js');
 const debug = require('./commands/debug/toggle.js');
+const Experience = require('./structures/profile/Experience');
 
 var newLevelReplace = {}
 var lineExists = {};
@@ -227,62 +228,19 @@ function messageChecker(oldMessage, newMessage) {
 
 	//Activity tracker
 	message.guild.fetchMember(message.author).then(function(member) {
-	if (message.author.bot) {
-		return;
-	}
 	const filter = message => message.author.id === member.user.id && member.user.bot == false;
 	message.channel.fetchMessages({ limit: 100 }).then(messages => {
 		if (message.author.bot) return;
 		  if (message.channel.type !== 'text') return;
-
 		  sql.get(`SELECT * FROM scores WHERE userId ='${message.author.id}'`).then(row => {
 			if (!row) {
 			  sql.run('INSERT INTO scores (userId, experience, level) VALUES (?, ?, ?)', [message.author.id, 1, 0]);
-			} else {
-			  let curLevel = 0
-			  if (`${row.level}` == 0 && `${row.experience}` > 100) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 1 && `${row.experience}` > 250) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 2 && `${row.experience}` > 500) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 3 && `${row.experience}` > 750) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 4 && `${row.experience}` > 1000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 5 && `${row.experience}` > 1250) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 6 && `${row.experience}` > 1500) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 7 && `${row.experience}` > 1750) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 8 && `${row.experience}` > 2000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 9 && `${row.experience}` > 2500) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 10 && `${row.experience}` > 3000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 11 && `${row.experience}` > 4000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 12 && `${row.experience}` > 5000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 13 && `${row.experience}` > 6000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 14 && `${row.experience}` > 7000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 15 && `${row.experience}` > 8000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 16 && `${row.experience}` > 9001) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 17 && `${row.experience}` > 10000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 18 && `${row.experience}` > 11000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 19 && `${row.experience}` > 12000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				} else if (`${row.level}` == 20 && `${row.experience}` > 13000) {
-					sql.run(`UPDATE scores SET level = ${row.level + 1} WHERE userId = ${message.author.id}`);
-				}
+			} else {			  
+			  let curLevel = Math.floor(0.1 * Math.sqrt(row.experience)) + 1;
+			  if (curLevel > row.level) {
+				row.level = curLevel;
+				sql.run(`UPDATE scores SET experience = ${row.experience + 1}, level = ${row.level} WHERE userId = ${message.author.id}`);
+			  }
 			  
 			  sql.run(`UPDATE scores SET experience = ${row.experience + 1} WHERE userId = ${message.author.id}`);
 			}
@@ -292,7 +250,6 @@ function messageChecker(oldMessage, newMessage) {
 			  sql.run('INSERT INTO scores (userId, experience, level) VALUES (?, ?, ?)', [message.author.id, 1, 0]);
 			});
 		  });
-
 			
 		  sql.get(`SELECT * FROM scores WHERE userId ='${message.author.id}'`).then(row => {
 		  console.log(`This user has ${row.experience} experience.`);
@@ -626,8 +583,15 @@ function messageChecker(oldMessage, newMessage) {
 
             if (expletiveFilter.enabled) {
                 //Check for expletives
-                var exp = msg.search(/(\b|\s|^|\.|\,|\ )(fuck|fucks|fuckin|fucking|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|\.|\,|\ )/i);
+                var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|fucks|fuckin|fucking|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|.|\,|\ )/i);
+                var dxp = msg.search(/(\b|\s|^|.|\,|\ )(cunt|b1tch|b!tch|bitch|cnut)(\b|\s|$|.|\,|\ )/i);
+				
                 if (exp != -1) { //Gah! They're not supposed to say that!
+				if (dxp != -1) { //extra bad word!
+				console.log(colors.bold(colors.yellow("▲ Bad expletive caught at " + parseInt(exp))));
+				caughtSwear = true;
+				}
+				
                     console.log(colors.bold(colors.yellow("▲ Expletive caught at " + parseInt(exp))));
                     switch (Math.floor(Math.random() * 1000) % 21) {
                         case 0:
@@ -695,7 +659,6 @@ function messageChecker(oldMessage, newMessage) {
                             break;
                     }
                     doNotDelete = false;
-                    caughtSwear = true;
                     message.delete();
                     return;
                 }
@@ -713,7 +676,7 @@ function messageChecker(oldMessage, newMessage) {
                 if (exp != -1) { //This is a link.
                     if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {
 
-                    } else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing" || message.channel.name == "meme_dungeon") {
+                    } else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing" || message.channel.name == "meme_dungeon" || message.channel.name == "photos") {
 
                     } else if (msg.toLowerCase().includes("https://twitch.tv/xailran") || msg.toLowerCase().includes("https://www.youtube.com")) {
 
@@ -785,7 +748,7 @@ function messageChecker(oldMessage, newMessage) {
                 }
                 //CONVERSATION COMMANDS
             } else if (msg.toLowerCase().includes("fuck you") || msg.toLowerCase().includes("fuck off") || msg.toLowerCase().includes("shit")) {
-                message.reply("Want a :hammer:?");
+                message.reply("<:xailFish:303393341704503297>");
             } else if (msg.toLowerCase().includes("how") && msg.toLowerCase().includes("you")) {
                 message.reply("I'm doing OK I suppose.");
             } else if (msg.toLowerCase().includes("yes") || msg.toLowerCase().includes("yep") || msg.toLowerCase().includes("right?") || msg.toLowerCase().includes("isn't it?")) {
@@ -987,7 +950,7 @@ client.on('messageUpdate', messageChecker);
 client.on('guildMemberAdd', function(guildMember) {
     if (guildMember.guild.id == 196793479899250688) {
         var channel;
-        channel = client.channels.get("247177027839459338");
+        channel = client.channels.get("229575537444651009");
 
         embed = new Discord.RichEmbed("info");
         embed.setAuthor("ᴜꜱᴇʀ ᴊᴏɪɴᴇᴅ » " + guildMember.displayName, guildMember.user.displayAvatarURL);
@@ -1005,7 +968,7 @@ client.on('guildMemberAdd', function(guildMember) {
             msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString();
         }
         embed.addField("**User Joined**", msg);
-        client.channels.get("247177027839459338").sendEmbed(embed);
+        client.channels.get("229575537444651009").sendEmbed(embed);
 
     }
 });
@@ -1013,7 +976,7 @@ client.on('guildMemberAdd', function(guildMember) {
 client.on('guildMemberRemove', function(guildMember) {
     if (guildMember.guild.id == 196793479899250688) {
         var channel;
-        channel = client.channels.get("247177027839459338");
+        channel = client.channels.get("229575537444651009");
 
         embed = new Discord.RichEmbed("info");
         embed.setAuthor("ᴜꜱᴇʀ ʀᴇᴍᴏᴠᴇᴅ » " + guildMember.displayName, guildMember.user.displayAvatarURL);
@@ -1028,7 +991,7 @@ client.on('guildMemberRemove', function(guildMember) {
             msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString();
         }
         embed.addField("**User Joined**", msg);
-        client.channels.get("247177027839459338").sendEmbed(embed);
+        client.channels.get("229575537444651009").sendEmbed(embed);
 
     }
 });
@@ -1036,7 +999,7 @@ client.on('guildMemberRemove', function(guildMember) {
 client.on('guildMemberUpdate', function(oldUser, newUser) {
 	if (oldUser.user.bot == true) return;
     if (newUser.nickname != oldUser.nickname) {
-        var channel = client.channels.get("247177027839459338"); //Admin Bot warnings
+        var channel = client.channels.get("229575537444651009"); //Admin Bot warnings
         if (newUser.nickname == null) {
             embed = new Discord.RichEmbed("warning");
             embed.setAuthor("ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.username + "#" + oldUser.user.discriminator, oldUser.user.displayAvatarURL);
@@ -1047,7 +1010,7 @@ client.on('guildMemberUpdate', function(oldUser, newUser) {
             embed.addField("**Previous Name**", msg);
 
 
-            client.channels.get("247177027839459338").sendEmbed(embed);
+            client.channels.get("229575537444651009").sendEmbed(embed);
         } else {
             embed = new Discord.RichEmbed("warning");
             embed.setAuthor("ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.username + "#" + oldUser.user.discriminator, oldUser.user.displayAvatarURL);
@@ -1059,30 +1022,12 @@ client.on('guildMemberUpdate', function(oldUser, newUser) {
             var msg = newUser.nickname + "\n";
             embed.addField("**New Nickname**", msg);
 
-            client.channels.get("247177027839459338").sendEmbed(embed);
+            client.channels.get("229575537444651009").sendEmbed(embed);
         }
     }
 });
 
 client.on('userUpdate', function(oldUser, newUser) {
-    if (newUser.guild != null) {
-        if (newUser.guild.id == 196793479899250688) {
-            if (newUser.username != oldUser.username) {
-                var channel = client.channels.get("247177027839459338"); //Admin Bot warnings
-                embed = new Discord.RichEmbed("warning");
-                embed.setAuthor("ᴜsᴇʀɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.username + "#" + oldUser.user.discriminator, oldUser.user.displayAvatarURL);
-                embed.setColor("#3698d1");
-
-                var msg = oldUser.user.username + "\n";
-                embed.addField("**Previous Username**", msg);
-
-                var msg = newUser.user.username + "\n";
-                embed.addField("**New Username**", msg);
-
-                client.channels.get("247177027839459338").sendEmbed(embed);
-            }
-        }
-    }
 });
 
 client.on('messageDelete', function(message) {
@@ -1107,7 +1052,7 @@ client.on('messageDelete', function(message) {
 		if (caughtKYS == true) {
             caughtKYS = false;
 
-            embed = new Discord.RichEmbed("spamming");
+            embed = new Discord.RichEmbed("kys");
             embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.username + "#" + message.member.user.discriminator, message.member.user.displayAvatarURL);
             embed.setColor("#e08743");
             embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was deleted.\n")
@@ -1232,7 +1177,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
     var channel = null;
     if (oldMessage.guild != null) {
         if (oldMessage.guild.id == 196793479899250688) {
-            channel = client.channels.get("247177027839459338");
+            channel = client.channels.get("229575537444651009");
         }
 
         if (channel != null) {
@@ -1257,7 +1202,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
                 embed.addField("**New Content**", msg);
 
                 embed.setFooter(dateString);
-                client.channels.get("247177027839459338").sendEmbed(embed);
+                client.channels.get("229575537444651009").sendEmbed(embed);
                 return;
             }
         }
