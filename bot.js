@@ -588,7 +588,7 @@ function messageChecker(oldMessage, newMessage) {
 				
                 if (exp != -1) { //Gah! They're not supposed to say that!
 				if (dxp != -1) { //extra bad word!
-				console.log(colors.bold(colors.yellow("▲ Bad expletive caught at " + parseInt(exp))));
+				console.log(colors.bold(colors.yellow("▲ Expletive (level 2) caught at " + parseInt(exp))));
 				caughtSwear = true;
 				}
 				
