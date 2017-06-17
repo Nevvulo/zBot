@@ -28,6 +28,15 @@ const yt = require('ytdl-core');
 //This is just to make the console look fancier
 var colors = require('colors');
 const replace = require("replace");
+const maintenanceM = require('./commands/debug/maintenance.js');	
+const pumaproof = require('./commands/moderator/pumaproof.js');	
+var maintenance = false;
+if (maintenanceM.maintenanceEnabled == true) {
+		maintenance = true;
+	} else {
+		maintenance = false;
+	}
+
 const sql = require('sqlite');
 sql.open('./score.sqlite');
 
@@ -37,6 +46,7 @@ const panicMode = require('./commands/moderator/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience');
 
+var bulkC = 0;
 var newLevelReplace = {}
 var lineExists = {};
 var level = {};
@@ -391,7 +401,7 @@ function messageChecker(oldMessage, newMessage) {
 	}
 	
 	
-    const prefix = ";";
+     const prefix = ";";
     const argseval = message.content.split(" ").slice(1);
 
     if (message.content.startsWith(prefix + "eval") && message.author.id == "246574843460321291") {
@@ -458,6 +468,7 @@ function messageChecker(oldMessage, newMessage) {
             message.delete(10000);
         }
     }
+
 
     if (panicMode.enabled == undefined) {
         panicMode.enabled = false;
@@ -583,7 +594,7 @@ function messageChecker(oldMessage, newMessage) {
 
             if (expletiveFilter.enabled) {
                 //Check for expletives
-                var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|fucks|fuckin|fucking|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|stfu|porn)(\b|\s|$|.|\,|\ )/i);
+                var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|fucks|fuckin|fucking|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|porn|stfu)(\b|\s|$|.|\,|\ )/i);
                 var dxp = msg.search(/(\b|\s|^|.|\,|\ )(cunt|b1tch|b!tch|bitch|cnut)(\b|\s|$|.|\,|\ )/i);
 				
                 if (exp != -1) { //Gah! They're not supposed to say that!
@@ -676,9 +687,9 @@ function messageChecker(oldMessage, newMessage) {
                 if (exp != -1) { //This is a link.
                     if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {
 
-                    } else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing" || message.channel.name == "meme_dungeon" || message.channel.name == "photos") {
+                    } else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing" || message.channel.name == "meme_dungeon" || message.channel.name == "photos" || message.channel.name == "minecraft_ideas") {
 
-                    } else if (msg.toLowerCase().includes("https://twitch.tv/xailran") || msg.toLowerCase().includes("https://www.youtube.com")) {
+                    } else if (msg.toLowerCase().includes("twitch.tv/xailran") || msg.toLowerCase().includes("www.youtube.com") || msg.toLowerCase().includes("www.reddit.com")) {
 
                     } else {
                         caughtLink = true;
@@ -864,7 +875,7 @@ function messageChecker(oldMessage, newMessage) {
                 message.reply("Part time meme, part time gamer");
             } else if (msg.toLowerCase().includes("padfoot")) {
                 message.reply("Harry Potter reference? Random name? Who knows");
-            } else if (msg.toLowerCase().includes("zblake.")) {
+            } else if (msg.toLowerCase().includes(".zblake")) {
                 message.reply("Everything is confusing! Except programming. Programming is cool");
             //} else if (msg.toLowerCase().includes("Rocker")) {
             //    message.reply("the most smol of the mods (and cute)");
@@ -872,8 +883,10 @@ function messageChecker(oldMessage, newMessage) {
         }
 	}
 }
-    
+
+	
     if (msg.toLowerCase().startsWith("bot:")) {
+		
 		//Un-comment to activate Lockdown Mode. 	return message.channel.send(":no_entry_sign: **EMERGENCY**: *Xail Bot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/Xail-Bot/wiki/Lockdown-Mode");
         var command = msg.substr(4).split(" ").slice(0, 1);
         var args = msg.split(" ").slice(1);
@@ -892,15 +905,20 @@ function messageChecker(oldMessage, newMessage) {
 			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 			message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 			}
+			if (pumaproof.puma == true) {
+			
+			} else {
 			message.reply(":no_entry_sign: **NOPE**: That is not a valid command. You can type `bot:help` to see a list of all available commands.");
 			console.error(colors.bold(colors.bgRed(colors.white(err))));
             console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+			}
         }
+		
     }
 
-	
-	
-    if (msg.toLowerCase().startsWith("mod:")) {
+	// PUMA PROOF
+	if (pumaproof.puma == true) {
+    if (msg.toLowerCase().startsWith("mod:") || msg.toLowerCase().startsWith("bot:")) {
         if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
             var command = msg.substr(4).split(" ").slice(0, 1);
             var args = msg.split(" ").slice(1);
@@ -911,8 +929,7 @@ function messageChecker(oldMessage, newMessage) {
                 let commandFile = require(`./commands/moderator/${command}.js`);
                 commandFile.run(client, message, args);
             } catch (err) {
-                console.error(colors.bold(colors.bgRed(colors.white(err))));
-				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+                
             }
         } else {
             doNotDelete = false;
@@ -920,7 +937,32 @@ function messageChecker(oldMessage, newMessage) {
             message.delete();
         }
     }
-	
+	} else {
+		    if (msg.toLowerCase().startsWith("mod:")) {
+        if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+            var command = msg.substr(4).split(" ").slice(0, 1);
+            var args = msg.split(" ").slice(1);
+
+			console.log(colors.bold(colors.bgBlue(colors.yellow(message.author.username + " issued moderator command " + command))));
+			
+            try {
+                let commandFile = require(`./commands/moderator/${command}.js`);
+                commandFile.run(client, message, args);
+            } catch (err) {
+                if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
+			message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
+			}
+			message.reply(":no_entry_sign: **NOPE**: That is not a valid command. You can type `bot:help` to see a list of all available commands.");
+			console.error(colors.bold(colors.bgRed(colors.white(err))));
+            console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+            }
+        } else {
+            doNotDelete = false;
+            message.reply(':no_entry_sign: **NOPE:** What? You\'re not a member of the staff! Why would you be allowed to type that!?');
+            message.delete();
+        }
+	}
+	}
 	    if (msg.toLowerCase().startsWith("debug:")) {
         if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
             var command = msg.substr(6).split(" ").slice(0, 1);
@@ -930,6 +972,27 @@ function messageChecker(oldMessage, newMessage) {
 			
             try {
                 let commandFile = require(`./commands/debug/${command}.js`);
+                commandFile.run(client, message, args);
+            } catch (err) {
+                console.error(colors.bold(colors.bgRed(colors.white(err))));
+				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+            }
+        } else {
+            doNotDelete = false;
+            message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
+            message.delete();
+        }
+    }
+	
+		    if (msg.toLowerCase().startsWith("disabled:")) {
+        if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
+            var command = msg.substr(9).split(" ").slice(0, 1);
+            var args = msg.split(" ").slice(1);
+
+			console.log(colors.bold(colors.bgBlue(colors.red(message.author.username + " issued disabled command " + command))));
+			
+            try {
+                let commandFile = require(`./commands/disabled/${command}.js`);
                 commandFile.run(client, message, args);
             } catch (err) {
                 console.error(colors.bold(colors.bgRed(colors.white(err))));
@@ -998,6 +1061,7 @@ client.on('guildMemberRemove', function(guildMember) {
 
 client.on('guildMemberUpdate', function(oldUser, newUser) {
 	if (oldUser.user.bot == true) return;
+	
     if (newUser.nickname != oldUser.nickname) {
         var channel = client.channels.get("229575537444651009"); //Admin Bot warnings
         if (newUser.nickname == null) {
@@ -1164,6 +1228,13 @@ client.on('messageDeleteBulk', function(messages) {
     if (panicMode[messages.first().guild.id]) return; //Don't want to be doing this in panic mode!
     if (botDelMessage[messages.first().guild.id]) return;
 
+	bulkC = bulkC + 1
+	
+	//Debugging information.
+	if (maintenance == true) {
+		message.channel.send(":page_facing_up: **DEBUG:** BulkDelete function, called " + bulkC + " times.");
+	}
+	
     channel = client.channels.get("229575537444651009");
 
     if (channel != null) {
