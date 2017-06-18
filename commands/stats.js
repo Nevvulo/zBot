@@ -3,27 +3,50 @@ const Canvas = require('canvas');
 const userStats = require('./../bot.js');
 const path = require('path');
 const request = require('request-promise');
-const {	promisifyAll } = require('tsubaki');
+const {
+	promisifyAll
+} = require('tsubaki');
 const fs = promisifyAll(require('fs'));
 const sql = require('sqlite');
 sql.open('./score.sqlite');
 
 exports.run = (client, message, args) => {
 	args = args.toString();
-	args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-
+	
+	//USERNAME/MENTION SYSTEM
 	if (args == "") {
 		args = message.author.id;
 	} else {
-		args = args.split(" ");
+		function getUserID(user) {
+			var u = user;
+			if (user.user != null) {
+				u = user.user;
+			}
+			return u.id;
+		}
+
+		args = args.replace(",", " ").replace(",", " ").replace(",", " ").toString();
+
+		if (!args.includes("<")) {
+			var foundUsers = client.users.findAll("username", args);
+			if (foundUsers.length == 0) {
+				message.channel.send(':no_entry_sign: **ERROR:** Couldn\'t find anyone with that username. You might want to try again.');
+				return;
+			} else {
+				for (let user of foundUsers) {
+					args = getUserID(user);
+				}
+			}
+		} else {
+			args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
+			console.log("Username not provided for arguments.");
+		}
 	}
 
-	message.guild.fetchMember(args.toString()).then(function(member) {
-
-
+	message.guild.fetchMember(args).then(function (member) {
 
 		async function drawStats() {
-			message.delete();
+			message.delete ();
 			const totalExp = await Experience.getTotalExperience(member.id);
 
 			const level = await Experience.getLevel(member.id);
@@ -43,10 +66,9 @@ exports.run = (client, message, args) => {
 			const Image = Canvas.Image;
 
 			var canvas = new Canvas(300, 120)
-			var ctx = canvas.getContext('2d')
-			const base = new Image();
+				var ctx = canvas.getContext('2d')
+				const base = new Image();
 			const cond = new Image();
-
 
 			const generate = () => {
 
@@ -96,7 +118,6 @@ exports.run = (client, message, args) => {
 				ctx.fillStyle = '#E5E5E5';
 				ctx.fillText(`${level}`, 74, 107);
 
-
 				// Image
 				ctx.beginPath();
 				ctx.arc(40, 40, 25, 0, 2 * Math.PI, true);
@@ -109,17 +130,18 @@ exports.run = (client, message, args) => {
 
 			base.src = await fs.readFileAsync('./assets/stats/backgrounds/default.png');
 			cond.src = await request({
-				uri: member.user.avatarURL() ? member.user.avatarURL('png') : member.user.displayAvatarURL,
-				encoding: null
-			});
+					uri: member.user.avatarURL() ? member.user.avatarURL('png') : member.user.displayAvatarURL,
+					encoding: null
+				});
 
 			generate();
 
 			return message.channel.send({
 				files: [{
-					attachment: canvas.toBuffer(),
-					name: 'stats.png'
-				}]
+						attachment: canvas.toBuffer(),
+						name: 'stats.png'
+					}
+				]
 			});
 		}
 

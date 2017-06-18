@@ -3,32 +3,58 @@ const Canvas = require('canvas');
 const userStats = require('./../bot.js');
 const path = require('path');
 const request = require('request-promise');
-const { promisifyAll } = require('tsubaki');
+const {
+	promisifyAll
+} = require('tsubaki');
 const fs = promisifyAll(require('fs'));
 const sql = require('sqlite');
 sql.open('./score.sqlite');
-var totalExp = "Error."
 
 exports.run = (client, message, args) => {
 	let badges = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
 	args = args.toString();
-	args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-
 	if (args == "") {
 		args = message.author.id;
 	} else {
-		args = args.split(" ");
+
+		function getUserID(user) {
+			var u = user;
+			if (user.user != null) {
+				u = user.user;
+			}
+			return u.id;
+		}
+		args = args.replace(",", " ").replace(",", " ").replace(",", " ").toString();
+
+		if (!args.includes("<")) {
+			var foundUsers = client.users.findAll("username", args);
+			if (foundUsers.length == 0) {
+				message.channel.send(':no_entry_sign: **ERROR:** Couldn\'t find anyone with that username. You might want to try again.');
+				return;
+			} else {
+				for (let user of foundUsers) {
+					args = getUserID(user);
+				}
+			}
+		} else {
+			args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
+			console.log("Username not provided for arguments.");
+		}
 	}
 
-	message.guild.fetchMember(args.toString()).then(function (member) {
+	message.guild.fetchMember(args).then(function (member) {
 		async function drawStats() {
 			message.delete ();
 
-			totalExp = await Experience.getTotalExperience(member.id);
-
+			//Fix error with late promise
+			var totalExp = await Experience.getTotalExperience(member.id);
 			const level = await Experience.getLevel(member.id);
 			const levelBounds = await Experience.getLevelBounds(level);
 			const currentExp = await Experience.getCurrentExperience(member.id);
+
+			if (totalExp == undefined) {
+				totalExp = "Error.";
+			}
 
 			if (!badges[member.id])
 				badges[member.id] = {
@@ -79,6 +105,7 @@ exports.run = (client, message, args) => {
 				ctx.font = '16px Roboto';
 				ctx.fillStyle = member.displayHexColor;
 				ctx.fillText(member.displayName, 75, 35);
+
 				// Role
 				ctx.font = '12px Roboto';
 				ctx.fillStyle = member.displayHexColor;
@@ -110,17 +137,20 @@ exports.run = (client, message, args) => {
 				ctx.fillStyle = '#E5E5E5';
 				ctx.fillText(`${level}`, 74, 107);
 
-				// RANK TITLE
+				// TOTAL EXP TITLE
 				ctx.font = '22px Uni Sans Heavy CAPS';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#E5E5E5';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
 				ctx.fillText('TOTAL EXP.', 74, 197);
 
-				// RANK
+				// TOTAL EXP
 				ctx.font = '16px Roboto';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#d1d1d1';
+				if (totalExp == "Error.") {
+					ctx.fillStyle = '#c1453a';
+				}
 				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
 				ctx.fillText(totalExp, 74, 215);
 
