@@ -130,7 +130,7 @@ exports.run = (client, message, args) => {
 
 			base.src = await fs.readFileAsync('./assets/stats/backgrounds/default.png');
 			cond.src = await request({
-					uri: member.user.avatarURL() ? member.user.avatarURL('png') : member.user.displayAvatarURL,
+					uri: member.user.avatarURL() ? member.user.avatarURL( {format: 'png'} ) : member.user.displayAvatarURL,
 					encoding: null
 				});
 

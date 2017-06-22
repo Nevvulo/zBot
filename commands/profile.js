@@ -11,6 +11,7 @@ const sql = require('sqlite');
 sql.open('./score.sqlite');
 
 exports.run = (client, message, args) => {
+
 	let badges = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
 	args = args.toString();
 	if (args == "") {
@@ -43,19 +44,19 @@ exports.run = (client, message, args) => {
 	}
 
 	message.guild.fetchMember(args).then(function (member) {
+			sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
 		async function drawStats() {
 			message.delete ();
 
 			//Fix error with late promise
+			var totalExperience = `${row.experience}`;
 			var totalExp = await Experience.getTotalExperience(member.id);
 			const level = await Experience.getLevel(member.id);
 			const levelBounds = await Experience.getLevelBounds(level);
 			const currentExp = await Experience.getCurrentExperience(member.id);
-
-			if (totalExp == undefined) {
-				totalExp = "Error.";
-			}
-
+			const fillValue = Math.min(Math.max(currentExp / (levelBounds.upperBound - levelBounds.lowerBound), 0), 1);
+			console.log(totalExp);
+			
 			if (!badges[member.id])
 				badges[member.id] = {
 					developer: 0,
@@ -125,6 +126,13 @@ exports.run = (client, message, args) => {
 				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
 				ctx.fillText(`${currentExp}/${levelBounds.upperBound - levelBounds.lowerBound}`, 74, 160);
 
+				// EXP
+				ctx.font = '10px Roboto';
+				ctx.textAlign = 'center';
+				ctx.fillStyle = '#3498DB';
+				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
+				ctx.fillRect(30, 225, 17, fillValue * -135);
+				
 				// LVL
 				ctx.font = '22px Uni Sans Heavy CAPS';
 				ctx.textAlign = 'left';
@@ -152,7 +160,7 @@ exports.run = (client, message, args) => {
 					ctx.fillStyle = '#c1453a';
 				}
 				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
-				ctx.fillText(totalExp, 74, 215);
+				ctx.fillText(totalExperience, 74, 215);
 
 				//BADGES
 				// BADGE TITLE
@@ -242,18 +250,18 @@ exports.run = (client, message, args) => {
 
 				// Image
 				ctx.globalAlpha = 1
-					ctx.beginPath();
+				ctx.beginPath();
 				ctx.arc(40, 40, 25, 0, 2 * Math.PI, true);
 				ctx.closePath();
 				ctx.clip();
 				ctx.shadowBlur = 5;
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				ctx.drawImage(cond, 15, 15, 50, 50);
+				ctx.drawImage(cond, 15, 15, 50, 50); //org 15, 15, 50, 50
 			};
 
 			base.src = await fs.readFileAsync('./assets/profile/backgrounds/default.png');
 			cond.src = await request({
-					uri: member.user.avatarURL() ? member.user.avatarURL('png') : member.user.displayAvatarURL,
+					uri: member.user.avatarURL() ? member.user.avatarURL( {format: 'png'} ) : member.user.displayAvatarURL,
 					encoding: null
 				});
 			subbadge.src = await fs.readFileAsync('./assets/profile/badges/subscriber.png');
@@ -276,5 +284,6 @@ exports.run = (client, message, args) => {
 
 		drawStats();
 
+	})
 	})
 }
