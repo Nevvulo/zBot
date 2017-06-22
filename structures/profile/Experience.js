@@ -3,19 +3,20 @@ sql.open('./score.sqlite');
 var totalXP = 0;
 
 class Experience {
+
 	static async getTotalExperience(userID) {
 		await sql.get(`SELECT * FROM scores WHERE userId ='${userID}'`).then(row => {
-		totalXP = row.experience;
-		console.log("total = " + totalXP);
-		return totalXP;
+			totalXP = `${row.experience}`;
+			return totalXP;
+			console.log(totalXP);
 		})
 	}
 
 	static async getCurrentExperience(userID) {
 		const level = await Experience.getLevel(userID);
-		
-		const { lowerBound } = Experience.getLevelBounds(level);
-		console.log("current = " + eval(totalXP - lowerBound));
+		const {
+			lowerBound
+		} = Experience.getLevelBounds(level);
 		return totalXP - lowerBound;
 	}
 
@@ -32,6 +33,7 @@ class Experience {
 	static async getLevel(userID) {
 		return Math.floor(0.177 * Math.sqrt(totalXP)) + 1;
 	}
+
 }
 
 module.exports = Experience;
