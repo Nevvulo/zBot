@@ -949,7 +949,7 @@ function messageChecker(oldMessage, newMessage) {
 	}
 
 	if (msg.toLowerCase().startsWith("disabled:")) {
-		if (message.member.roles.find("name", "Rainbow Flock") || message.member.roles.find("name", "Head of the Flock")) {
+		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
 			var command = msg.substr(9).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
