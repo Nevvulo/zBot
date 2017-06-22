@@ -229,10 +229,12 @@ function messageChecker(oldMessage, newMessage) {
 
 	if (message.mentions.users.size > 0 && message.author.bot == false) {
 		if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
-			message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while.");
+			message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while.").then(message => {
+        message.delete({ timeout: 8000 });
+      });
 		}
 	} else {}
-
+	
 	//Activity tracker
 	message.guild.fetchMember(message.author).then(function (member) {
 		const filter = message => message.author.id === member.user.id && member.user.bot == false;
@@ -259,19 +261,23 @@ function messageChecker(oldMessage, newMessage) {
 					} else {
 
 						sql.get(`SELECT * FROM scores WHERE userId ='${message.author.id}'`).then(row => {
-							sql.run(`UPDATE scores SET experience = ${row.experience + Math.round(Math.random() * (21 - 9) + 9)}`);
+							sql.run(`UPDATE scores SET experience = ${row.experience + Math.round(Math.random() * (21 - 9) + 9)} WHERE userId = ${message.author.id}`);
 							console.log("Added experience.");
 						})
 
 						// Adds the user to the array so that they can't talk for 60 seconds
 						talkedRecently.push(message.author.id);
-						setTimeout(() => {
+						client.setTimeout(() => {
 							const index = talkedRecently.indexOf(message.author.id);
 							// Removes the user from the array after 60 seconds
 							talkedRecently.splice(index, 1);
 						}, 60000);
 					}
 				}
+				
+				//BADGES AND OPTIONAL STUFF
+
+				
 			}).catch (() => {
 				console.error;
 				sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, experience INTEGER, level INTEGER)').then(() => {
@@ -279,7 +285,7 @@ function messageChecker(oldMessage, newMessage) {
 				});
 			});
 
-			let badges = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
+			var badges = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
 
 			// if the user has no badges, init to false.
 			if (!badges[message.author.id])
@@ -291,43 +297,58 @@ function messageChecker(oldMessage, newMessage) {
 					subscriber: 0,
 					streamer: 0
 				};
-			let userBadges = badges[message.author.id];
-
+			var userBadges = badges[message.author.id];
+			sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
 			//If developer:
 			if (message.author.id == 246574843460321291) {
 				userBadges.developer = 1;
+			} else {
+			userBadges.developer = 0;
 			}
 
 			//If moderator:
 			if (member.roles.find("name", "Fleece Police")) {
 				userBadges.moderator = 1;
+			} else {
+				userBadges.moderator = 0;
 			}
-
+			
 			//If active:
 			if (member.id == 246574843460321291 || member.id == 284551391781978112 || member.id == 184050823326728193 || member.id == 246129294785380353 || member.id == 224472981571633153 || member.id == 213776985581813760 || member.id == 213776985581813760) { // add id's here if active
 				userBadges.active = 1;
+			} else {
+			userBadges.active = 0;
 			}
 
 			//If subscriber:
 			if (member.roles.find("name", "Subscriber")) {
 				userBadges.subscriber = 1;
+			} else {
+			userBadges.subscriber = 0;
 			}
 
-			//If user has been typing for more then 1 minute:
-			if (member.user.typingDurationIn(message.channel) > 60000) {
+			//If user is lvl 10:
+			
+			if (`${row.experience} > 2500`) {
 				userBadges.essaywriter = 1;
+			} else {
+			userBadges.essaywriter = 0;
 			}
-
+			
+			
 			//If user is streamer:
-			if (message.author.id == 196792235654774784) {
+			if (member.id == 196792235654774784) {
 				userBadges.streamer = 1;
+			} else {
+			userBadges.streamer = 0;
 			}
 
-			fs.writeFile('./badges.json', JSON.stringify(badges), (err) => {
+			fs.writeFile('./badges.json', JSON.stringify(badges, null, 2), function (err) {
 				if (err)
 					console.error(err)
 			});
 
+		})
 		})
 	})
 
@@ -356,32 +377,48 @@ function messageChecker(oldMessage, newMessage) {
 			if (typeof evaled !== "string")
 				evaled = require("util").inspect(evaled);
 			message.delete ();
-			embed = new Discord.RichEmbed("test");
-			embed.setAuthor("ᴇᴠᴀʟ ʀᴇꜱᴜʟᴛ » ");
-			embed.setColor("#7d42f4"); {
-				var emsg = `\`\`\`js\n${clean(code)}\n\`\`\``;
-				embed.addField(":inbox_tray: **Input**", emsg);
-			}
+
+			message.channel.send({embed: {
+			color: 3191350,
+			author: {
+			name: "ᴇᴠᴀʟ ʀᴇꜱᴜʟᴛ »  ",
+			icon_url: message.author.displayAvatarURL
+			},
+			fields: [
 			{
-				var emsg = `\`\`\`js\n${clean(evaled)}\n\`\`\``;
-				embed.addField(":outbox_tray: **Output**", emsg);
+			  name: '**:inbox_tray: Input**',
+			  value: `\`\`\`js\n${clean(evaled)}\n\`\`\``
+			},
+			{
+			  name: '**:outbox_tray: Output**',
+			  value: `\`\`\`js\n${clean(evaled)}\n\`\`\``
 			}
-
-			message.channel.sendEmbed(embed).then(m => {
-
+			],
+			timestamp: new Date()
+			}}).then(m => {
 				m.react("✅");
 			})
 		} catch (err) {
 			message.delete ();
-			embed = new Discord.RichEmbed("test");
-			embed.setAuthor("ᴇᴠᴀʟ ᴇʀʀᴏʀ » ");
-			embed.setColor("#720d0d");
+			
+			message.channel.send({embed: {
+			color: 3191350,
+			author: {
+			name: "ᴇᴠᴀʟ ᴇʀʀᴏʀ »  ",
+			icon_url: message.author.displayAvatarURL
+			},
+			fields: [
 			{
-				var emsg = `\`\`\`xl\n${clean(err)}\n\`\`\``;
-				embed.addField(":no_entry_sign: **Error**", emsg);
+			  name: '**:no_entry_sign: Error**',
+			  value: `\`\`\`xl\n${clean(err)}\n\`\`\``
+			},
+			{
+			  name: '**Output**',
+			  value: `\`\`\`js\n${clean(evaled)}\n\`\`\``
 			}
-
-			message.channel.sendEmbed(embed).then(m => {
+			],
+			timestamp: new Date()
+			}}).then(m => {
 				m.react("❌");
 				m.react(":xailFish:303393341704503297");
 			})
@@ -399,14 +436,11 @@ function messageChecker(oldMessage, newMessage) {
 	if (expletiveFilter.enabled == null || undefined) {
 		expletiveFilter.enabled = true;
 	}
-
-	exports.doNotDelete = doNotDelete;
-	//console.log(doNotDelete);
-
+	
 	if (botDelMessage) {
 		if (message.author.id == 303017211457568778 && doNotDelete == false) {
 			console.log(colors.yellow("▲ Bot is about to delete: " + colors.grey(message)));
-			message.delete (10000);
+			message.delete({ timeout: 10000 });
 		}
 	}
 
@@ -622,13 +656,8 @@ function messageChecker(oldMessage, newMessage) {
 				message.delete ();
 			}
 
-			const rl = readline.createInterface({
-					input: fs.createReadStream('assets/filter/link/link blacklist.csv')
-				});
-
-			rl.on('line', function (line) {
 				if (message.member != null) { //*!(message.member.roles.find("name", "Fleece Police"))
-					exp = msg.search(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{5,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&// = ] * ) /i) || line;
+					exp = msg.search(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{5,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&// = ]*)/i);
 					if (exp != -1) { //This is a link.
 						if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {}
 						else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testin" || message.channel.name == "meme_dungeon" || message.channel.name == "photos" || message.channel.name == "minecraft_ideas") {}
@@ -667,7 +696,6 @@ function messageChecker(oldMessage, newMessage) {
 
 					}
 				}
-			})
 		}
 	}
 
@@ -718,7 +746,7 @@ function messageChecker(oldMessage, newMessage) {
 				message.reply("I don't know, it's probably because of something Xail did.");
 			} else if (msg.toLowerCase().includes("can i")) {
 				message.reply("It's up to you, mate.");
-			} else if (msg.toLowerCase().includes("hello") || msg.toLowerCase().includes("hi")) {
+			} else if (msg.toLowerCase().includes("hello") || msg.toLowerCase().includes("hey") || msg.toLowerCase().includes("hi")) {
 
 				switch (Math.floor(Math.random() * 1000) % 6) {
 				case 0:
@@ -788,7 +816,7 @@ function messageChecker(oldMessage, newMessage) {
 					break;
 				}
 				//MEME COMMANDS
-			} else if (msg.toLowerCase().includes("boy i sure do wish i could give money to xailran, he is just such a smart, funny guy that i want to give him funds to help his channel.")) {
+			} else if (msg.toLowerCase().includes("boy i sure do wish i could give money to dude, he is just such a smart, funny guy that i want to give the guy funds to help the channel.")) {
 				message.reply("That is a very specific request you have there!");
 			} else if (msg.toLowerCase().includes("+") || msg.toLowerCase().includes("divided") || msg.toLowerCase().includes("-") || msg.toLowerCase().includes("plus") || msg.toLowerCase().includes("subtract") || msg.toLowerCase().includes("minus") || msg.toLowerCase().includes("times") || msg.toLowerCase().includes("*") || msg.toLowerCase().includes("/") || msg.toLowerCase().includes("=")) {
 				message.reply("Sorry, I don't know what it is. Go ask Xail, he'd probably know.");
@@ -921,7 +949,7 @@ function messageChecker(oldMessage, newMessage) {
 	}
 
 	if (msg.toLowerCase().startsWith("disabled:")) {
-		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
+		if (message.member.roles.find("name", "Rainbow Flock") || message.member.roles.find("name", "Head of the Flock")) {
 			var command = msg.substr(9).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
@@ -1222,7 +1250,7 @@ client.on('messageUpdate', function (oldMessage, newMessage) {
 				color: 16040514,
 				author: {
 				name: "ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.tag,
-				icon_url: oldMessage.member.user.displayAvatarURL
+				icon_url: oldMessage.author.displayAvatarURL
 				},
 				description: ":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n",
 				fields: [
