@@ -240,12 +240,14 @@ function messageChecker(oldMessage, newMessage) {
 	//Activity tracker
 	message.guild.fetchMember(message.author).then(function(member) {
 		const filter = message => message.author.id === member.user.id && member.user.bot == false;
-		message.channel.fetchMessages({
-			limit: 100
-		}).then(messages => {
-			if (message.author.bot) return;
-			if (message.channel.type !== 'text') return;
-			
+		message.channel.fetchMessages({limit: 100}).then(messages => {
+			if (message.author.bot)
+				return;
+			if (message.channel.type !== 'text')
+				return;
+
+			sql.get(`SELECT * FROM scores WHERE userId ='${message.author.id}'`).then(row => {
+
 			if (!row) {
 				sql.run('INSERT INTO scores (userId, experience, level) VALUES (?, ?, ?)', [message.author.id, 1, 0]);
 			} else {
@@ -256,6 +258,7 @@ function messageChecker(oldMessage, newMessage) {
 				}
 				// Checks if they have talked recently
 				if (talkedRecently.includes(message.author.id)) {
+					// You can change the nature of the cool down by changing the return to something else.
 					return;
 				} else {
 
@@ -468,7 +471,8 @@ if (message.author.id !== 303017211457568778 && !message.author.bot) {
 
 		//ALL FUNCTION STUFF IS CHECKING IF THE FIRST WORD OF THE STRING IS PRESENT MORE THAN [X] AMOUNT OF TIMES, NEEDS MORE WORK
 		function regexEscape(str) {
-			if (str == null) return;
+			if (str == null)
+				return;
 			return str.toString().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 		}
 
@@ -477,7 +481,8 @@ if (message.author.id !== 303017211457568778 && !message.author.bot) {
 			//could be any combination of 'g', 'i', and 'm'
 			flags = 'gi';
 
-			if (input == null) return;
+			if (input == null)
+				return;
 			input = regexEscape(input);
 
 			return new RegExp('[a-zA-Z ](' + input + '){10,}', flags);
@@ -977,9 +982,36 @@ client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
 
 client.on('guildMemberAdd', function(guildMember) {
-		if (guildMember.guild.id == 196793479899250688) {
+	if (guildMember.guild.id == 196793479899250688) {
 		guildMember.addRole(guildMember.guild.roles.get("224372132019306496"));	
-			
+		
+		channel = client.channels.get("196793479899250688");
+		let randomjoin = "";
+		switch (Math.floor(Math.random() * 1000) % 7) {
+				case 0:
+					randomjoin = "Please give them a warm welcome!";
+					break;
+				case 1:
+					randomjoin = "Thank you for joining, and we hope you enjoy your stay!";
+					break;
+				case 2:
+					randomjoin = "Thanks for joining us!";
+					break;
+				case 3:
+					randomjoin = "It's great to have you here!";
+					break;
+				case 4:
+					randomjoin = "It's a pleasure to have you here.";
+					break;
+				case 5:
+					randomjoin = "Hope you have had a great day so far!";
+					break;
+				case 6:
+					randomjoin = "Nice to see you!";
+					break;
+			}
+		channel.send(guildMember + " has joined our awesome server! *" + randomjoin + "*") 
+		
 		channel = client.channels.get("229575537444651009");
 		channel.send({
 			embed: {
