@@ -13,15 +13,16 @@ exports.run = (client, message, args) => {
 	message.delete();
 	
     if (banConfirm == true) {
+		
+		moderatorBan = moderatorBan.toString();
+		banMember = banMember.toString();
+		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").toString();
+		
+		var date = new Date();
+		var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+		
         banConfirm = false;
         message.guild.fetchMember(banMember).then(function(member) {
-            embed = new Discord.RichEmbed("ban");
-            embed.setAuthor("ʙᴀɴ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
-            embed.setColor("#af1c1c");
-
-            var date = new Date();
-            var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
-
             //Write ban information to .csv file
             var writer = csvWriter({
                 headers: ["Discord Username", "Date (in AEST)", "Type of Punishment", "Punished by", "Reason"],
@@ -34,31 +35,51 @@ exports.run = (client, message, args) => {
             writer.end()
             console.log(colors.green("* Successfully wrote ban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
-            var msg = banMember + "\n";
-            embed.addField("**User**", msg);
-
-            var msg = moderatorBan + "\n";
-            embed.addField("**Moderator**", msg);
-
-            var msg = banReason + "\n";
-            embed.addField("**Reason**", msg);
-            embed.setFooter(dateString);
-
-
-            banMember.sendMessage(":warning: You have been permanently banned from Rainbow Gaming.");
-            embeduser = new Discord.RichEmbed("ban-for-user");
-            embeduser.setAuthor("ʙᴀɴ » " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
-            embeduser.setColor("#af1c1c");
-            var msg = banReason + "\n";
-            embeduser.addField("**Reason**", msg);
-
-            var msg = dateString + "\n";
-            embeduser.addField("**Timestamp**", msg);
-
-            banMember.sendEmbed(embeduser);
-
-            message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully banned.");
-            client.channels.get("229575537444651009").sendEmbed(embed);
+			
+			channel = client.channels.get("229575537444651009");
+			channel.send({
+				embed: {
+					color: 11475996,
+					author: {
+						name: "ʙᴀɴ »  " + member.user.tag,
+						icon_url: member.user.avatarURL( {format: 'png'} )
+					},
+					description: ":warning: <@" + member.id + "> has been banned.\n",
+					fields: [{
+							name: '**User**',
+							value: "<@" + member.id + ">"
+						},
+						{
+							name: '**Moderator**',
+							value: moderatorBan
+						},
+						{
+							name: '**Reason**',
+							value: banReason
+						}
+					],
+					timestamp: new Date()
+				}
+			});
+			
+			member.send({
+				embed: {
+					color: 11475996,
+					author: {
+						name: "ʙᴀɴ »  " + member.user.tag,
+						icon_url: member.user.avatarURL( {format: 'png'} )
+					},
+					description: ":warning: You have been banned on Rainbow Gaming.\n",
+					fields: [{
+							name: '**Reason**',
+							value: banReason
+						}
+					],
+					timestamp: new Date()
+				}
+			});
+			
+			message.channel.send(":white_check_mark: " + member.displayName + " was successfully banned.");
             message.guild.ban(banMember, 7, banReason);
             banMember = null;
 

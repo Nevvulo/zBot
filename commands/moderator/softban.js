@@ -13,10 +13,9 @@ exports.run = (client, message, args) => {
 	
 if (softbanConfirm == true) {
 message.guild.fetchMember(banMember).then(function(member) {
-	embed = new Discord.RichEmbed("softban");
 	embed.setAuthor("sᴏғᴛʙᴀɴ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
 	embed.setColor("#e08743");
-
+	
 	var date = new Date();
 	var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
 
@@ -32,33 +31,53 @@ message.guild.fetchMember(banMember).then(function(member) {
 	writer.end()
 	console.log(colors.green("* Successfully wrote softban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
-	var msg = banMember + "\n";
-	embed.addField("**User**", msg);
-
-	var msg = moderatorBan + "\n";
-	embed.addField("**Moderator**", msg);
-
-	var msg = banReason + "\n";
-	embed.addField("**Reason**", msg);
-	embed.setFooter(dateString);
-
-
-	banMember.sendMessage(":warning: You have been softbanned from Rainbow Gaming.");
-	embeduser = new Discord.RichEmbed("ban-for-user");
-	embeduser.setAuthor("sᴏғᴛʙᴀɴ » " + banMember.displayName + "#" + banMember.user.discriminator, banMember.user.displayAvatarURL);
-	embeduser.setColor("#e08743");
-	var msg = banReason + "\n";
-	embeduser.addField("**Reason**", msg);
-
-	var msg = dateString + "\n";
-	embeduser.addField("**Timestamp**", msg);
-
-	banMember.sendEmbed(embeduser);
-
+	
+			channel = client.channels.get("229575537444651009");
+			channel.send({
+				embed: {
+					color: 14714691,
+					author: {
+						name: "sᴏғᴛʙᴀɴ »  " + member.user.tag,
+						icon_url: member.user.avatarURL( {format: 'png'} )
+					},
+					description: ":warning: <@" + member.id + "> has been softbanned.\n",
+					fields: [{
+							name: '**User**',
+							value: "<@" + member.id + ">"
+						},
+						{
+							name: '**Moderator**',
+							value: moderatorBan
+						},
+						{
+							name: '**Reason**',
+							value: banReason
+						}
+					],
+					timestamp: new Date()
+				}
+			});
+			
+			member.send({
+				embed: {
+					color: 14714691,
+					author: {
+						name: "sᴏғᴛʙᴀɴ »  " + member.user.tag,
+						icon_url: member.user.avatarURL( {format: 'png'} )
+					},
+					description: ":warning: You have been softbanned on Rainbow Gaming.\n",
+					fields: [{
+							name: '**Reason**',
+							value: banReason
+						}
+					],
+					timestamp: new Date()
+				}
+			});
+	
 	message.guild.ban(banMember, 7, banReason);
 	message.guild.unban(banMember);
-	message.channel.send(":white_check_mark: " + banMember.displayName + " was successfully softbanned.");
-	client.channels.get("229575537444651009").sendEmbed(embed);
+	message.channel.send(":white_check_mark: " + member.displayName + " was successfully softbanned.");
 	banMember = null;
 	
 });

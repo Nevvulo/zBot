@@ -2,26 +2,30 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
-const cancel = require('./cancel.js');
 var colors = require('colors');
 
-var moderatorWarn = {};
-var warnReason = {};
-var warnMember = null;
+var moderatorWarn = "";
+var warnReason = "";
+var warnMember = "";
 var warningCount = 0;
 var warnConfirm = false;
 
 exports.run = (client, message, args) => {
 	
     if (warnConfirm == true && warnMember !== null) {
-        doNotDelete = true;
+		
+		moderatorWarn = moderatorWarn.toString();
+		warnMember = warnMember.toString();
+		warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").toString();
+
+		var date = new Date();
+		var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
+
         warnConfirm = false;
         message.guild.fetchMember(warnMember).then(function(member) {
-
-            var date = new Date();
-            var dateString = (date.toDateString() + " at " + date.toLocaleTimeString());
-
+			
             //Write warning information to .csv file
+			console.log("Write to CSV")
             var writer = csvWriter({
                 headers: ["Discord Username", "Date (in GMT)", "Type of Punishment", "Punished by", "Reason"],
                 sendHeaders: false
@@ -32,41 +36,55 @@ exports.run = (client, message, args) => {
             writer.write([member.displayName + "#" + member.user.discriminator, dateString, "Warning", moderatorWarn.username, warnReason])
             writer.end()
             console.log(colors.green("* Successfully wrote warning for user '" + colors.underline(member.displayName) + "' to CSV file."));
-
-
-            embed = new Discord.RichEmbed("warning");
-            embed.setAuthor("ᴡᴀʀɴɪɴɢ » " + member.displayName + "#" + member.user.discriminator, member.user.displayAvatarURL);
-            embed.setColor("#E5C01D");
-
-            var msg = warnMember + "\n";
-            embed.addField("**User**", msg);
-
-            var msg = moderatorWarn + "\n";
-            embed.addField("**Moderator**", msg);
-
-            var msg = warnReason + "\n";
-            embed.addField("**Reason**", msg);
-
-            var msg = warningCount + 1 + "\n"; // Add 1 to warningCount to include this warning as well.
-            embed.addField("**Warning #**", msg);
-
-            embed.setFooter(dateString);
-
-
-            warnMember.sendMessage(":warning: You have just received a warning on Rainbow Gaming.");
-            embeduser = new Discord.RichEmbed("warn-for-user");
-            embeduser.setAuthor("ᴡᴀʀɴɪɴɢ » " + warnMember.displayName + "#" + warnMember.user.discriminator, warnMember.user.displayAvatarURL);
-            embeduser.setColor("#E5C01D");
-            var msg = warnReason + "\n";
-            embeduser.addField("**Reason**", msg);
-
-            var msg = dateString + "\n";
-            embeduser.addField("**Timestamp**", msg);
-
-            warnMember.sendEmbed(embeduser);
-
-            message.channel.send(":white_check_mark: " + warnMember.displayName + " was successfully warned.");
-            client.channels.get("229575537444651009").sendEmbed(embed);
+			
+			channel = client.channels.get("229575537444651009");
+			channel.send({
+				embed: {
+					color: 15056925,
+					author: {
+						name: "ᴡᴀʀɴɪɴɢ »  " + member.user.tag,
+						icon_url: member.user.avatarURL( {format: 'png'} )
+					},
+					description: ":warning: <@" + member.id + "> has received a warning.\n",
+					fields: [{
+							name: '**User**',
+							value: "<@" + member.id + ">"
+						},
+						{
+							name: '**Moderator**',
+							value: moderatorWarn
+						},
+						{
+							name: '**Reason**',
+							value: warnReason
+						},
+						{
+							name: '**Warning #**',
+							value: warningCount + 1
+						}
+					],
+					timestamp: new Date()
+				}
+			});
+			
+			member.send({
+				embed: {
+					color: 15056925,
+					author: {
+						name: "ᴡᴀʀɴɪɴɢ »  " + member.user.tag,
+						icon_url: member.user.avatarURL( {format: 'png'} )
+					},
+					description: ":warning: You have received a warning on Rainbow Gaming.\n",
+					fields: [{
+							name: '**Reason**',
+							value: warnReason
+						}
+					],
+					timestamp: new Date()
+				}
+			});
+			
+			message.channel.send(":white_check_mark: " + member.displayName + " was successfully warned.");
             warningCount = 0;
             warnMember = null;
         });
@@ -109,6 +127,7 @@ exports.run = (client, message, args) => {
                         //Retrieve warning count info early so that it is ready to use when the user confirms the warn.
 
                     });
+					console.log("getting lines")
                     rl.on('line', function(line) {
                         if (line.includes("Warning") && line.includes(member.displayName + "#" + member.user.discriminator)) {
                             warningCount = warningCount + 1
