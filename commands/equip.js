@@ -8,6 +8,7 @@ var num = args[0];
 var badge = args[1].toString();
 
 let badgesA = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
+let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
 var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 
 		// if the user has no badges, init to false.
@@ -21,16 +22,41 @@ var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 				slot6: "empty"
 			};
 			
+		// if the user has no badges, init to false.
+		if (!badgesP[message.author.id])
+			badgesP[message.author.id] = {
+				background: "default"
+			};
+			
 		var userSlots = badges[message.author.id];
 		var userBadges = badgesA[message.author.id];
+		var userProfile = badgesP[message.author.id];
 
-		if (`badge == ${badge} && userBadges.${badge} == 1`) {
-		eval(`userSlots.slot${num} = "${badge}"`);
+		if (num == "list") {
+		message.reply(":white_check_mark: **OK:** These are the badges that you currently have: " + badgesA[message.author.id]);
+		return;
+		}
+		
+		if (`userBadges.${badge} = 1`) {
+ 		eval(`userSlots.slot${num} = "${badge}"`);
 		} else {
 		message.reply(":no_entry_sign: **NOPE:** You can't equip this badge because you don't own it or it doesn't exist.");
 		return;
 		}	
-								
+			
+				
+		if (num == "background") {
+		eval(`userProfile.background = "${badge}"`);
+		fs.writeFile('./data/profile/profile-background.json', JSON.stringify(badgesP, null, 2), function(err) {
+				if (err) {
+					console.error(err)
+				}
+			});
+			message.reply(":white_check_mark: **OK:** You've successfully equipped the background **" + badge + "**.");
+		return;
+		}
+		
+			
 		if (num == "all") {
 			if (badge == "empty") {
 			userSlots.slot1 = "empty";
@@ -39,14 +65,14 @@ var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 			userSlots.slot4 = "empty";
 			userSlots.slot5 = "empty";
 			userSlots.slot6 = "empty";
+			message.reply(":white_check_mark: **OK:** You've successfully unequipped **all** of your badges.");
 			}
-		}
-
-		if (badge == "empty" && num == "all") {
-		message.reply(":white_check_mark: **OK:** You've successfully unequipped **all** of your badges.");
-			
-		} else if (badge == "empty") {
+		} 
+		
+		if (badge == "empty") {
 		message.reply(":white_check_mark: **OK:** You've successfully unequipped any badge in slot **" + num + "**.");
+		} else if (num == "background") {
+		message.reply(":no_entry_sign: **NOPE:** You can't equip this background because you don't own it or it doesn't exist.");
 		} else {
 		message.reply(":white_check_mark: **OK:** You've successfully equipped the badge **" + badge + "** into slot **" + num + "**.");
 		}
