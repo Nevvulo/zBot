@@ -33,18 +33,20 @@ var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 		var userProfile = badgesP[message.author.id];
 
 		if (num == "list") {
-		message.reply(":white_check_mark: **OK:** These are the badges that you currently have: " + badgesA[message.author.id]);
+		message.reply(":white_check_mark: **OK:** These are the badges that you currently have: " + badgesA[message.author.id].toString());
 		return;
 		}
-		
-		if (`userBadges.${badge} = 1`) {
+
+		if (num == 1 || num == 2 || num == 3 || num == 4 || num == 5 || num == 6) {
+		if (eval(`userBadges.${badge} == 1`) == true) {
  		eval(`userSlots.slot${num} = "${badge}"`);
+		message.reply(":white_check_mark: **OK:** You've successfully equipped the badge **" + badge + "** into slot **" + num + "**.");
 		} else {
 		message.reply(":no_entry_sign: **NOPE:** You can't equip this badge because you don't own it or it doesn't exist.");
 		return;
-		}	
-			
-				
+		}
+		}
+							
 		if (num == "background") {
 		eval(`userProfile.background = "${badge}"`);
 		fs.writeFile('./data/profile/profile-background.json', JSON.stringify(badgesP, null, 2), function(err) {
@@ -54,6 +56,7 @@ var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 			});
 			message.reply(":white_check_mark: **OK:** You've successfully equipped the background **" + badge + "**.");
 		return;
+		//message.reply(":no_entry_sign: **NOPE:** You can't equip this background because you don't own it or it doesn't exist.");
 		}
 		
 			
@@ -71,11 +74,9 @@ var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 		
 		if (badge == "empty") {
 		message.reply(":white_check_mark: **OK:** You've successfully unequipped any badge in slot **" + num + "**.");
-		} else if (num == "background") {
-		message.reply(":no_entry_sign: **NOPE:** You can't equip this background because you don't own it or it doesn't exist.");
-		} else {
-		message.reply(":white_check_mark: **OK:** You've successfully equipped the badge **" + badge + "** into slot **" + num + "**.");
 		}
+		
+
 		
 		fs.writeFile('./slots.json', JSON.stringify(badges, null, 2), function(err) {
 				if (err) {
