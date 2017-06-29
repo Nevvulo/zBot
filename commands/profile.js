@@ -13,6 +13,9 @@ sql.open('./score.sqlite');
 exports.run = (client, message, args) => {
 
 	let badges = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
+	let slots = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
+
+	
 	args = args.toString();
 	if (args == "") {
 		args = message.author.id;
@@ -44,8 +47,21 @@ exports.run = (client, message, args) => {
 	}
 
 	message.guild.fetchMember(args).then(function (member) {
-			sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
+	let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
+	
+	// if the user has no badges, init to false.
+	if (!badgesP[member.id])
+		badgesP[member.id] = {
+			background: "default"
+	};
+			
+	
+	var userProfile = badgesP[member.id];	
+		
+	sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
 		async function drawStats() {
+			var uSlot = slots[member.id];
+			var uBadge = badges[member.id];
 			message.delete ();
 
 			//Fix error with late promise
@@ -55,7 +71,6 @@ exports.run = (client, message, args) => {
 			const levelBounds = await Experience.getLevelBounds(level);
 			const currentExp = await Experience.getCurrentExperience(member.id);
 			const fillValue = Math.min(Math.max(currentExp / (levelBounds.upperBound - levelBounds.lowerBound), 0), 1);
-			console.log(totalExp);
 			
 			if (!badges[member.id])
 				badges[member.id] = {
@@ -64,7 +79,9 @@ exports.run = (client, message, args) => {
 					moderator: 0,
 					essaywriter: 0,
 					subscriber: 0,
-					streamer: 0
+					streamer: 0,
+					xbt: 0,
+					friendship: 0
 				};
 
 			function fontFile(name) {
@@ -80,8 +97,8 @@ exports.run = (client, message, args) => {
 			const Image = Canvas.Image;
 
 			var canvas = new Canvas(300, 300)
-				var ctx = canvas.getContext('2d')
-				const base = new Image();
+			var ctx = canvas.getContext('2d')
+			const base = new Image();
 			const cond = new Image();
 			const subbadge = new Image();
 			const devbadge = new Image();
@@ -89,6 +106,9 @@ exports.run = (client, message, args) => {
 			const modbadge = new Image();
 			const essaywriterbadge = new Image();
 			const streamerbadge = new Image();
+			const xbtbadge = new Image();
+			const friendshipbadge = new Image();
+			const photographerbadge = new Image();
 
 			const generate = () => {
 				// Environment Variables
@@ -111,6 +131,13 @@ exports.run = (client, message, args) => {
 				ctx.font = '12px Roboto';
 				ctx.fillStyle = member.displayHexColor;
 				ctx.fillText(member.highestRole.name.toUpperCase(), 75, 50);
+				
+				//If XBT:
+				if (badges[member.id].xbt == 1) {
+				ctx.font = '12px Roboto';
+				ctx.fillStyle = '#3498db';
+				ctx.fillText("Xail Bot Testing", 205, 50);
+				}
 
 				// EXP TITLE
 				ctx.font = '22px Uni Sans Heavy CAPS';
@@ -170,84 +197,69 @@ exports.run = (client, message, args) => {
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
 				ctx.fillText('YOUR BADGES', 25, 255);
 				// Badges are spaced out +40 X for each badge
-				// If member is a subscriber
-				if (badges[member.id].subscriber == 1) {
-					ctx.drawImage(subbadge, 25, 260, 25, 25);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				} else {
-					ctx.globalAlpha = 0
-						ctx.drawImage(subbadge, 25, 260, 25, 25);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+				let slot1X = 25;
+				let slot2X = 65;
+				let slot3X = 105;
+				let slot4X = 145;
+				let slot5X = 185;
+				let slot6X = 225;
+				
+				// + SUBSCRIBER BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "subscriber") {
+					ctx.drawImage(subbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-
-				// If developer aka blake
-				if (badges[member.id].developer == 1) {
-					ctx.globalAlpha = 1
-						ctx.drawImage(devbadge, 265, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				} else {
-					ctx.globalAlpha = 0
-						ctx.drawImage(devbadge, 265, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
 				}
-
-				// If moderator
-				if (badges[member.id].moderator == 1) {
-					ctx.globalAlpha = 1
-						ctx.drawImage(modbadge, 65, 260, 25, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-
-				} else {
-					ctx.globalAlpha = 0.15
-						ctx.drawImage(modbadge, 65, 260, 25, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+				
+				// + ACTIVE BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "active") {
+					ctx.drawImage(activebadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-
-				// If a member is active as picked by me
-				if (badges[member.id].active == 1) { // add id's here if active
-					ctx.globalAlpha = 1
-						ctx.drawImage(activebadge, 105, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				} else {
-					ctx.globalAlpha = 0.15
-						ctx.drawImage(activebadge, 105, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+				}	
+								
+				// + MODERATOR BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "moderator") {
+					ctx.drawImage(modbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-
-				// If a member has been typing for a straight minute
-				if (badges[member.id].essaywriter == 1) { // add id's here if active
-					ctx.globalAlpha = 1
-						ctx.drawImage(essaywriterbadge, 145, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				} else {
-					ctx.globalAlpha = 0.15
-						ctx.drawImage(essaywriterbadge, 145, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+				}	
+								
+				// + ESSAYWRITER BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "essaywriter") {
+					ctx.drawImage(essaywriterbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-
-				// If streamer:
-				if (badges[member.id].streamer == 1) { // add id's here if active
-					ctx.globalAlpha = 1;
-					ctx.drawImage(streamerbadge, 185, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				} else {
-					ctx.globalAlpha = 0;
-					ctx.drawImage(streamerbadge, 265, 260, 28, 28);
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+				}	
+								
+				// + XBT BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "xbt") {
+					ctx.drawImage(xbtbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-
+				}	
+								
+				// + FRIENDSHIP BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "friendship") {
+					ctx.drawImage(friendshipbadge, eval(`slot${i}X`), 260, 25, 25);
+				}
+				}
+								
+				// + DEVELOPER BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "developer") {
+					ctx.drawImage(devbadge, eval(`slot${i}X`), 260, 25, 25);
+				}
+				}
+								
+				// + PHOTOGRAPHER BADGE
+				for (let i = 1; i < 7; i++) {
+				if (eval(`uSlot.slot${i}`) == "photographer") {
+					ctx.drawImage(photographerbadge, eval(`slot${i}X`), 260, 25, 25);
+				}
+				}
+				
 				// Image
 				ctx.globalAlpha = 1
 				ctx.beginPath();
@@ -259,7 +271,7 @@ exports.run = (client, message, args) => {
 				ctx.drawImage(cond, 15, 15, 50, 50); //org 15, 15, 50, 50
 			};
 
-			base.src = await fs.readFileAsync('./assets/profile/backgrounds/default.png');
+			base.src = await fs.readFileAsync(`./assets/profile/backgrounds/${userProfile.background}.png`);
 			cond.src = await request({
 					uri: member.user.avatarURL() ? member.user.avatarURL( {format: 'png'} ) : member.user.displayAvatarURL,
 					encoding: null
@@ -270,6 +282,9 @@ exports.run = (client, message, args) => {
 			activebadge.src = await fs.readFileAsync('./assets/profile/badges/active.png');
 			essaywriterbadge.src = await fs.readFileAsync('./assets/profile/badges/essaywriter.png');
 			streamerbadge.src = await fs.readFileAsync('./assets/profile/badges/streamer.png');
+			xbtbadge.src = await fs.readFileAsync('./assets/profile/badges/xbt.png');
+			friendshipbadge.src = await fs.readFileAsync('./assets/profile/badges/friendship.png');
+			photographerbadge.src = await fs.readFileAsync('./assets/profile/badges/photographer.png');
 
 			generate();
 
