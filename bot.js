@@ -29,7 +29,6 @@ const yt = require('ytdl-core');
 var colors = require('colors');
 const replace = require("replace");
 const maintenanceM = require('./commands/debug/maintenance.js');
-const pumaproof = require('./commands/moderator/pumaproof.js');
 
 //Maintenance check
 var maintenance = false;
@@ -42,9 +41,9 @@ if (maintenanceM.maintenanceEnabled == true) {
 const sql = require('sqlite');
 sql.open('./score.sqlite');
 
-const expletiveFilter = require('./commands/moderator/filter.js');
-const doModeration = require('./commands/moderator/mod.js');
-const panicMode = require('./commands/moderator/panic.js');
+const expletiveFilter = require('./commands/filter.js');
+const doModeration = require('./commands/mod.js');
+const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience');
 
@@ -841,10 +840,10 @@ function messageChecker(oldMessage, newMessage) {
 	}
 
 	// Command handler for bot, mod and debug commands.
-	if (msg.toLowerCase().startsWith("bot:")) {
+	if (msg.toLowerCase().startsWith("+")) {
 
 		//Un-comment to activate Lockdown Mode. 	return message.channel.send(":no_entry_sign: **EMERGENCY**: *Xail Bot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/Xail-Bot/wiki/Lockdown-Mode");
-		var command = msg.substr(4).split(" ").slice(0, 1);
+		var command = msg.substr(1).split(" ").slice(0, 1);
 		var args = msg.split(" ").slice(1);
 
 		exports.commandIssuer = message.author.id;
@@ -854,68 +853,24 @@ function messageChecker(oldMessage, newMessage) {
 			let commandFile = require(`./commands/${command}.js`);
 			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
-			} else {
-				commandFile.run(client, message, args);
+		} else if (!message.member.roles.find("name", "Fleece Police")) {
+			if (command == "mod" || command == "filter" || command == "rm" || command == "uinfo" || command == "warn" || command == "ban" || command == "softban" || command == "mute" || command == "say" || command == "permit" || command == "setgame" || command == "reboot" || command == "cancel") {
+			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
+			}	
+		} else {
+			commandFile.run(client, message, args);
 			}
 		} catch (err) {
 			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 			}
-			if (pumaproof.puma == true) {} else {
 				message.reply(":no_entry_sign: **NOPE**: That is not a valid command. You can type `bot:help` to see a list of all available commands.");
 				console.error(colors.bold(colors.bgRed(colors.white(err))));
 				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
-			}
-		}
 
+			}
 	}
-
-	// PUMA PROOF
-	if (pumaproof.puma == true) {
-		if (msg.toLowerCase().startsWith("mod:") || msg.toLowerCase().startsWith("bot:")) {
-			if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
-				var command = msg.substr(4).split(" ").slice(0, 1);
-				var args = msg.split(" ").slice(1);
-
-				console.log(colors.bold(colors.bgBlue(colors.yellow(message.author.username + " issued moderator command " + command))));
-
-				try {
-					let commandFile = require(`./commands/moderator/${command}.js`);
-					commandFile.run(client, message, args);
-				} catch (err) {}
-			} else {
-				doNotDelete = false;
-				message.reply(':no_entry_sign: **NOPE:** What? You\'re not a member of the staff! Why would you be allowed to type that!?');
-				message.delete();
-			}
-		}
-	} else {
-		// Moderator command handler
-		if (msg.toLowerCase().startsWith("mod:")) {
-			if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
-				var command = msg.substr(4).split(" ").slice(0, 1);
-				var args = msg.split(" ").slice(1);
-
-				console.log(colors.bold(colors.bgBlue(colors.yellow(message.author.username + " issued moderator command " + command))));
-
-				try {
-					let commandFile = require(`./commands/moderator/${command}.js`);
-					commandFile.run(client, message, args);
-				} catch (err) {
-					if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
-						message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
-					}
-					message.reply(":no_entry_sign: **NOPE**: That is not a valid command. You can type `bot:help` to see a list of all available commands.");
-					console.error(colors.bold(colors.bgRed(colors.white(err))));
-					console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
-				}
-			} else {
-				doNotDelete = false;
-				message.reply(':no_entry_sign: **NOPE:** What? You\'re not a member of the staff! Why would you be allowed to type that!?');
-				message.delete();
-			}
-		}
-	}
+	
 	// Debug command handler
 	if (msg.toLowerCase().startsWith("debug:")) {
 		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
@@ -982,6 +937,7 @@ function messageChecker(oldMessage, newMessage) {
 		}
 	}
 }
+
 // END OF MESSAGE Function
 
 client.on('message', messageChecker);
