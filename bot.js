@@ -38,14 +38,17 @@ if (maintenanceM.maintenanceEnabled == true) {
 	maintenance = false;
 }
 
+//Database require
 const sql = require('sqlite');
 sql.open('./score.sqlite');
 
 const expletiveFilter = require('./commands/filter.js');
+const challenge = require('./commands/challenge.js');
 const doModeration = require('./commands/mod.js');
 const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience');
+const botthis = require('./bot.js');
 
 var bulkC = 0;
 var lineExists = {};
@@ -69,6 +72,21 @@ var caughtFastSpam = false;
 var caughtLink = false;
 var caughtKYS = false;
 var ignoreMessage = false;
+
+var health = {};
+var healLevel = {};
+var timesHealed = {};
+var missTurn = {};
+var armor = {};
+var specialAbilityUsed = {};
+var turn = "";
+var init = true;
+var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
+var userChallenge;
+
+const electron = require('electron');
+var currentGuild = "";
+var currentChannel = "";
 
 doModeration[196793479899250688] = true;
 
@@ -143,9 +161,11 @@ function setGame() {
 			presence.game.name = "being a ninja";
 			break;
 		case 21:
-			presence.game.name = "bot:help for more info";
+			presence.game.name = "+help for more info";
 			break;
+
 	}
+	presence.game.name = "with 500 followers!";
 	client.user.setPresence(presence);
 }
 
@@ -177,7 +197,7 @@ function messageChecker(oldMessage, newMessage) {
 	var msg = message.content;
 
 	if (message.guild == null) return;
-	
+
 	exports.userAFK = userAFK;
 
 	if (message.mentions.users.size > 0 && message.author.bot == false) {
@@ -191,7 +211,7 @@ function messageChecker(oldMessage, newMessage) {
 	} else {}
 
 	//✦ Check for a photo in message, if true, add 1 to photographer progress badge. ✦
-	var badgecompletion = JSON.parse(fs.readFileSync('./data/badges/badge-progress.json', 'utf8'));
+	var badgecompletion = JSON.parse(fs.readFileSync('./data/badges/Badge Progress.json', 'utf8'));
 
 	if (!badgecompletion[message.author.id])
 		badgecompletion[message.author.id] = {
@@ -199,8 +219,6 @@ function messageChecker(oldMessage, newMessage) {
 		};
 
 	//If user posts a picture in #photos, add 1 to photographer badge:
-	if (message.author.bot) return;
-
 	if (message.attachments.size > 0) {
 		badgecompletion[message.author.id].photographer += 1;
 	}
@@ -256,8 +274,7 @@ function messageChecker(oldMessage, newMessage) {
 				});
 			});
 
-			var badges = JSON.parse(fs.readFileSync('./badges.json', 'utf8'));
-
+			var badges = JSON.parse(fs.readFileSync('./data/badges/Badge Tracker.json', 'utf8'));
 			// If the user currently doesn't exist in the badges file, init to 0 for all badges.
 			if (!badges[message.author.id])
 				badges[message.author.id] = {
@@ -272,10 +289,7 @@ function messageChecker(oldMessage, newMessage) {
 					photographer: 0
 				};
 
-
-
 			var userBadges = badges[message.author.id];
-
 
 			sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
 				// Check if message author is zBlake:
@@ -293,7 +307,7 @@ function messageChecker(oldMessage, newMessage) {
 				}
 
 				// If message author is one of the names below (active badge):
-				if (member.id == 246574843460321291 || member.id == 284551391781978112 || member.id == 184050823326728193 || member.id == 246129294785380353 || member.id == 224472981571633153 || member.id == 213776985581813760 || member.id == 213776985581813760) { // add id's here if active
+				if (member.id == 246574843460321291 || member.id == 284551391781978112 || member.id == 184050823326728193 || member.id == 246129294785380353 || member.id == 224472981571633153 || member.id == 213776985581813760 || member.id == 213776985581813760 || member.id == 196792235654774784) { // add id's here if active
 					userBadges.active = 1;
 				} else {
 					userBadges.active = 0;
@@ -333,16 +347,16 @@ function messageChecker(oldMessage, newMessage) {
 				}
 
 				// Save photographer progress if applicable:
-				fs.writeFile('./data/badges/badge-progress.json', JSON.stringify(badgecompletion, null, 2), function(err) {
+				fs.writeFile('./data/badges/Badge Progress.json', JSON.stringify(badgecompletion, null, 2), function(err) {
 					if (err) {
-						console.error(err)
+						console.log(colors.bold(colors.bgRed(colors.white("[ERROR] [BADGES] Failed to write to Badge Progress JSON file."))));
 					}
 				});
 
 				// Save badges.json
-				fs.writeFile('./badges.json', JSON.stringify(badges, null, 2), function(err) {
+				fs.writeFile('./data/badges/Badge Tracker.json', JSON.stringify(badges, null, 2), function(err) {
 					if (err) {
-						console.error(err)
+						console.log(colors.bold(colors.bgRed(colors.white("[ERROR] [BADGES] Failed to write to Badge Tracker JSON file."))));
 					}
 				});
 
@@ -425,6 +439,380 @@ function messageChecker(oldMessage, newMessage) {
 			})
 		}
 	}
+
+
+	//CHALLENGE
+	if (challenge.startedChallenge && message.channel.name == challenge.channel) {
+		// Initialization variables
+		if (init) {
+		health[challenge.author] = 100;
+		health[challenge.enemy] = 100;
+		armor[challenge.author] = 0;
+		armor[challenge.enemy] = 0;
+		healLevel[challenge.author] = 1;
+		healLevel[challenge.enemy] = 1;
+		specialAbilityUsed[challenge.enemy.id] = false;
+		specialAbilityUsed[challenge.author.id] = false;
+		timesHealed[challenge.enemy.id] = 1
+		timesHealed[challenge.author.id] = 1
+		turn = challenge.author;
+		init = false;
+		}
+
+		// Only check for messages that start with attack, defend, heal or end.
+		if (msg == "attack" || msg == "defend" || msg == "heal" || msg == "end" || msg == "special") {
+		userChallenge = badgesC[turn.id];
+		// Check for turn
+		if (message.author.id != turn.id) {
+			message.reply(":crossed_swords: **CHALLENGE**: It is not your turn!");
+			return;
+		}
+
+		message.channel.send(missTurn[turn.id]);
+
+		if (missTurn[turn.id] == true) {
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + turn + " missed their turn.");
+			missTurn[turn.id] = false;
+			//END TURN
+			if (turn == challenge.enemy) {
+			turn = challenge.author
+			} else {
+			turn = challenge.enemy
+			}
+
+			if (userChallenge.weapon == "gold") {
+			message.channel.send(":crossed_swords: **CHALLENGE**: It is " + turn + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");
+			} else {
+			message.channel.send(":crossed_swords: **CHALLENGE**: It is " + turn + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `end`");
+			}
+
+			return;
+		}
+
+		if (msg.toLowerCase().startsWith("attack")) {
+			let damage = Math.round(Math.random() * (27 - 7) + 7) - armor[challenge.enemy];
+			let miss = Math.round(Math.random() * (3 - 1) + 1)
+
+			if (turn == challenge.enemy) {
+			damage = Math.round(Math.random() * (27 - 7) + 7) - armor[challenge.author];
+
+			//1/3 chance to miss
+			if (miss != 3) {
+			//Deduct health
+			health[challenge.author] = health[challenge.author] - damage;
+
+			//Check if user has defeated enemy
+			if (health[challenge.author] < 1) {
+			var winner = challenge.enemy;
+			var loser = challenge.author;
+			var wowword = "";
+			var verb = "";
+			var noun = "";
+
+			// WOW WORD
+			switch (Math.floor(Math.random() * 1000) % 6) {
+						case 0:
+							wowword = "Holy cow!"
+							break;
+						case 1:
+							wowword = "Wow!"
+							break;
+						case 2:
+							wowword = "I did not expect that!"
+							break;
+						case 3:
+							wowword = "God damn!"
+							break;
+						case 4:
+							wowword = "Oh my god!"
+							break;
+						case 5:
+							wowword = "No way!"
+							break;
+			}
+
+			// NOUN
+			switch (Math.floor(Math.random() * 1000) % 4) {
+						case 0:
+							noun = "just"
+							break;
+						case 1:
+							noun = "totally"
+							break;
+						case 2:
+							noun = "kinda"
+							break;
+						case 3:
+							noun = "100%"
+							break;
+			}
+
+			// VERB
+			switch (Math.floor(Math.random() * 1000) % 11) {
+						case 0:
+							verb = "annihilated"
+							break;
+						case 1:
+							verb = "knocked out"
+							break;
+						case 2:
+							verb = "absolutely flogged"
+							break;
+						case 3:
+							verb = "destroyed"
+							break;
+						case 4:
+							verb = "crushed"
+							break;
+						case 5:
+							verb = "ruined"
+							break;
+						case 6:
+							verb = "eradicated"
+							break;
+						case 7:
+							verb = "dismantled"
+							break;
+						case 8:
+							verb = "wiped out"
+							break;
+						case 9:
+							verb = "erased"
+							break;
+						case 10:
+							verb = "squashed"
+							break;
+			}
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + wowword + " " + winner + " " + noun + " " + verb + " " + loser + "! Good fight!")
+			return;
+			}
+
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.author + " took **" + damage + "** damage. They now have **" + health[challenge.author] + " HP**.")
+			} else {
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.author + " dodged " + challenge.enemy + "'s attack!");
+			}
+
+			} else {
+			damage = Math.round(Math.random() * (27 - 7) + 7) - armor[challenge.enemy];
+
+			//1/3 chance to miss
+			if (miss != 3) {
+			//Deduct health
+			health[challenge.enemy] = health[challenge.enemy] - damage;
+
+			//Check if user has defeated enemy
+			if (health[challenge.enemy] < 1) {
+			var winner = challenge.author;
+			var loser = challenge.enemy;
+			var wowword = "";
+			var verb = "";
+			var noun = "";
+
+			// WOW WORD
+			switch (Math.floor(Math.random() * 1000) % 6) {
+						case 0:
+							wowword = "Holy cow!"
+							break;
+						case 1:
+							wowword = "Wow!"
+							break;
+						case 2:
+							wowword = "I did not expect that!"
+							break;
+						case 3:
+							wowword = "God damn!"
+							break;
+						case 4:
+							wowword = "Oh my god!"
+							break;
+						case 5:
+							wowword = "No way!"
+							break;
+			}
+
+			// NOUN
+			switch (Math.floor(Math.random() * 1000) % 4) {
+						case 0:
+							noun = "just"
+							break;
+						case 1:
+							noun = "totally"
+							break;
+						case 2:
+							noun = "kinda"
+							break;
+						case 3:
+							noun = "100%"
+							break;
+			}
+
+			// VERB
+			switch (Math.floor(Math.random() * 1000) % 11) {
+						case 0:
+							verb = "annihilated"
+							break;
+						case 1:
+							verb = "knocked out"
+							break;
+						case 2:
+							verb = "absolutely flogged"
+							break;
+						case 3:
+							verb = "destroyed"
+							break;
+						case 4:
+							verb = "crushed"
+							break;
+						case 5:
+							verb = "ruined"
+							break;
+						case 6:
+							verb = "eradicated"
+							break;
+						case 7:
+							verb = "dismantled"
+							break;
+						case 8:
+							verb = "wiped out"
+							break;
+						case 9:
+							verb = "erased"
+							break;
+						case 10:
+							verb = "squashed"
+							break;
+			}
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + wowword + " " + winner + " " + noun + " " + verb + " " + loser + "! Good fight!");
+			return;
+			}
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.enemy + " took **" + damage + "** damage. They now have **" + health[challenge.enemy] + " HP**.")
+			} else {
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.enemy + " dodged " + challenge.author + "'s attack!");
+			}
+			}
+
+			//END TURN
+			if (turn == challenge.enemy) {
+			turn = challenge.author
+			} else {
+			turn = challenge.enemy
+			}
+		}
+
+		if (msg.toLowerCase().startsWith("defend")) {
+			let defense = Math.round(Math.random() * (5 - 2) + 2)
+
+			if (turn == challenge.enemy) {
+			if (armor[challenge.enemy] > 7) {
+				message.reply(":no_entry_sign: **NOPE**: You are at the maximum defense level!");
+				armor[challenge.enemy] = 7;
+				return;
+			}
+			armor[challenge.enemy] = armor[challenge.enemy] + defense;
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.enemy + " equiped some armor. They now take **" + defense + " HP** less damage for every attack.")
+			} else {
+			if (armor[challenge.author] > 7) {
+				message.reply(":no_entry_sign: **NOPE**: You are at the maximum defense level!");
+				armor[challenge.author] = 7;
+				return;
+			}
+			armor[challenge.author] = armor[challenge.author] + defense;
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.author + " equiped some armor. They now take **" + defense + " HP** less damage for every attack.")
+			}
+
+			//END TURN
+			if (turn == challenge.enemy) {
+			turn = challenge.author
+			} else {
+			turn = challenge.enemy
+			}
+		}
+
+		if (msg.toLowerCase().startsWith("heal")) {
+			if (timesHealed[turn.id] < 4) {
+			let healAmount = Math.round(Math.random() * (12 - 5) + 5)
+			timesHealed[turn.id] = timesHealed[turn.id] + 1
+
+			if (turn == challenge.enemy) {
+
+			// HEAL POTION LEVEL HANDLING
+			if (healLevel[challenge.enemy] == 1) {
+			healAmount = Math.round(Math.random() * (12 - 5) + 5)
+			} else if (healLevel[challenge.enemy] == 2) {
+			healAmount = Math.round(Math.random() * (15 - 8) + 8)
+			} else if (healLevel[challenge.enemy] == 3) {
+			healAmount = Math.round(Math.random() * (18 - 11) + 11)
+			}
+
+			health[challenge.enemy] = health[challenge.enemy] + healAmount;
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.enemy + " drank a **level " + healLevel[challenge.enemy] + "** health potion. They healed **" + healAmount + " HP**, bringing them up to **" + health[challenge.enemy] + " HP**.");
+			} else {
+
+			// HEAL POTION LEVEL HANDLING
+			if (healLevel[challenge.author] == 1) {
+			healAmount = Math.round(Math.random() * (12 - 5) + 5)
+			} else if (healLevel[challenge.author] == 2) {
+			healAmount = Math.round(Math.random() * (15 - 8) + 8)
+			} else if (healLevel[challenge.author] == 3) {
+			healAmount = Math.round(Math.random() * (18 - 11) + 11)
+			}
+
+			health[challenge.author] = health[challenge.author] + healAmount;
+			message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.author + " drank a **level " + healLevel[challenge.author] + "** health potion. They healed **" + healAmount + " HP**, bringing them up to **" + health[challenge.author] + " HP**.");
+			}
+
+			//END TURN
+			if (turn == challenge.enemy) {
+			turn = challenge.author
+			} else {
+			turn = challenge.enemy
+			}
+			} else {
+			message.reply(":no_entry_sign: **NOPE**: You can't heal anymore.");
+			return;
+			}
+		}
+
+
+
+		if (msg.toLowerCase().startsWith("special")) {
+			if (userChallenge.weapon == "gold") {
+			if (specialAbilityUsed[turn.id] == false) {
+			if (turn == challenge.enemy) {
+				health[challenge.enemy] = health[challenge.enemy] + 20;
+				missTurn[challenge.author.id] = true;
+				message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.enemy + " used their special ability: **Gold Frost**! " + challenge.enemy + " gained **20 HP** and " + challenge.author + " will miss their next turn.");
+				specialAbilityUsed[challenge.enemy.id] = true;
+			} else {
+				health[challenge.author] = health[challenge.author] + 20;
+				missTurn[challenge.enemy.id] = true;
+				message.channel.send(":crossed_swords: **CHALLENGE**: " + challenge.author + " used their special ability: **Gold Frost**! " + challenge.author + " gained **20 HP** and " + challenge.enemy + " will miss their next turn.");
+				specialAbilityUsed[challenge.author.id] = true;
+			}
+			} else {
+			message.reply(":no_entry_sign: **NOPE**: You've already used your special ability.");
+			}
+			} else {
+			message.reply(":no_entry_sign: **NOPE**: You don't have a special ability to use.");
+			}
+			//END TURN
+			if (turn == challenge.enemy) {
+			turn = challenge.author
+			} else {
+			turn = challenge.enemy
+			}
+		}
+
+		if (userChallenge.weapon == "gold") {
+		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + turn + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");
+		} else {
+		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + turn + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `end`");
+		}
+		return;
+		}
+
+	}
+
 
 	// If botDelMessage has no value, init to true.
 	if (botDelMessage == null) {
@@ -523,7 +911,7 @@ function messageChecker(oldMessage, newMessage) {
 			} else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
 				ignoreMessage = true;
 				doNotDelete = false;
-				console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
+				console.log(colors.yellow(colors.bold("▲ Spam limits activated for " + message.author.tag)));
 				switch (Math.floor(Math.random() * 1000) % 5) {
 					case 0:
 						message.reply("Well... We all heard you.");
@@ -555,7 +943,7 @@ function messageChecker(oldMessage, newMessage) {
 				message.delete();
 			} else if (smallMessageCount[message.author.id] > 5) {
 				ignoreMessage = true;
-				console.log(colors.bold(colors.yellow("▲ Spam limits kicking in!")));
+				console.log(colors.yellow(colors.bold("▲ Spam limits activated for " + message.author.tag)));
 				doNotDelete = false;
 				switch (Math.floor(Math.random() * 1000) % 4) {
 					case 0:
@@ -574,21 +962,21 @@ function messageChecker(oldMessage, newMessage) {
 
 				message.delete();
 			}
-			
+
 			// Check message content for the words seen in exp or dxp, and if one or more are found, delete the message.
 			// Expletive filter
 			if (expletiveFilter.enabled) {
-				var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|fucks|fuckin|fucking|penis|cunt|faggot|fark|fck|fag|wank|wanker|nigger|nigga|bastard|bitch|asshole|dick|dickhead|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|porn|stfu)(\b|\s|$|.|\,|\ )/i);
+				var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|penis|cunt|faggot|fark|fck|fag|wank|nigger|nigga|bastard|bitch|asshole|dick|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|porn|stfu)(\b|\s|$|.|\,|\ )/i);
 				var dxp = msg.search(/(\b|\s|^|.|\,|\ )(cunt|b1tch|b!tch|bitch|cnut)(\b|\s|$|.|\,|\ )/i);
 
 				if (exp != -1) { //Gah! They're not supposed to say that!
 					if (dxp != -1) { //extra bad word!
-						console.log(colors.bold(colors.yellow("▲ Expletive (level 2) caught at " + parseInt(exp))));
+						console.log(colors.yellow(colors.bold("▲ [SEVERE] Expletive caught in message by " + message.author.tag)));
 						caughtSwear = true;
 					}
 
-					console.log(colors.bold(colors.yellow("▲ Expletive caught at " + parseInt(exp))));
-					switch (Math.floor(Math.random() * 1000) % 22) {
+					console.log(colors.yellow(colors.bold("▲ Expletive caught in message by " + message.author.tag)));
+					switch (Math.floor(Math.random() * 1000) % 21) {
 						case 0:
 							message.reply("I'm very disappointed in you. :angry:");
 							break;
@@ -650,7 +1038,7 @@ function messageChecker(oldMessage, newMessage) {
 							message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
 							break;
 						case 20:
-							message.reply("♫ God I wish I never spoke, now I gotta wash my mouth out with soap ♫");
+							message.reply("https://cdn.discordapp.com/attachments/325540027972976650/333031862807166977/oGPoUBPq_CTMvEiSVSFVruRc1xMozwglHWxYIrGzUk.png");
 							break;
 					}
 					doNotDelete = false;
@@ -678,7 +1066,7 @@ function messageChecker(oldMessage, newMessage) {
 					} else if (msg.toLowerCase().includes("twitch.tv/xailran") || msg.toLowerCase().includes("www.youtube.com") || msg.toLowerCase().includes("www.reddit.com") || msg.toLowerCase().includes("discord.gg")) {
 					} else {
 						caughtLink = true;
-						console.log(colors.yellow(colors.bold("Link caught at " + parseInt(exp))));
+						console.log(colors.yellow(colors.bold("▲ Link caught in message by " + message.author.tag)));
 						message.delete();
 						switch (Math.floor(Math.random() * 1000) % 6) {
 							case 0:
@@ -763,7 +1151,7 @@ function messageChecker(oldMessage, newMessage) {
 						message.reply("Is it me you're looking for?");
 						break;
 					case 1:
-						message.reply("Hey there! If you ever need help using Xail Bot, just type `bot:help`!");
+						message.reply("Hey there! If you ever need help using Xail Bot, just type `+help`!");
 						break;
 					case 2:
 						message.reply("Hello there!");
@@ -851,30 +1239,33 @@ function messageChecker(oldMessage, newMessage) {
 
 		try {
 			let commandFile = require(`./commands/${command}.js`);
+			// ACE prevention
 			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 		} else if (!message.member.roles.find("name", "Fleece Police")) {
+			// If command is a moderator command
 			if (command == "mod" || command == "filter" || command == "rm" || command == "uinfo" || command == "warn" || command == "ban" || command == "softban" || command == "mute" || command == "say" || command == "permit" || command == "setgame" || command == "reboot" || command == "cancel") {
 			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
-			}	
+			} else {
+			commandFile.run(client, message, args);
+			}
 		} else {
 			commandFile.run(client, message, args);
 			}
 		} catch (err) {
+			// ACE prevention
 			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 			}
-				message.reply(":no_entry_sign: **NOPE**: That is not a valid command. You can type `bot:help` to see a list of all available commands.");
-				console.error(colors.bold(colors.bgRed(colors.white(err))));
+				console.error(colors.bold(colors.bgRed(colors.white("[ERROR PERFORMING " + command + "]\n" + err.stack))));
 				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
-
 			}
 	}
-	
+
 	// Debug command handler
-	if (msg.toLowerCase().startsWith("debug:")) {
-		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
-			var command = msg.substr(6).split(" ").slice(0, 1);
+	if (msg.toLowerCase().startsWith("%")) {
+		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock") || message.member.roles.find("name", "XailBot")) {
+			var command = msg.substr(1).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
 			console.log(colors.bold(colors.bgBlue(colors.red(message.author.username + " issued debug command " + command))));
@@ -883,7 +1274,7 @@ function messageChecker(oldMessage, newMessage) {
 				let commandFile = require(`./commands/debug/${command}.js`);
 				commandFile.run(client, message, args);
 			} catch (err) {
-				console.error(colors.bold(colors.bgRed(colors.white(err))));
+				console.error(colors.bold(colors.bgRed(colors.white(err.stack))));
 				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
 			}
 		} else {
@@ -942,6 +1333,61 @@ function messageChecker(oldMessage, newMessage) {
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
+
+
+process.stdin.resume();
+process.stdin.setEncoding('utf-8');
+process.stdin.on('data', sendMessage);
+
+function sendMessage(text) {
+	text = text.trim();
+	switch (text) {
+		case "stop":
+			console.log("Stopping...")
+			process.exit(0);
+			break;
+		case "setguild":
+			console.log("Set guild to: none")
+			currentGuild = "";
+			currentChannel = "";
+			break;
+		case "setchannel":
+			console.log("Set channel to: none")
+			currentChannel = "";
+			break;
+		default:
+			if (text.startsWith("log")) {
+				console.log(text.substr(4));
+			} else if (text.startsWith("setguild")) {
+				client.guilds.forEach(function (guild) {
+					if (guild.name == text.substr(9)) {
+						currentGuild = guild;
+						currentChannel = "";
+						console.log("Set guild to: " + text.substr(9))
+					}
+				})
+			} else if (text.startsWith("setchannel")) {
+				if (currentGuild != "") {
+					currentGuild.channels.forEach(function (channel) {
+						if (channel.name == text.substr(11)) {
+							currentChannel = channel;
+							console.log("Set channel to: #" + text.substr(11))
+						}
+					})
+				} else {
+					console.log("Set a guild first!")
+				}
+			} else if (text.startsWith("send")) {
+				if (currentChannel != "") {
+					currentChannel.send(text.substr(5))
+				}
+			}
+	}
+}
+
+client.on('channelCreate', function(channel) {
+console.log(channel);
+});
 
 client.on('guildMemberAdd', function(guildMember) {
 	if (guildMember.guild.id == 196793479899250688) {
@@ -1028,58 +1474,57 @@ client.on('guildMemberRemove', function(guildMember) {
 	}
 });
 
-client.on('guildMemberUpdate', function(oldUser, newUser) {
-	if (oldUser.user.bot == true)
-		return;
-
-	if (newUser.nickname != oldUser.nickname) {
-		var channel = client.channels.get("229575537444651009"); //Admin Bot warnings
-		if (newUser.nickname == null) {
-			channel = client.channels.get("229575537444651009");
-			channel.send({
-				embed: {
-					color: 4371444,
-					author: {
-						name: "ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.tag,
-						icon_url: oldUser.user.displayAvatarURL
-					},
-					description: ":label: <@" + oldUser.user.id + "> has cleared their nickname.\nIt has now defaulted back to their username.\n",
-					fields: [{
-						name: '**Previous Nickname**',
-						value: oldUser.displayName
-					}],
-					timestamp: new Date()
-				}
-			});
-			return;
-		} else {
-			channel = client.channels.get("229575537444651009");
-			channel.send({
-				embed: {
-					color: 4371444,
-					author: {
-						name: "ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.tag,
-						icon_url: oldUser.user.avatarURL({
-							format: 'png'
-						})
-					},
-					description: ":label: <@" + oldUser.user.id + "> has changed their nickname.\n",
-					fields: [{
-							name: '**Previous Nickname**',
-							value: oldUser.displayName
-						},
-						{
-							name: '**New Nickname**',
-							value: newUser.displayName
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-			return;
-		}
-	}
-});
+//client.on('guildMemberUpdate', function(oldUser, newUser) {
+	//if (oldUser.user.bot == true)
+		//return;
+	//if (newUser.nickname != oldUser.nickname) {
+		//var channel = client.channels.get("229575537444651009"); //Admin Bot warnings
+		//if (newUser.nickname == null) {
+			//channel = client.channels.get("229575537444651009");
+			//channel.send({
+				//embed: {
+					//color: 4371444,
+					//author: {
+						//name: "ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.tag,
+						//icon_url: oldUser.user.displayAvatarURL
+					//},
+					//description: ":label: <@" + oldUser.user.id + "> has cleared their nickname.\nIt has now defaulted back to their username.\n",
+					//fields: [{
+						//name: '**Previous Nickname**',
+						//value: oldUser.displayName
+					//}],
+					//timestamp: new Date()
+				//}
+			//});
+			//return;
+		//} else {
+			//channel = client.channels.get("229575537444651009");
+			//channel.send({
+				//embed: {
+					//color: 4371444,
+					//author: {
+						//name: "ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.tag,
+						//icon_url: oldUser.user.avatarURL({
+							//format: 'png'
+						//})
+					//},
+					//description: ":label: <@" + oldUser.user.id + "> has changed their nickname.\n",
+					//fields: [{
+						//	name: '**Previous Nickname**',
+						//	value: oldUser.displayName
+						//},
+						//{
+						//	name: '**New Nickname**',
+						//	value: newUser.displayName
+						//}
+					//],
+					//timestamp: new Date()
+				//}
+			//});
+			//return;
+		//}
+	//}
+//});
 
 client.on('userUpdate', function(oldUser, newUser) {});
 
