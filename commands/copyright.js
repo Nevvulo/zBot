@@ -1,6 +1,6 @@
 exports.run = (client, message, args) => {
 doNotDelete = false;
-message.author.sendMessage(
+message.author.send(
 	"Copyright (C) 2017 Victor Tran and Rylan Arbour\n\n" +
 	"Rewritten by zBlake for use on Rainbow Gaming." +
 
