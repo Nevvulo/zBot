@@ -1,7 +1,9 @@
 const fs = require('fs');
+//Database require
+const sql = require('sqlite');
+sql.open('./score.sqlite');
 
 exports.run = (client, message, args) => {
-let badgesA = JSON.parse(fs.readFileSync('./data/badges/Badge Tracker.json', 'utf8'));
 let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
 var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
@@ -10,7 +12,6 @@ if (!badgesC[message.author.id])
 			badgesC[message.author.id] = {
 				weapon: "none"
 			};
-
 // if the user has no badges, init to false.
 if (!badges[message.author.id])
 	badges[message.author.id] = {
@@ -28,22 +29,18 @@ if (!badgesP[message.author.id])
 		background: "default"
 	};
 
-var userSlots = badges[message.author.id];
-var userBadges = badgesA[message.author.id];
+
 var userProfile = badgesP[message.author.id];
 var userChallenge = badgesC[message.author.id];
+var userSlots = badges[message.author.id];
 
 message.delete();
 
 if (args == "list") {
 let tosend = []
-for (var key in userBadges) {
-    var value = userBadges[key];
-
-    if (value > 0) {
-	tosend.push(key)
-	}
-}
+sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(rows => {
+	tosend.push(rows)
+})
 
 message.reply(":white_check_mark: **OK:** These are the badges that you currently own: **" + tosend + "**.");
 return;
@@ -52,15 +49,22 @@ return;
 var num = args[0];
 var badge = args[1].toString();
 
+		sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(row => {
 		if (num == 1 || num == 2 || num == 3 || num == 4 || num == 5 || num == 6) {
-		if (eval(`userBadges.${badge} == 1`) == true) {
+		if (eval(`row.${badge}`) == 1 || badge == "empty") {
  		eval(`userSlots.slot${num} = "${badge}"`);
 		message.reply(":white_check_mark: **OK:** You've successfully equipped the badge **" + badge + "** into slot **" + num + "**.");
+		fs.writeFile('./slots.json', JSON.stringify(badges, null, 2), function(err) {
+				if (err) {
+					console.error(err)
+				}
+			});
 		} else {
 		message.reply(":no_entry_sign: **NOPE:** You can't equip this badge because you don't own it or it doesn't exist.");
 		return;
 		}
 		}
+	})
 
 		if (num == "background") {
 		eval(`userProfile.background = "${badge}"`);
