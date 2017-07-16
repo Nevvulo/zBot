@@ -1103,7 +1103,7 @@ function messageChecker(oldMessage, newMessage) {
 	// Start a conversation with the bot.
 	if (message.mentions !== null && message.mentions.users !== null) {
 		doNotDelete = true;
-		if (message.author.bot) return;
+		//if (message.author.bot) return;
 		// If the message content starts with a mention to Xail Bot, execute conversation code.
 		if (msg.toLowerCase().startsWith("<@303017211457568778>")) {
 			if (message.channel.name == "bot_testing") {}
@@ -1300,12 +1300,15 @@ function messageChecker(oldMessage, newMessage) {
 
 			try {
 				let commandFile = require(`./commands/debug/${command}.js`);
+				if (message.author.bot) {
+					commandFile.run(client, message, args);
+					return;
+				}
+
 				if (command == "setexp" || command == "maintenance" || command == "warn" && message.author.bot == false) {
 					message.reply(":lock: **INSUFFICIENT PERMISSIONS**: *" + command + "* requires sudo mode to be ran. Type `sudo` in the console to run this command with administrator privileges.");
 					sudoCommand = message.content
 					return;
-				} else if (command == "setexp" || command == "maintenance" || command == "warn" && message.author.bot == true) {
-				commandFile.run(client, message, args);
 			} else {
 				commandFile.run(client, message, args);
 			}
