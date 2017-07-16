@@ -212,19 +212,6 @@ function messageChecker(oldMessage, newMessage) {
 		}
 	} else {}
 
-	//✦ Check for a photo in message, if true, add 1 to photographer progress badge. ✦
-	var badgecompletion = JSON.parse(fs.readFileSync('./data/badges/Badge Progress.json', 'utf8'));
-
-	if (!badgecompletion[message.author.id])
-		badgecompletion[message.author.id] = {
-			photographer: 0
-		};
-
-	//If user posts a picture in #photos, add 1 to photographer badge:
-	if (message.attachments.size > 0) {
-		badgecompletion[message.author.id].photographer += 1;
-	}
-
 	//✦ Experience handler, including levels, badges and experience gained per message. ✦
 	message.guild.fetchMember(message.author).then(function(member) {
 		const filter = message => message.author.id === member.user.id && member.user.bot == false;
@@ -276,95 +263,77 @@ function messageChecker(oldMessage, newMessage) {
 				});
 			});
 
-			var badges = JSON.parse(fs.readFileSync('./data/badges/Badge Tracker.json', 'utf8'));
-			// If the user currently doesn't exist in the badges file, init to 0 for all badges.
-			if (!badges[message.author.id])
-				badges[message.author.id] = {
-					developer: 0,
-					active: 0,
-					moderator: 0,
-					essaywriter: 0,
-					subscriber: 0,
-					streamer: 0,
-					xbt: 0,
-					friendship: 0,
-					photographer: 0
-				};
-
-			var userBadges = badges[message.author.id];
-
-			sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
+			sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(row => {
+				if (!row) {
+					sql.run('INSERT INTO badges (userId, developer, active, moderator, essaywriter, subscriber, streamer, xbt, friendship, photographer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [message.author.id, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+				}
 				// Check if message author is zBlake:
 				if (message.author.id == 246574843460321291) {
-					userBadges.developer = 1;
-				} else {
-					userBadges.developer = 0;
+					sql.run(`UPDATE badges SET developer = 1 WHERE userId = ${message.author.id}`);
 				}
 
 				// If message author has a moderator role:
 				if (member.roles.find("name", "Fleece Police")) {
-					userBadges.moderator = 1;
-				} else {
-					userBadges.moderator = 0;
+					sql.run(`UPDATE badges SET moderator = 1 WHERE userId = ${message.author.id}`);
 				}
 
 				// If message author is one of the names below (active badge):
 				if (member.id == 246574843460321291 || member.id == 284551391781978112 || member.id == 184050823326728193 || member.id == 246129294785380353 || member.id == 224472981571633153 || member.id == 213776985581813760 || member.id == 213776985581813760 || member.id == 196792235654774784) { // add id's here if active
-					userBadges.active = 1;
-				} else {
-					userBadges.active = 0;
+					sql.run(`UPDATE badges SET active = 1 WHERE userId = ${message.author.id}`);
 				}
 
 				// If message author has the subscriber role:
 				if (member.roles.find("name", "Subscriber")) {
-					userBadges.subscriber = 1;
-				} else {
-					userBadges.subscriber = 0;
+					sql.run(`UPDATE badges SET subscriber = 1 WHERE userId = ${message.author.id}`);
 				}
 
 				// If message author has the Xail Bot Testing role:
 				if (member.roles.find("name", "Xail Bot Testing")) {
-					userBadges.xbt = 1;
-				} else {
-					userBadges.xbt = 0;
+					sql.run(`UPDATE badges SET xbt = 1 WHERE userId = ${message.author.id}`);
 				}
-
 				// If message author has 100/100 on the photographer progress badge:
 				if (badgecompletion[message.author.id].photographer > 99) {
-					userBadges.photographer = 1;
+					sql.run(`UPDATE badges SET photographer = 1 WHERE userId = ${message.author.id}`);
 				}
 
 				// If message author is lvl 10 or higher:
+				sql.get(`SELECT * FROM scores WHERE userId ='${member.id}'`).then(row => {
 				if (`${row.experience} > 2500`) {
-					userBadges.essaywriter = 1;
-				} else {
-					userBadges.essaywriter = 0;
+					sql.run(`UPDATE badges SET essaywriter = 1 WHERE userId = ${message.author.id}`);
 				}
+			});
 
 				// If message author is Xailran:
 				if (member.id == 196792235654774784) {
-					userBadges.streamer = 1;
-				} else {
-					userBadges.streamer = 0;
+					sql.run(`UPDATE badges SET streamer = 1 WHERE userId = ${message.author.id}`);
 				}
 
-				// Save photographer progress if applicable:
-				fs.writeFile('./data/badges/Badge Progress.json', JSON.stringify(badgecompletion, null, 2), function(err) {
-					if (err) {
-						console.log(colors.bold(colors.bgRed(colors.white("[ERROR] [BADGES] Failed to write to Badge Progress JSON file."))));
-					}
+			}).catch(() => {
+				console.error;
+				sql.run('CREATE TABLE IF NOT EXISTS badges (userId TEXT, developer INTEGER, active INTEGER, moderator INTEGER, essaywriter INTEGER, subscriber INTEGER, streamer INTEGER, xbt INTEGER, friendship INTEGER, photographer INTEGER)').then(() => {
+					sql.run('INSERT INTO badges (userId, developer, active, moderator, essaywriter, subscriber, streamer, xbt, friendship, photographer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [message.author.id, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 				});
+			});
 
-				// Save badges.json
-				fs.writeFile('./data/badges/Badge Tracker.json', JSON.stringify(badges, null, 2), function(err) {
-					if (err) {
-						console.log(colors.bold(colors.bgRed(colors.white("[ERROR] [BADGES] Failed to write to Badge Tracker JSON file."))));
-					}
-				});
+			sql.get(`SELECT * FROM badgeprogress WHERE userId ='${message.author.id}'`).then(row => {
+				if (!row) {
+					sql.run('INSERT INTO badgeprogress (userId, photographer) VALUES (?, ?)', [message.author.id, 0]);
+				}
+			//If user posts a picture in #photos, add 1 to photographer badge:
+			sql.get(`SELECT * FROM badgeprogress WHERE userId ='${member.id}'`).then(row => {
+			if (message.attachments.size > 0) {
+				sql.run(`UPDATE badges SET photographer = ${row.photographer + 1} WHERE userId = ${message.author.id}`);
+			}
+		})
+		}).catch(() => {
+			console.error;
+			sql.run('CREATE TABLE IF NOT EXISTS badgeprogress (userId TEXT, photographer INTEGER)').then(() => {
+				sql.run('INSERT INTO badgeprogress (userId, photographer) VALUES (?, ?)', [message.author.id, 0]);
+			});
+		});
 
 			})
 		})
-	})
 
 	// Force Reboot command
 	if (message.content.startsWith("bot:r") && message.author.id == "246574843460321291") {
@@ -1056,7 +1025,7 @@ function messageChecker(oldMessage, newMessage) {
 			if (message.author.id != 303017211457568778 && msg.search(/\b(kys|kill yourself|k-y-s|k y s|k ys|k ys|k i l l yourself|k i l l y o u r s e l f|k-ys|ky-s|kill y o u r s e l f|kill ys|k yourself|killyourself|k y o u r s e l f|kill urself|k.y.s.|k-y-s.|ky-s.|k-ys.|k y s.|ky s.|k ys.)\b/i) != -1) {
 				var auth = message.author;
 				caughtKYS = true;
-				message.reply("Right. We don't appreciate that here. A notification has been sent to the mods.");
+				message.reply("Right, we don't appreciate that here. A notification has been sent to the mods.");
 				message.delete();
 			}
 
@@ -1101,7 +1070,7 @@ function messageChecker(oldMessage, newMessage) {
 	}
 
 	// Start a conversation with the bot.
-	if (message.mentions !== null && message.mentions.users !== null) {
+	if (message.mentions !== null && message.mentions.users !== null && message.author.bot == false) {
 		doNotDelete = true;
 		//if (message.author.bot) return;
 		// If the message content starts with a mention to Xail Bot, execute conversation code.
