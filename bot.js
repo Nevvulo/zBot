@@ -50,6 +50,8 @@ const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience');
 const botthis = require('./bot.js');
 
+var sudoCommand = "";
+
 var bulkC = 0;
 var lineExists = {};
 var npToggle = false;
@@ -532,7 +534,7 @@ function messageChecker(oldMessage, newMessage) {
 			}
 
 			// NOUN
-			switch (Math.floor(Math.random() * 1000) % 4) {
+			switch (Math.floor(Math.random() * 1000) % 5) {
 						case 0:
 							noun = "just"
 							break;
@@ -545,6 +547,9 @@ function messageChecker(oldMessage, newMessage) {
 						case 3:
 							noun = "100%"
 							break;
+						case 4:
+							noun = "absolutely"
+						break;
 			}
 
 			// VERB
@@ -556,7 +561,7 @@ function messageChecker(oldMessage, newMessage) {
 							verb = "knocked out"
 							break;
 						case 2:
-							verb = "absolutely flogged"
+							verb = "flogged"
 							break;
 						case 3:
 							verb = "destroyed"
@@ -966,7 +971,7 @@ function messageChecker(oldMessage, newMessage) {
 			// Check message content for the words seen in exp or dxp, and if one or more are found, delete the message.
 			// Expletive filter
 			if (expletiveFilter.enabled) {
-				var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|penis|cunt|faggot|fark|fck|fag|wank|nigger|nigga|bastard|bitch|asshole|dick|d1ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|porn|stfu)(\b|\s|$|.|\,|\ )/i);
+				var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|penis|cunt|faggot|fark|fck|fag|wank|nigger|nigga|bastard|bitch|asshole|dick|d1ck|d!ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|porn|stfu)(\b|\s|$|.|\,|\ )/i);
 				var dxp = msg.search(/(\b|\s|^|.|\,|\ )(cunt|b1tch|b!tch|bitch|cnut)(\b|\s|$|.|\,|\ )/i);
 
 				if (exp != -1) { //Gah! They're not supposed to say that!
@@ -1048,7 +1053,7 @@ function messageChecker(oldMessage, newMessage) {
 			}
 
 			// Special case if message content contains "kill yourself".
-			if (message.author.id != 303017211457568778 && msg.search(/\b(kys|kill yourself)\b/i) != -1) {
+			if (message.author.id != 303017211457568778 && msg.search(/\b(kys|kill yourself|k-y-s|k y s|k ys|k ys|k i l l yourself|k i l l y o u r s e l f|k-ys|ky-s|kill y o u r s e l f|kill ys|k yourself|killyourself|k y o u r s e l f|kill urself|k.y.s.|k-y-s.|ky-s.|k-ys.|k y s.|ky s.|k ys.)\b/i) != -1) {
 				var auth = message.author;
 				caughtKYS = true;
 				message.reply("Right. We don't appreciate that here. A notification has been sent to the mods.");
@@ -1062,7 +1067,7 @@ function messageChecker(oldMessage, newMessage) {
 				exp = msg.search(/.*?(http\:\/\/www\.[a-zA-Z0-9\.\/\-]+)/);
 				if (exp != -1) { //This is a link.
 					if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {
-					} else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testin" || message.channel.name == "meme_dungeon" || message.channel.name == "photos" || message.channel.name == "minecraft_ideas") {
+					} else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing" || message.channel.name == "meme_dungeon" || message.channel.name == "photos" || message.channel.name == "minecraft_ideas") {
 					} else if (msg.toLowerCase().includes("twitch.tv/xailran") || msg.toLowerCase().includes("www.youtube.com") || msg.toLowerCase().includes("www.reddit.com") || msg.toLowerCase().includes("discord.gg")) {
 					} else {
 						caughtLink = true;
@@ -1098,7 +1103,7 @@ function messageChecker(oldMessage, newMessage) {
 	// Start a conversation with the bot.
 	if (message.mentions !== null && message.mentions.users !== null) {
 		doNotDelete = true;
-
+		if (message.author.bot) return;
 		// If the message content starts with a mention to Xail Bot, execute conversation code.
 		if (msg.toLowerCase().startsWith("<@303017211457568778>")) {
 			if (message.channel.name == "bot_testing") {}
@@ -1227,6 +1232,29 @@ function messageChecker(oldMessage, newMessage) {
 		}
 	}
 
+	// AUTO RESPONSES:
+	//
+	if (msg == "pizza stream") {
+		message.reply("The Pizza of Horror! Toppings: http://prnt.sc/dpki7o")
+	} else if (msg == "five survivors") {
+		message.reply("https://cdn.discordapp.com/attachments/247302759706132480/251236486131875841/20161118225900_1.jpg")
+	} else if (msg == "church of the rainbow sheep") {
+		message.reply("Do you have an idea for its history, and adding detail? Please, message Xailran! http://www.steamcommunity.com/groups/churchrainbowsheep")
+	} else if (msg == "praise the sheep") {
+		message.reply("All hail the rainbow sheep!")
+	} else if (msg == "praise the rain") {
+		message.reply("Rain = water. Water + Light = refraction. Refraction = Rainbow. Rain is confirmed sheep")
+	} else if (msg == "praise the sun") {
+		message.reply("The sun provides light. Light = Rainbow. Sun is confirmed Sheep")
+	} else if (msg == "praise the rainbow") {
+		message.reply("For the rainbow!!!")
+	} else if (msg == "pizza dwight") {
+		message.reply("Pizza Dwight shenanigans are what keep me going! http://puu.sh/s7m0Z/28cf18bcbc.png")
+	} else if (msg == "cheap games") {
+		message.reply("You like games? Of course you do! Want to save money? Who doesn't! Follow this link to get a discount off your first order, and to support Xailran at the same time! (He says thanks!) https://greenmangaming.mention-me.com/m/ol/mhm-f386ad9753 Have fun!")
+	}
+	//
+
 	// Command handler for bot, mod and debug commands.
 	if (msg.toLowerCase().startsWith("+")) {
 
@@ -1272,7 +1300,15 @@ function messageChecker(oldMessage, newMessage) {
 
 			try {
 				let commandFile = require(`./commands/debug/${command}.js`);
+				if (command == "setexp" || command == "maintenance" || command == "warn" && message.author.bot == false) {
+					message.reply(":lock: **INSUFFICIENT PERMISSIONS**: *" + command + "* requires sudo mode to be ran. Type `sudo` in the console to run this command with administrator privileges.");
+					sudoCommand = message.content
+					return;
+				} else if (command == "setexp" || command == "maintenance" || command == "warn" && message.author.bot == true) {
 				commandFile.run(client, message, args);
+			} else {
+				commandFile.run(client, message, args);
+			}
 			} catch (err) {
 				console.error(colors.bold(colors.bgRed(colors.white(err.stack))));
 				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
@@ -1341,15 +1377,16 @@ process.stdin.on('data', sendMessage);
 
 function sendMessage(text) {
 	text = text.trim();
+	currentGuild = client.guilds.first(); //because Xail Bot is only connected to 1 guild
+	currentGuild.channels.forEach(function (channel) {
+	if (channel.name == "bot_testing") {
+			currentChannel = channel
+	}
+	})
 	switch (text) {
 		case "stop":
 			console.log("Stopping...")
 			process.exit(0);
-			break;
-		case "setguild":
-			console.log("Set guild to: none")
-			currentGuild = "";
-			currentChannel = "";
 			break;
 		case "setchannel":
 			console.log("Set channel to: none")
@@ -1358,14 +1395,6 @@ function sendMessage(text) {
 		default:
 			if (text.startsWith("log")) {
 				console.log(text.substr(4));
-			} else if (text.startsWith("setguild")) {
-				client.guilds.forEach(function (guild) {
-					if (guild.name == text.substr(9)) {
-						currentGuild = guild;
-						currentChannel = "";
-						console.log("Set guild to: " + text.substr(9))
-					}
-				})
 			} else if (text.startsWith("setchannel")) {
 				if (currentGuild != "") {
 					currentGuild.channels.forEach(function (channel) {
@@ -1381,13 +1410,23 @@ function sendMessage(text) {
 				if (currentChannel != "") {
 					currentChannel.send(text.substr(5))
 				}
+		} else if (text.startsWith("sudo")) {
+			if (currentChannel != "") {
+				currentChannel.send(sudoCommand);
 			}
+		}
 	}
 }
 
-client.on('channelCreate', function(channel) {
-console.log(channel);
+client.on('messageReactionAdd', function(reaction, user) {
+	console.log("Reaction " + reaction.emoji.name + " added by " + user.tag)
+	if (reaction.message.channel.id == 325540027972976650) {
+		if (reaction.emoji.identifier == "Kappa:300124631522869248") {
+			reaction.message.channel.send("Ok I'll")
+		}
+	}
 });
+
 
 client.on('guildMemberAdd', function(guildMember) {
 	if (guildMember.guild.id == 196793479899250688) {
@@ -1474,63 +1513,9 @@ client.on('guildMemberRemove', function(guildMember) {
 	}
 });
 
-//client.on('guildMemberUpdate', function(oldUser, newUser) {
-	//if (oldUser.user.bot == true)
-		//return;
-	//if (newUser.nickname != oldUser.nickname) {
-		//var channel = client.channels.get("229575537444651009"); //Admin Bot warnings
-		//if (newUser.nickname == null) {
-			//channel = client.channels.get("229575537444651009");
-			//channel.send({
-				//embed: {
-					//color: 4371444,
-					//author: {
-						//name: "ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.tag,
-						//icon_url: oldUser.user.displayAvatarURL
-					//},
-					//description: ":label: <@" + oldUser.user.id + "> has cleared their nickname.\nIt has now defaulted back to their username.\n",
-					//fields: [{
-						//name: '**Previous Nickname**',
-						//value: oldUser.displayName
-					//}],
-					//timestamp: new Date()
-				//}
-			//});
-			//return;
-		//} else {
-			//channel = client.channels.get("229575537444651009");
-			//channel.send({
-				//embed: {
-					//color: 4371444,
-					//author: {
-						//name: "ɴɪᴄᴋɴᴀᴍᴇ ᴄʜᴀɴɢᴇ »  " + oldUser.user.tag,
-						//icon_url: oldUser.user.avatarURL({
-							//format: 'png'
-						//})
-					//},
-					//description: ":label: <@" + oldUser.user.id + "> has changed their nickname.\n",
-					//fields: [{
-						//	name: '**Previous Nickname**',
-						//	value: oldUser.displayName
-						//},
-						//{
-						//	name: '**New Nickname**',
-						//	value: newUser.displayName
-						//}
-					//],
-					//timestamp: new Date()
-				//}
-			//});
-			//return;
-		//}
-	//}
-//});
-
-client.on('userUpdate', function(oldUser, newUser) {});
-
 client.on('messageDelete', function(message) {
-	if (message.content.startsWith("bot:") || message.content.startsWith("mod:"))
-		return;
+	if (message.content.startsWith("+"))
+return;
 	var channel = null;
 
 	if (message.guild != null) {
@@ -1723,6 +1708,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 process.on("unhandledRejection", err => {
 	console.error(colors.bold(colors.bgRed(colors.white("[UNCAUGHT PROMISE] " + err.stack))));
 });
+
 
 client.login(api.key()).catch(function() {
 	console.log(colors.bold(colors.bgRed(colors.white("[ERROR] Login failed."))));
