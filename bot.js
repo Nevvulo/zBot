@@ -22,9 +22,6 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const client = new Discord.Client();
 const api = require('./keys.js');
-const readline = require('readline');
-const csvWriter = require('csv-write-stream');
-const yt = require('ytdl-core');
 //This is just to make the console look fancier
 var colors = require('colors');
 const replace = require("replace");
@@ -48,20 +45,11 @@ const doModeration = require('./commands/mod.js');
 const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience');
-const botthis = require('./bot.js');
 
 var sudoCommand = "";
 
-var bulkC = 0;
-var lineExists = {};
-var npToggle = false;
 var lastMessages = {};
-var fastMessage = {};
-var fastMessageCount = {};
 var sameMessageCount = {};
-var smallMessageCount = {};
-var lastUserInteraction = {};
-var numDel;
 var botDelMessage = {};
 var doNotDelete = {};
 var talkedRecently = [];
@@ -86,14 +74,13 @@ var init = true;
 var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
 var userChallenge;
 
-const electron = require('electron');
 var currentGuild = "";
 var currentChannel = "";
 
 doModeration[196793479899250688] = true;
 
 function setGame() {
-	var presence = {};
+	let presence = {};
 	presence.game = {};
 	presence.status = "online";
 	presence.afk = false;
@@ -167,7 +154,6 @@ function setGame() {
 			break;
 
 	}
-	presence.game.name = "with 500 followers!";
 	client.user.setPresence(presence);
 }
 
@@ -204,7 +190,7 @@ function messageChecker(oldMessage, newMessage) {
 
 	if (message.mentions.users.size > 0 && message.author.bot == false) {
 		if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
-			message.channel.send(":information_source: " + message.mentions.users.first().username + " is currently AFK. They may not respond to your message for a while.").then(message => {
+			message.reply(":information_source: **" + message.mentions.users.first().username + "** is currently *AFK*. They may not respond to your message for a while.").then(message => {
 				message.delete({
 					timeout: 8000
 				});
@@ -335,83 +321,6 @@ function messageChecker(oldMessage, newMessage) {
 			})
 		})
 
-	// Force Reboot command
-	if (message.content.startsWith("bot:r") && message.author.id == "246574843460321291") {
-		message.delete();
-		message.reply(':arrows_counterclockwise: **SAFE REBOOT:** Forcing all currently loaded modules to stop and rebooting Xail Bot.');
-		message.channel.send(":white_check_mark: We'll be back in a bit.").then(function() {
-			client.destroy();
-			client.login(api.key()).then(function() {
-				message.channel.send(":white_check_mark: **Xail Bot** is back online!");
-			}).catch(function() {
-				console.log("[ERROR] Login failed.");
-			});
-		});
-	}
-
-	// Evaluation command, only works for zBlake:
-	const prefix = ";";
-	const argseval = message.content.split(" ").slice(1);
-	if (message.content.startsWith(prefix + "eval") && message.author.id == "246574843460321291") {
-		ignoreMessage = true;
-		try {
-			var code = argseval.join(" ");
-			var evaled = eval(code);
-
-			if (typeof evaled !== "string")
-				evaled = require("util").inspect(evaled);
-			message.delete();
-
-			message.channel.send({
-				embed: {
-					color: 3191350,
-					author: {
-						name: "ᴇᴠᴀʟ ʀᴇꜱᴜʟᴛ »  ",
-						icon_url: message.author.displayAvatarURL
-					},
-					fields: [{
-							name: '**:inbox_tray: Input**',
-							value: `\`\`\`js\n${code}\n\`\`\``
-						},
-						{
-							name: '**:outbox_tray: Output**',
-							value: `\`\`\`js\n${clean(evaled)}\n\`\`\``
-						}
-					],
-					timestamp: new Date()
-				}
-			}).then(m => {
-				m.react("✅");
-			})
-		} catch (err) {
-			message.delete();
-
-			message.channel.send({
-				embed: {
-					color: 3191350,
-					author: {
-						name: "ᴇᴠᴀʟ ᴇʀʀᴏʀ »  ",
-						icon_url: message.author.displayAvatarURL
-					},
-					fields: [{
-							name: '**:no_entry_sign: Error**',
-							value: `\`\`\`xl\n${clean(err)}\n\`\`\``
-						},
-						{
-							name: '**Output**',
-							value: `\`\`\`js\n${clean(evaled)}\n\`\`\``
-						}
-					],
-					timestamp: new Date()
-				}
-			}).then(m => {
-				m.react("❌");
-				m.react(":xailFish:303393341704503297");
-			})
-		}
-	}
-
-
 	//CHALLENGE
 	if (challenge.startedChallenge && message.channel.name == challenge.channel) {
 		// Initialization variables
@@ -432,6 +341,7 @@ function messageChecker(oldMessage, newMessage) {
 
 		// Only check for messages that start with attack, defend, heal or end.
 		if (msg == "attack" || msg == "defend" || msg == "heal" || msg == "end" || msg == "special") {
+		message.delete();
 		userChallenge = badgesC[turn.id];
 		// Check for turn
 		if (message.author.id != turn.id) {
@@ -905,36 +815,7 @@ function messageChecker(oldMessage, newMessage) {
 				}
 
 				message.delete();
-			} else if (smallMessageCount[message.author.id] == 6) {
-				var auth = message.author;
-				client.channels.get("229575537444651009").send(":warning: **SPAM:** <@" + auth.id + "> was spamming on " + message.channel.name + ".");
-				doNotDelete = false;
-				message.reply("Quite enough of this. I'm not warning you any more. A notification has been sent to the mods.");
-				caughtSpam = true;
-				message.delete();
-			} else if (smallMessageCount[message.author.id] > 6) {
-				ignoreMessage = true;
-				message.delete();
-			} else if (smallMessageCount[message.author.id] > 5) {
-				ignoreMessage = true;
-				console.log(colors.yellow(colors.bold("▲ Spam limits activated for " + message.author.tag)));
-				doNotDelete = false;
-				switch (Math.floor(Math.random() * 1000) % 4) {
-					case 0:
-						message.reply("This looks like spam. And we don't like spam.");
-						break;
-					case 1:
-						message.reply("Cut it out.");
-						break;
-					case 2:
-						message.reply("Very... scribbly...");
-						break;
-					case 3:
-						message.reply("If you're going to type that, why not get out a pen and paper and do it yourself?");
-						break;
-				}
-
-				message.delete();
+			} 
 			}
 
 			// Check message content for the words seen in exp or dxp, and if one or more are found, delete the message.
@@ -1067,12 +948,10 @@ function messageChecker(oldMessage, newMessage) {
 				}
 			}
 		}
-	}
 
 	// Start a conversation with the bot.
 	if (message.mentions !== null && message.mentions.users !== null && message.author.bot == false) {
 		doNotDelete = true;
-		//if (message.author.bot) return;
 		// If the message content starts with a mention to Xail Bot, execute conversation code.
 		if (msg.toLowerCase().startsWith("<@303017211457568778>")) {
 			if (message.channel.name == "bot_testing") {}
@@ -1131,10 +1010,10 @@ function messageChecker(oldMessage, newMessage) {
 						message.reply("Hello there!");
 						break;
 					case 3:
-						message.reply("Woah, hey there " + message.author + "! Didn't know you were here!");
+						message.reply("Woah, hey there " + message.author.username + "! Didn't know you were here!");
 						break;
 					case 4:
-						message.reply("A wild " + message.author + " appeared!");
+						message.channel.send("A wild " + message.author + " appeared!");
 						break;
 				}
 
@@ -1143,7 +1022,7 @@ function messageChecker(oldMessage, newMessage) {
 				message.reply("Did you know I am actually based off of that guy?");
 			} else if (msg.toLowerCase().includes("zblake") || msg.toLowerCase().includes("blake")) {
 				message.reply("Oh, I know that guy! He's an absolute legend.");
-			} else if (msg.toLowerCase().includes("pooma") || msg.toLowerCase().includes("pumacatrun2")) {
+			} else if (msg.toLowerCase().includes("puma") || msg.toLowerCase().includes("pumacatrun2")) {
 				switch (Math.floor(Math.random() * 1000) % 4) {
 					case 0:
 						message.reply("same");
@@ -1173,9 +1052,8 @@ function messageChecker(oldMessage, newMessage) {
 									message.author.send("https://www.youtube.com/watch?v=4ZaYk7X9KAU\nTHE MUUUSIICCC <3 <3 <3")
 									break;
 							}
-						} else {
-							message.reply("rocker is smol");
-						}
+						}	
+						message.reply("rocker is smol");	
 						break;
 					case 1:
 						message.reply("i like yo face " + message.author);
@@ -1188,7 +1066,7 @@ function messageChecker(oldMessage, newMessage) {
 						break;
 				}
 				//MEME COMMANDS
-			} else if (msg.toLowerCase().includes("boy i sure do wish i could give money to dude, he is just such a smart, funny guy that i want to give the guy funds to help the channel.")) {
+			} else if (msg.toLowerCase() == "boy i sure do wish i could give money to xailran, he is just such a smart, funny guy that i want to give him funds to help his channel.") {
 				message.reply("That is a very specific request you have there!");
 			} else if (msg.toLowerCase().includes("+") || msg.toLowerCase().includes("divided") || msg.toLowerCase().includes("-") || msg.toLowerCase().includes("plus") || msg.toLowerCase().includes("subtract") || msg.toLowerCase().includes("minus") || msg.toLowerCase().includes("times") || msg.toLowerCase().includes("*") || msg.toLowerCase().includes("/") || msg.toLowerCase().includes("=")) {
 				message.reply("Sorry, I don't know what it is. Go ask Xail, he'd probably know.");
@@ -1345,9 +1223,9 @@ client.on('messageUpdate', messageChecker);
 
 process.stdin.resume();
 process.stdin.setEncoding('utf-8');
-process.stdin.on('data', sendMessage);
+process.stdin.on('data', sendCLIMessage);
 
-function sendMessage(text) {
+function sendCLIMessage(text) {
 	text = text.trim();
 	currentGuild = client.guilds.first(); //because Xail Bot is only connected to 1 guild
 	currentGuild.channels.forEach(function (channel) {
@@ -1394,7 +1272,7 @@ client.on('messageReactionAdd', function(reaction, user) {
 	console.log("Reaction " + reaction.emoji.name + " added by " + user.tag)
 	if (reaction.message.channel.id == 325540027972976650) {
 		if (reaction.emoji.identifier == "Kappa:300124631522869248") {
-			reaction.message.channel.send("Ok I'll")
+			reaction.message.channel.send("congartulation u r winner")
 		}
 	}
 });
@@ -1411,7 +1289,7 @@ client.on('guildMemberAdd', function(guildMember) {
 				randomjoin = "Please give them a warm welcome!";
 				break;
 			case 1:
-				randomjoin = "Thank you for joining, and we hope you enjoy your stay!";
+				randomjoin = "Thanks for joining, and we hope you enjoy your stay!";
 				break;
 			case 2:
 				randomjoin = "Thanks for joining us!";
@@ -1429,7 +1307,7 @@ client.on('guildMemberAdd', function(guildMember) {
 				randomjoin = "Nice to see you!";
 				break;
 		}
-		channel.send(guildMember + " has joined our awesome server! *" + randomjoin + "*")
+		channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*")
 
 		channel = client.channels.get("229575537444651009");
 		channel.send({
@@ -1466,7 +1344,7 @@ client.on('guildMemberRemove', function(guildMember) {
 			embed: {
 				color: 13724718,
 				author: {
-					name: "ᴜꜱᴇʀ ʀᴇᴍᴏᴠᴇᴅ »  " + guildMember.user.tag,
+					name: "ᴜꜱᴇʀ ǫuı »  " + guildMember.user.tag,
 					icon_url: guildMember.user.displayAvatarURL
 				},
 				fields: [{
@@ -1621,18 +1499,16 @@ client.on('messageDeleteBulk', function(messages) {
 	if (botDelMessage[messages.first().guild.id])
 		return;
 
-	bulkC = bulkC + 1
-
 	//Debugging information.
-	//if (maintenance == true) {
+	if (maintenance == true) {
 	channel = client.channels.get("325540027972976650");
-	channel.send(":page_facing_up: **DEBUG:** BulkDelete function, called " + bulkC + " times. Deleted " + messages.size + " messages.");
-	//}
+	channel.send(":page_facing_up: **DEBUG:** BulkDelete function called. Deleted " + messages.size + " messages.");
+	}
 
 	channel = client.channels.get("229575537444651009");
 
 	if (channel != null) {
-		console.log(colors.bold(colors.yellow("▲ " + numDel + " messages deleted using mod:rm.")));
+		console.log(colors.bold(colors.yellow("▲ " + messages.size + " messages deleted using mod:rm.")));
 	}
 
 });
