@@ -27,6 +27,47 @@ var colors = require('colors');
 const replace = require("replace");
 const maintenanceM = require('./commands/debug/maintenance.js');
 
+global.logType = {
+    debug: 0,
+    info: 1,
+    warning: 2,
+    critical: 3,
+    success: 4
+}
+
+global.log = function(logMessage, type = logType.debug) {
+    if (type == logType.debug) {
+        if (process.argv.indexOf("--debug") == -1) {
+            return;
+        }
+    }
+
+    var logString;
+		var logFormatting;
+    switch (type) {
+        case logType.debug:
+            logFormatting = colors.bgMagenta(colors.white("[ DEBUG ]"));
+            break;
+        case logType.info:
+						logString = colors.white(logMessage);
+            logFormatting = colors.white("[ INFO ]");
+            break;
+        case logType.warning:
+						logString = colors.yellow(logMessage);
+            logFormatting = colors.bgYellow(colors.black("[ WARNING ]"));
+            break;
+        case logType.critical:
+						logString = colors.bgRed(colors.white(logMessage));
+            logFormatting = colors.bgRed(colors.white("[ CRITICAL ]"));
+            break;
+        case logType.success:
+						logString = colors.green(logMessage);
+            logFormatting = colors.bgGreen(colors.black("[ SUCCESS ]"));
+            break;
+    }
+    console.log(logFormatting, logString);
+}
+
 //Maintenance check
 var maintenance = false;
 if (maintenanceM.maintenanceEnabled == true) {
@@ -46,23 +87,29 @@ const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience');
 
+//Console
 var sudoCommand = "";
+var currentGuild = "";
+var currentChannel = "";
 
+//Misc.
+var talkedRecently = [];
+var userAFK = [];
+
+//Moderation
 var lastMessages = {};
 var sameMessageCount = {};
 var botDelMessage = {};
 var doNotDelete = {};
-var talkedRecently = [];
-var userAFK = [];
-var mentionUserXBT;
-
 var caughtSwear = false;
 var caughtSpam = false;
 var caughtFastSpam = false;
 var caughtLink = false;
 var caughtKYS = false;
 var ignoreMessage = false;
+doModeration[196793479899250688] = true;
 
+//Challenges
 var health = {};
 var healLevel = {};
 var timesHealed = {};
@@ -74,105 +121,30 @@ var init = true;
 var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
 var userChallenge;
 
-var currentGuild = "";
-var currentChannel = "";
 
-doModeration[196793479899250688] = true;
-
-function setGame() {
+async function setGame() {
 	let presence = {};
 	presence.game = {};
 	presence.status = "online";
 	presence.afk = false;
 
-	switch (Math.floor(Math.random() * 1000) % 22) {
-		case 0:
-			presence.game.name = "with various buttons";
-			break;
-		case 1:
-			presence.game.name = "xail's stream";
-			break;
-		case 2:
-			presence.game.name = "xail is a nerd";
-			break;
-		case 3:
-			presence.game.name = "with an internal bug";
-			break;
-		case 4:
-			presence.game.name = "blake is a legend";
-			break;
-		case 5:
-			presence.game.name = "bot games";
-			break;
-		case 6:
-			presence.game.name = "with ones and zeroes";
-			break;
-		case 7:
-			presence.game.name = "bot things";
-			break;
-		case 8:
-			presence.game.name = "with supa weapon";
-			break;
-		case 9:
-			presence.game.name = "with puzzles";
-			break;
-		case 10:
-			presence.game.name = "rewinding time";
-			break;
-		case 11:
-			presence.game.name = "checking archives";
-			break;
-		case 12:
-			presence.game.name = "being unbreakable";
-			break;
-		case 13:
-			presence.game.name = "with sandwiches";
-			break;
-		case 14:
-			presence.game.name = "with other bots";
-			break;
-		case 15:
-			presence.game.name = "Pokèmon";
-			break;
-		case 16:
-			presence.game.name = "the waiting game";
-			break;
-		case 17:
-			presence.game.name = "bending space";
-			break;
-		case 18:
-			presence.game.name = "with hexagons";
-			break;
-		case 19:
-			presence.game.name = "with space and time";
-			break;
-		case 20:
-			presence.game.name = "being a ninja";
-			break;
-		case 21:
-			presence.game.name = "+help for more info";
-			break;
-
-	}
+	await fs.readFile('./data/main/setGame/setGame.txt', function(err, data){
+	if(err) throw err;
+	data = data.toString();
+	var fileContentLines = data.split( '\n' );
+	var randomLineIndex = Math.floor( Math.random() * fileContentLines.length );
+	var randomLine = fileContentLines[ randomLineIndex ];
+	presence.game.name = randomLine;
 	client.user.setPresence(presence);
+	})
+
 }
 
 client.on('ready', () => {
-	console.log(" ");
-	console.log(" ");
-	console.log("● Xail Bot is ready!");
-	console.log(" ");
-	console.log(" ");
+	log("> Xail Bot is now online!", logType.success)
 	client.setInterval(setGame, 300000);
 	setGame();
 });
-
-function clean(text) {
-	if (typeof(text) === "string")
-		return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
-	else
-		return text;
-}
 
 function messageChecker(oldMessage, newMessage) {
 	var message;
@@ -215,7 +187,7 @@ function messageChecker(oldMessage, newMessage) {
 
 				if (!row) {
 					sql.run('INSERT INTO scores (userId, experience, level) VALUES (?, ?, ?)', [message.author.id, 1, 0]);
-					console.log("Added new user to database.");
+					log("Added a new user to experience database.", logType.info);
 				} else {
 					let curLevel = Math.floor(0.1 * Math.sqrt(row.experience)) + 1;
 					if (curLevel > row.level) {
@@ -229,8 +201,9 @@ function messageChecker(oldMessage, newMessage) {
 					} else {
 
 						sql.get(`SELECT * FROM scores WHERE userId ='${message.author.id}'`).then(row => {
-							sql.run(`UPDATE scores SET experience = ${row.experience + Math.round(Math.random() * (11 - 4) + 4)} WHERE userId = ${message.author.id}`);
-							console.log("Added experience.");
+							let rand = Math.round(Math.random() * (11 - 4) + 4);
+							sql.run(`UPDATE scores SET experience = ${row.experience + rand} WHERE userId = ${message.author.id}`);
+							log("Added " + rand + " experience to " + message.author.username + ".", logType.info);
 						})
 
 						// Adds the user to the array so that they can't talk for 65 seconds
@@ -757,7 +730,7 @@ function messageChecker(oldMessage, newMessage) {
 
 			//This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
 			//Check for spam in a single message
-			console.log(colors.gray("MESSAGE: " + message.author.username + " » " + msg));
+			console.log(colors.gray("[ MESSAGE ] " + message.author.username + " » " + msg));
 			if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
 				caughtSpam = true;
 				message.delete()
@@ -795,7 +768,7 @@ function messageChecker(oldMessage, newMessage) {
 			} else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
 				ignoreMessage = true;
 				doNotDelete = false;
-				console.log(colors.yellow(colors.bold("▲ Spam limits activated for " + message.author.tag)));
+				log("▲ Spam limits activated for " + message.author.tag, logType.info);
 				switch (Math.floor(Math.random() * 1000) % 5) {
 					case 0:
 						message.reply("Well... We all heard you.");
@@ -815,7 +788,7 @@ function messageChecker(oldMessage, newMessage) {
 				}
 
 				message.delete();
-			} 
+			}
 			}
 
 			// Check message content for the words seen in exp or dxp, and if one or more are found, delete the message.
@@ -826,11 +799,11 @@ function messageChecker(oldMessage, newMessage) {
 
 				if (exp != -1) { //Gah! They're not supposed to say that!
 					if (dxp != -1) { //extra bad word!
-						console.log(colors.yellow(colors.bold("▲ [SEVERE] Expletive caught in message by " + message.author.tag)));
+						log("▲ Expletive (level 2) caught in message by " + message.author.tag, logType.info);
 						caughtSwear = true;
 					}
 
-					console.log(colors.yellow(colors.bold("▲ Expletive caught in message by " + message.author.tag)));
+					log("▲ Expletive (level 2) caught in message by " + message.author.tag, logType.info);
 					switch (Math.floor(Math.random() * 1000) % 21) {
 						case 0:
 							message.reply("I'm very disappointed in you. :angry:");
@@ -921,7 +894,7 @@ function messageChecker(oldMessage, newMessage) {
 					} else if (msg.toLowerCase().includes("twitch.tv/xailran") || msg.toLowerCase().includes("www.youtube.com") || msg.toLowerCase().includes("www.reddit.com") || msg.toLowerCase().includes("discord.gg")) {
 					} else {
 						caughtLink = true;
-						console.log(colors.yellow(colors.bold("▲ Link caught in message by " + message.author.tag)));
+						log("▲ Unapproved link caught in message by " + message.author.tag, logType.info);
 						message.delete();
 						switch (Math.floor(Math.random() * 1000) % 6) {
 							case 0:
@@ -1052,8 +1025,8 @@ function messageChecker(oldMessage, newMessage) {
 									message.author.send("https://www.youtube.com/watch?v=4ZaYk7X9KAU\nTHE MUUUSIICCC <3 <3 <3")
 									break;
 							}
-						}	
-						message.reply("rocker is smol");	
+						}
+						message.reply("rocker is smol");
 						break;
 					case 1:
 						message.reply("i like yo face " + message.author);
@@ -1110,7 +1083,7 @@ function messageChecker(oldMessage, newMessage) {
 		var args = msg.split(" ").slice(1);
 
 		exports.commandIssuer = message.author.id;
-		console.log(colors.bold(colors.bgBlue(colors.white(message.author.username + " issued command " + command))));
+		log(message.author.username + " issued command " + command, logType.info);
 
 		try {
 			let commandFile = require(`./commands/${command}.js`);
@@ -1132,8 +1105,7 @@ function messageChecker(oldMessage, newMessage) {
 			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
 				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
 			}
-				console.error(colors.bold(colors.bgRed(colors.white("[ERROR PERFORMING " + command + "]\n" + err.stack))));
-				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+				log(err.stack, logType.warning);
 			}
 	}
 
@@ -1143,7 +1115,7 @@ function messageChecker(oldMessage, newMessage) {
 			var command = msg.substr(1).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
-			console.log(colors.bold(colors.bgBlue(colors.red(message.author.username + " issued debug command " + command))));
+			log(message.author.username + " issued debug command " + command, logType.info);
 
 			try {
 				let commandFile = require(`./commands/debug/${command}.js`);
@@ -1160,8 +1132,7 @@ function messageChecker(oldMessage, newMessage) {
 				commandFile.run(client, message, args);
 			}
 			} catch (err) {
-				console.error(colors.bold(colors.bgRed(colors.white(err.stack))));
-				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+				log(err.stack, logType.warning);
 			}
 		} else {
 			doNotDelete = false;
@@ -1176,40 +1147,17 @@ function messageChecker(oldMessage, newMessage) {
 			var command = msg.substr(9).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
-			console.log(colors.bold(colors.bgBlue(colors.red(message.author.username + " issued disabled command " + command))));
+			log(message.author.username + " issued disabled command " + command, logType.info);
 
 			try {
 				let commandFile = require(`./commands/disabled/${command}.js`);
 				commandFile.run(client, message, args);
 			} catch (err) {
-				console.error(colors.bold(colors.bgRed(colors.white(err))));
-				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
+				log(err.stack, logType.warning);
 			}
 		} else {
 			doNotDelete = false;
 			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
-			message.delete();
-		}
-	}
-
-	// Special case for xbt: commands.
-	if (msg.toLowerCase().startsWith("xbt:")) {
-		if (message.member.roles.find("name", "Xail Bot Testing") || message.member.roles.find("name", "Admin")) {
-			var command = msg.substr(4).split(" ").slice(0, 1);
-			var args = msg.split(" ").slice(1);
-
-			console.log(colors.bold(colors.bgBlue(colors.green(message.author.username + " issued XBT command " + command))));
-
-			try {
-				let commandFile = require(`./commands/xbt/${command}.js`);
-				commandFile.run(client, message, args);
-			} catch (err) {
-				console.error(colors.bold(colors.bgRed(colors.white(err))));
-				console.error(colors.bold(colors.bgYellow(colors.white("This was most likely caused by the user not entering a valid command."))));
-			}
-		} else {
-			doNotDelete = false;
-			message.reply(':no_entry_sign: **NOPE:** You need to be apart of Xail Bot Testing to use this command.');
 			message.delete();
 		}
 	}
@@ -1235,26 +1183,26 @@ function sendCLIMessage(text) {
 	})
 	switch (text) {
 		case "stop":
-			console.log("Stopping...")
+			log("Xail Bot will now shutdown.", logType.info)
 			process.exit(0);
 			break;
 		case "setchannel":
-			console.log("Set channel to: none")
+			log("Set text channel to nothing.", logType.info)
 			currentChannel = "";
 			break;
 		default:
 			if (text.startsWith("log")) {
-				console.log(text.substr(4));
+				log(text.substr(4), logType.info);
 			} else if (text.startsWith("setchannel")) {
 				if (currentGuild != "") {
 					currentGuild.channels.forEach(function (channel) {
 						if (channel.name == text.substr(11)) {
 							currentChannel = channel;
-							console.log("Set channel to: #" + text.substr(11))
+							log("Set text channel to #" + text.substr(11) + ". All messages sent through the 'send' command will be redirected to that channel.", logType.info)
 						}
 					})
 				} else {
-					console.log("Set a guild first!")
+					return;
 				}
 			} else if (text.startsWith("send")) {
 				if (currentChannel != "") {
@@ -1269,10 +1217,10 @@ function sendCLIMessage(text) {
 }
 
 client.on('messageReactionAdd', function(reaction, user) {
-	console.log("Reaction " + reaction.emoji.name + " added by " + user.tag)
+	log("Reaction " + reaction.emoji.name + " added by " + user.tag, logType.info)
 	if (reaction.message.channel.id == 325540027972976650) {
 		if (reaction.emoji.identifier == "Kappa:300124631522869248") {
-			reaction.message.channel.send("congartulation u r winner")
+			reaction.message.channel.send("ok can you stop pushing my buttons mate")
 		}
 	}
 });
@@ -1508,7 +1456,7 @@ client.on('messageDeleteBulk', function(messages) {
 	channel = client.channels.get("229575537444651009");
 
 	if (channel != null) {
-		console.log(colors.bold(colors.yellow("▲ " + messages.size + " messages deleted using mod:rm.")));
+		log("▲ " + messages.size + " messages deleted using bulkDelete.", logType.warn);
 	}
 
 });
@@ -1554,11 +1502,10 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 });
 
 process.on("unhandledRejection", err => {
-	console.error(colors.bold(colors.bgRed(colors.white("[UNCAUGHT PROMISE] " + err.stack))));
+	log("[UNCAUGHT PROMISE] " + err.stack, logType.critical);
 });
 
 
 client.login(api.key()).catch(function() {
-	console.log(colors.bold(colors.bgRed(colors.white("[ERROR] Login failed."))));
-	console.log("Failed to login with token: " + api.key());
+	log("Xail Bot failed to establish a connection to the server.", logType.critical);
 });
