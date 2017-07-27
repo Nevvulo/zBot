@@ -1,4 +1,5 @@
 exports.run = (client, message, args) => {
+	
 doNotDelete = true;
 
                 var ball = "";
@@ -97,6 +98,4 @@ doNotDelete = true;
                         break;
 
                 }
-                message.delete();
-                return;
 }

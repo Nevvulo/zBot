@@ -80,7 +80,7 @@
 				embed.addField("Punishment History", msg, true);{
 					if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "224372132019306496") {
 						var msg = "**Role** » *Member* \n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "268886481479794690") {
+					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "335341733892325378") {
 						var msg = "**Role** » *Subscriber* \n";
 					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "269802212367138817") {
 						var msg = "**Role** » *VIP* \n";

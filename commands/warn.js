@@ -6,7 +6,7 @@ var colors = require('colors');
 var warnMember = "";
 
 exports.run = (client, message, args) => {
-	if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
+	if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
 		doNotDelete = true;
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
@@ -24,16 +24,16 @@ exports.run = (client, message, args) => {
 			warning = warning.trim();
 			warnReason = warning;
 		}
-		message.channel.send(args.split(" ").toString());
+
 		message.guild.fetchMember(args.split(" ").toString()).then(function(member) {
 			// Init variables
 			let warnReason = warning;
 			warnMember = member;
 			let warningCount = 0;
-			
+
 			warnMember = warnMember.toString();
 			warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").toString();
-			
+
 			if (member.roles.find("name", "Fleece Police")) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t warn other moderators.');
 			} else {

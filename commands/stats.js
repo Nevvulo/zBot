@@ -8,7 +8,7 @@ const {
 } = require('tsubaki');
 const fs = promisifyAll(require('fs'));
 const sql = require('sqlite');
-sql.open('./score.sqlite');
+sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
 	args = args.toString();

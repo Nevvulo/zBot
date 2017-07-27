@@ -1,7 +1,7 @@
 const fs = require('fs');
 //Database require
 const sql = require('sqlite');
-sql.open('./score.sqlite');
+sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
 let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
