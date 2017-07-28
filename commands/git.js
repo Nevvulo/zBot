@@ -1,24 +1,32 @@
 const Discord = require('discord.js');
-const fs = require('fs');
 const Version = require('./../structures/general/Version.js')
+const git = require('git-last-commit');
 const {
 	promisifyAll
 } = require('tsubaki');
+const fs = promisifyAll(require('fs'));
+	let version = "0";
 
 exports.run = (client, message, args) => {
-	git();
-	async function git () {
-	console.log("I've started the git command.")
+	ver();
+	async function ver() {
+	version = Version.getVersionNumber();
+			console.log(version)
+	setTimeout(() => {
+		git.getLastCommit(function(err, commit) {
 	message.delete();
-	console.log("Starting embed now.")
-	let version = await Promise.resolve(Version.getVersionNumber());
 	const embed = new Discord.RichEmbed()
 		.addField('GitHub Repository', Version.getGitHubLink(), true)
 		.addField('Xail Bot Version', version, true)
+		.addField('Latest Commit', commit.subject, true)
 		.setColor(0x00FF00)
 		.setFooter('Xail Bot - Derived from AstralMod, heavily modified by zBlake.')
 		.setTimestamp()
-		console.log("Sending embed now.")
 	message.channel.send({ embed })
-}
+	});
+}, 200);
+
+	}
+
+
 };
