@@ -95,6 +95,8 @@ const ExperienceManager = require('./structures/experience/ExperienceManager.js'
 ExperienceManager.constructor(client, commandEmitter);
 const CommandHandler = require('./structures/general/CommandHandler.js')
 CommandHandler.constructor(client, commandEmitter);
+const Blacklist = require('./structures/general/Blacklist.js')
+Blacklist.constructor(client, commandEmitter);
 
 //Console
 var sudoCommand = "";
@@ -184,7 +186,7 @@ function messageChecker(oldMessage, newMessage) {
 
 	if (message.author.id !== 303017211457568778 && !message.author.bot) {
     	console.log(colors.gray("[ MESSAGE ] " + message.author.username + " » " + msg));
-    
+
 
 			// If the RegEx "exp" executes successfully and finds a match, remove the message.
 			// Link filter
