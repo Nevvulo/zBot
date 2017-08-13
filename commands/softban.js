@@ -30,7 +30,7 @@ exports.run = (client, message, args) => {
 			console.log(colors.green("* Successfully wrote softban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
 
-			channel = client.channels.get("229575537444651009");
+			channel = client.channels.get("345783379397967872");
 			channel.send({
 				embed: {
 					color: 11475996,
@@ -67,7 +67,7 @@ exports.run = (client, message, args) => {
 							format: 'png'
 						})
 					},
-					description: ":warning: You have been softbanned on Rainbow Gaming.\n",
+					description: ":warning: You have been softbanned on " + message.guild.name + ".\n",
 					fields: [{
 							name: '**Reason**',
 							value: banReason

@@ -1,6 +1,6 @@
 /****************************************
  *
- *   Xail Bot: An all-in-one bot designed for Rainbow Gaming.
+ *   zBot: An all-in-one bot.
  *   Copyright (C) 2017 Victor Tran and Rylan Arbour
  *	 Rewritten and redesigned by zBlake
  *
@@ -78,15 +78,15 @@ if (maintenanceM.maintenanceEnabled == true) {
 	maintenance = false;
 }
 
-const expletiveFilter = require('./commands/filter.js');
-const doModeration = require('./commands/mod.js');
+var moderationEnabled = false;
+
 const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience.js');
 const Spam = require('./structures/general/Spam.js')
-Spam.constructor(client, commandEmitter);
+Spam.constructor(client, commandEmitter, moderationEnabled);
 const Expletive = require('./structures/general/Expletive.js')
-Expletive.constructor(client, commandEmitter);
+Expletive.constructor(client, commandEmitter, moderationEnabled);
 const Conversation = require('./structures/general/Conversation.js')
 Conversation.constructor(client, commandEmitter);
 const Challenge = require('./structures/games/Challenge.js')
@@ -108,10 +108,7 @@ var userAFK = [];
 
 //Moderation
 var doNotDelete = false;
-var caughtLink = false;
-var caughtKYS = false;
 var ignoreMessage = false;
-doModeration[196793479899250688] = true;
 
 async function setGame() {
 	let presence = {};
@@ -132,7 +129,7 @@ async function setGame() {
 }
 
 client.on('ready', () => {
-	log("> Xail Bot is now online!", logType.success)
+	log("> zBot is now online!", logType.success)
 	client.setInterval(setGame, 300000);
 	setGame();
 });
@@ -162,18 +159,6 @@ function messageChecker(oldMessage, newMessage) {
 		}
 	} else {}
 
-
-
-	// If doModeration has no value, init to true.
-	if (doModeration.enabled == null || undefined) {
-		doModeration.enabled = true;
-	}
-
-	// If expletiveFilter has no value, init to true.
-	if (expletiveFilter.enabled == null || undefined) {
-		expletiveFilter.enabled = true;
-	}
-
 	// If panicMode has no value, init to false.
 	if (panicMode.enabled == undefined) {
 		panicMode.enabled = false;
@@ -186,33 +171,6 @@ function messageChecker(oldMessage, newMessage) {
 
 	if (message.author.id !== 303017211457568778 && !message.author.bot) {
     	console.log(colors.gray("[ MESSAGE ] " + message.author.username + " » " + msg));
-
-
-			// If the RegEx "exp" executes successfully and finds a match, remove the message.
-			// Link filter
-			if (message.member != null) { //*!(message.member.roles.find("name", "Fleece Police"))
-				//exp = msg.search(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{5,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&// = ]*)/i);
-				exp = msg.search(/.*?(http\:\/\/www\.[a-zA-Z0-9\.\/\-]+)/);
-				if (exp != -1) { //This is a link.
-					if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Permitted")) {
-					} else if (message.channel.name == "self_promos" || message.channel.name == "music" || message.channel.name == "bot_testing" || message.channel.name == "meme_dungeon" || message.channel.name == "photos" || message.channel.name == "minecraft_ideas") {
-					} else if (msg.toLowerCase().includes("twitch.tv/xailran") || msg.toLowerCase().includes("www.youtube.com") || msg.toLowerCase().includes("www.reddit.com") || msg.toLowerCase().includes("discord.gg")) {
-					} else {
-						caughtLink = true;
-						log("▲ Unapproved link caught in message by " + message.author.tag, logType.info);
-						message.delete();
-            fs.readFile('./data/main/filter/linkCaughtMessage.txt', function(err, data) {
-          	if(err) throw err;
-          	data = data.toString();
-          	let fileContentLines = data.split( '\n' );
-          	let randomLineIndex = Math.floor( Math.random() * fileContentLines.length );
-          	let randomLine = fileContentLines[ randomLineIndex ];
-        		message.reply(randomLine);
-            })
-						return;
-					}
-				}
-			}
 		}
   }
 // END OF MESSAGE Function
@@ -227,15 +185,15 @@ process.stdin.on('data', sendCLIMessage);
 
 function sendCLIMessage(text) {
 	text = text.trim();
-	currentGuild = client.guilds.first(); //because Xail Bot is only connected to 1 guild
+	currentGuild = client.guilds.first(); //because zBot is only connected to 1 guild
 	currentGuild.channels.forEach(function (channel) {
-	if (channel.name == "bot_testing") {
+	if (channel.name == "admins") {
 			currentChannel = channel
 	}
 	})
 	switch (text) {
 		case "stop":
-			log("Xail Bot will now shutdown.", logType.info)
+			log("zBot will now shutdown.", logType.info)
 			process.exit(0);
 			break;
 		case "setchannel":
@@ -269,10 +227,7 @@ function sendCLIMessage(text) {
 }
 
 client.on('guildMemberAdd', function(guildMember) {
-	if (guildMember.guild.id == 196793479899250688) {
-		guildMember.addRole(guildMember.guild.roles.get("224372132019306496"));
-
-		channel = client.channels.get("196793479899250688");
+		channel = client.channels.get("345783379397967872");
 		let randomjoin = "";
 		switch (Math.floor(Math.random() * 1000) % 7) {
 			case 0:
@@ -297,9 +252,9 @@ client.on('guildMemberAdd', function(guildMember) {
 				randomjoin = "Nice to see you!";
 				break;
 		}
-		channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*")
+		//channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*")
 
-		channel = client.channels.get("229575537444651009");
+		channel = client.channels.get("345783379397967872");
 		channel.send({
 			embed: {
 				color: 3191350,
@@ -324,17 +279,15 @@ client.on('guildMemberAdd', function(guildMember) {
 			}
 		});
 
-	}
 });
 
 client.on('guildMemberRemove', function(guildMember) {
-	if (guildMember.guild.id == 196793479899250688) {
-		channel = client.channels.get("229575537444651009");
+		channel = client.channels.get("345783379397967872");
 		channel.send({
 			embed: {
 				color: 13724718,
 				author: {
-					name: "ᴜꜱᴇʀ ǫuı »  " + guildMember.user.tag,
+					name: "ᴜꜱᴇʀ ǫᴜɪᴛ »  " + guildMember.user.tag,
 					icon_url: guildMember.user.displayAvatarURL
 				},
 				fields: [{
@@ -349,86 +302,33 @@ client.on('guildMemberRemove', function(guildMember) {
 				timestamp: new Date()
 			}
 		});
-
-	}
 });
 
 client.on('messageDelete', function(message) {
-	if (message.content.startsWith("+"))
-return;
-	var channel = null;
-
-	if (message.guild != null) {
-
-		if (message.guild.id == 196793479899250688) { //General chat for testbot
-			channel = client.channels.get("229575537444651009");
-		}
-
-		if (panicMode[message.guild.id])
-			return; //Don't want to be doing this in panic mode!
-		if (message.author.id == 303017211457568778)
-			return;
-		if (message.author.id == 155149108183695360)
-			return; //Dyno
-		if (message.author.id == 184405311681986560)
-			return; //FredBoat
-		if (ignoreMessage) {
-			ignoreMessage = false;
-			return;
-		}
-
-		if (caughtKYS == true) {
-			caughtKYS = false;
-
-			channel = client.channels.get("229575537444651009");
-			channel.send({
-				embed: {
-					color: 14714691,
-					author: {
-						name: "ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag,
-						icon_url: message.member.user.displayAvatarURL
-					},
-					description: ":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n",
-					fields: [{
-							name: '**Message**',
-							value: message.cleanContent
-						},
-						{
-							name: '**Reason**',
-							value: "Death threat contained in message.\n"
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-			return;
-		} else if (caughtLink == true) {
-			caughtLink = false;
-
-			channel = client.channels.get("229575537444651009");
-			channel.send({
-				embed: {
-					color: 14714691,
-					author: {
-						name: "ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag,
-						icon_url: message.member.user.displayAvatarURL
-					},
-					description: ":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n",
-					fields: [{
-							name: '**Message**',
-							value: message.cleanContent
-						},
-						{
-							name: '**Reason**',
-							value: "Unconfirmed link contained in message.\n"
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-			return;
-		}
-	}
+  if (`${Date.now() - message.createdTimestamp}` < 1900) return;
+	if (message.content.startsWith("+")) return;
+  if (message.author.bot) return;
+	var channel = client.channels.get("345783379397967872");
+  channel.send({
+    embed: {
+      color: 14714691,
+      author: {
+        name: "ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag,
+        icon_url: message.member.user.displayAvatarURL
+      },
+      description: ":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n",
+      fields: [{
+          name: '**Message**',
+          value: message.cleanContent
+        },
+        {
+          name: '**Reason**',
+          value: "Message manually removed by user.\n"
+        }
+      ],
+      timestamp: new Date()
+    }
+  });
 });
 
 client.on('messageDeleteBulk', function(messages) {
@@ -443,7 +343,7 @@ client.on('messageDeleteBulk', function(messages) {
 	channel.send(":page_facing_up: **DEBUG:** BulkDelete function called. Deleted " + messages.size + " messages.");
 	}
 
-	channel = client.channels.get("229575537444651009");
+	channel = client.channels.get("345783379397967872");
 
 	if (channel != null) {
 		log("▲ " + messages.size + " messages deleted using bulkDelete.", logType.warn);
@@ -453,18 +353,18 @@ client.on('messageDeleteBulk', function(messages) {
 
 client.on('messageUpdate', function(oldMessage, newMessage) {
 	if (oldMessage.cleanContent == newMessage.cleanContent) return; //Ignore
+  if (oldMessage.author.bot) return;
+  var oldMessageContent = oldMessage.cleanContent;
+  if (oldMessage.cleanContent == "") {
+    oldMessageContent = "*No message was provided.*";
+  }
 	var channel = null;
 	if (oldMessage.guild != null) {
-		if (oldMessage.guild.id == 196793479899250688) {
-			channel = client.channels.get("229575537444651009");
-		}
+			channel = client.channels.get("345783379397967872");
 
 		if (channel != null) {
-			if (oldMessage.author.bot) return;
-			if (oldMessage.member.roles.find("name", "Fleece Police") || oldMessage.member.roles.find("name", "Head of the Flock")) {
-				return;
-			} else {
-				channel = client.channels.get("229575537444651009");
+
+				channel = client.channels.get("345783379397967872");
 				channel.send({
 					embed: {
 						color: 16040514,
@@ -475,7 +375,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 						description: ":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n",
 						fields: [{
 								name: '**Old Content**',
-								value: oldMessage.cleanContent
+								value: oldMessageContent
 							},
 							{
 								name: '**New Content**',
@@ -486,7 +386,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 					}
 				});
 				return;
-			}
+
 		}
 	}
 });
@@ -497,5 +397,5 @@ process.on("unhandledRejection", err => {
 
 
 client.login(api.key()).catch(function() {
-	log("Xail Bot failed to establish a connection to the server.", logType.critical);
+	log("zBot failed to establish a connection to the server.", logType.critical);
 });

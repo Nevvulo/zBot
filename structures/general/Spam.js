@@ -9,6 +9,7 @@ var spamObject = {
 };
 
 function newMessage(message) {
+    if (!moderationEnabled) return;
 	if (message.author.bot) return;
 	var msg = message.content
 
@@ -73,7 +74,7 @@ function newMessage(message) {
                 if (spamCountingUser >= 3) {
                     if (spamCountingUser == 6) {
 											message.reply("Quite enough of this. I'm not warning you anymore.")
-											channel = client.channels.get("229575537444651009");
+											channel = client.channels.get("345783379397967872");
 											channel.send({
 												embed: {
 													color: 14714691,
@@ -173,8 +174,9 @@ function newMessage(message) {
 
 module.exports = {
     name: "Spam",
-    constructor: function(discordClient, commandEmitter) {
+    constructor: function(discordClient, commandEmitter, isModerationEnabled) {
         client = discordClient;
+        moderationEnabled = isModerationEnabled;
         commandEmitter.on('newMessage', newMessage);
     },
     destructor: function(commandEmitter) {

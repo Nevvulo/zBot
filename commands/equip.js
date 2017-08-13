@@ -36,14 +36,26 @@ var userSlots = badges[message.author.id];
 
 message.delete();
 
-if (args == "list") {
+if (args == "list badges") {
 let tosend = []
 sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(rows => {
-	tosend.push(rows)
+	let tempRows = JSON.stringify(rows, null, 2)
+	var jRows = JSON.parse(tempRows)
+	console.log("test " + jRows)
+	for (var key in jRows) {
+	     var value = jRows[key];
+			 console.log(key + " " + value);
+			 if (value > 0 && key !== "userId") {
+				console.log(key)
+			tosend.push(" " + key)
+			}
+	  }
+		message.reply(":white_check_mark: **OK:** These are the badges that you currently own:**" + tosend + "**.");
+		return;
 })
 
-message.reply(":white_check_mark: **OK:** These are the badges that you currently own: **" + tosend + "**.");
-return;
+} else if (args == "list backgrounds") {
+
 }
 
 var num = args[0];

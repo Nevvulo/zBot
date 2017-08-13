@@ -15,34 +15,35 @@ function newMessage(message) {
 		exports.commandIssuer = message.author.id;
 		log(message.author.username + " issued command " + command, logType.info);
 
-		try {
-			let commandFile = require(`./../../commands/${command}.js`);
-			// ACE prevention
-			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
-				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
-		} else if (!message.member.roles.find("name", "Fleece Police")) {
-			// If command is a moderator command
-			if (command == "mod" || command == "filter" || command == "rm" || command == "uinfo" || command == "warn" || command == "ban" || command == "softban" || command == "mute" || command == "say" || command == "permit" || command == "setgame" || command == "reboot" || command == "cancel") {
-			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
-			} else {
-			commandFile.run(client, message, args);
-			}
-		} else {
-			commandFile.run(client, message, args);
-			}
-		} catch (err) {
-			// ACE prevention
-			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
-				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
-			}
-				log(err.stack, logType.warning);
-			}
-	}
+    try {
+    			let commandFile = require(`./../../commands/${command}.js`);
+    			// ACE prevention
+    			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
+    				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
+    		} else if (message.author.id !== "246574843460321291") {
+    			// If command is a moderator command
+    			if (command == "mod" || command == "filter" || command == "rm" || command == "uinfo" || command == "warn" || command == "ban" || command == "softban" || command == "mute" || command == "say" || command == "permit" || command == "setgame" || command == "reboot" || command == "cancel") {
+    			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
+          return;
+    			} else {
+    			commandFile.run(client, message, args);
+    			}
+    		} else {
+    			commandFile.run(client, message, args);
+    			}
+    		} catch (err) {
+    			// ACE prevention
+    			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
+    				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
+    			}
+    				log(err.stack, logType.warning);
+    			}
+    	}
 
 	// Debug command handler
-	if (msg.toLowerCase().startsWith("%")) {
-		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock") || message.member.roles.find("name", "XailBot")) {
-			var command = msg.substr(1).split(" ").slice(0, 1);
+	if (msg.toLowerCase().startsWith("d+")) {
+		if (message.member.roles.find("name", "Admin") || message.guild.ownerID == message.author.id || message.author.id == 246574843460321291 || message.member.roles.find("name", "zBot")) {
+			var command = msg.substr(2).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
 			log(message.author.username + " issued debug command " + command, logType.info);
@@ -61,27 +62,6 @@ function newMessage(message) {
 			} else {
 				commandFile.run(client, message, args);
 			}
-			} catch (err) {
-				log(err.stack, logType.warning);
-			}
-		} else {
-			doNotDelete = false;
-			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
-			message.delete();
-		}
-	}
-
-	// If a command is deprecated, handle command using disabled:
-	if (msg.toLowerCase().startsWith("disabled:")) {
-		if (message.member.roles.find("name", "Admin") || message.member.roles.find("name", "Head of the Flock")) {
-			var command = msg.substr(9).split(" ").slice(0, 1);
-			var args = msg.split(" ").slice(1);
-
-			log(message.author.username + " issued disabled command " + command, logType.info);
-
-			try {
-				let commandFile = require(`./../../commands/disabled/${command}.js`);
-				commandFile.run(client, message, args);
 			} catch (err) {
 				log(err.stack, logType.warning);
 			}

@@ -22,7 +22,7 @@ parser.set('littleboy', math.eval('6 * 10^13 J')); // The energy a hiroshima bom
 parser.set('sun', math.eval('2.0 * 10^30 kg')); // The mass of the sun
 parser.set('jiffy', math.eval('0.01 seconds')); // A tick in a computer
 parser.set('now', nowDate); // A tick in a computer
-parser.set('cuteness', math.eval('Infinity')); // A tick in a computer
+parser.set('friends', 'none'); // A tick in a computer
 parser.set('blakecuteness', math.eval('0')); // A tick in a computer
 parser.set('pumas_game_library', math.eval('Infinity')); // A tick in a computer
 
@@ -54,7 +54,26 @@ message.channel.send({
 			}
 		})
 } catch (err) {
-message.reply(":no_entry_sign: **ERROR:** Error whilst calculating request. " + err);
+
+	message.channel.send({
+		embed: {
+			color: 14714691,
+			author: {
+				name: "ᴍᴀᴛʜ ᴇʀʀᴏʀ »  ",
+				icon_url: message.member.user.displayAvatarURL
+			},
+			description: ":no_entry_sign: **ERROR:** Error whilst calculating request.\n",
+			fields: [{
+					name: '**Error**',
+					value: err.toString().substr(7)
+				}
+			],
+			footer: {
+		    text: "Try again, check for errors, and if the problem persists please contact zBlake#6715."
+		  }
+		}
+	});
+
 return;
 }
 }

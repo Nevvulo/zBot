@@ -6,7 +6,6 @@ var colors = require('colors');
 var warnMember = "";
 
 exports.run = (client, message, args) => {
-	if (message.member.roles.find("name", "Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
 		doNotDelete = true;
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
@@ -32,7 +31,7 @@ exports.run = (client, message, args) => {
 			let warningCount = 0;
 
 			warnMember = warnMember.toString();
-			warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").toString();
+			warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
 
 			if (member.roles.find("name", "Fleece Police")) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t warn other moderators.');
@@ -50,13 +49,13 @@ exports.run = (client, message, args) => {
 							warningCount = warningCount + 1
 						}
 					});
-
+					console.log(warnMember)
 					message.guild.fetchMember(warnMember).then(function(member) {
 
 						//Write warning information to .csv file
 						var writer = csvWriter({
 							headers: ["Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
-							sendHeaders: true
+							sendHeaders: false
 						})
 						writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
 							flags: 'a'
@@ -65,7 +64,7 @@ exports.run = (client, message, args) => {
 						writer.end()
 						console.log(colors.green("* Successfully wrote warning for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
-						channel = client.channels.get("229575537444651009");
+						channel = client.channels.get("345783379397967872");
 						channel.send({
 							embed: {
 								color: 15056925,
@@ -111,7 +110,7 @@ exports.run = (client, message, args) => {
 							}
 						});
 
-						message.channel.send(":white_check_mark: " + member + " was successfully warned.");
+						message.channel.send(":white_check_mark: **" + member + "** was successfully warned.");
 					});
 					return;
 				}
@@ -139,9 +138,6 @@ exports.run = (client, message, args) => {
 					break;
 			}
 		});
-	} else {
-		message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
-	}
 
 	message.delete();
 }

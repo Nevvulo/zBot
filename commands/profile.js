@@ -135,6 +135,7 @@ exports.run = (client, message, args) => {
 				ctx.scale(1, 1);
 				ctx.patternQuality = 'billinear';
 				ctx.filter = 'bilinear';
+				ctx.imageSmoothingEnabled = true;
 				ctx.antialias = 'subpixel';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
 				ctx.shadowOffsetY = 2;
@@ -143,21 +144,24 @@ exports.run = (client, message, args) => {
 				// Username
 				if (member.id == 184050823326728193 || member.id == 246574843460321291) {
 					texter(member.displayName, 75, 35)
-				} else {
+				} else if (member.highestRole.name == "@everyone") {
 				ctx.font = '16px Roboto';
-				ctx.fillStyle = member.displayHexColor;
+				ctx.fillStyle = "#FFF";
 				ctx.fillText(member.displayName, 75, 35);
-			}
+			} else {
+			ctx.font = '16px Roboto';
+			ctx.fillStyle = member.displayHexColor;
+			ctx.fillText(member.displayName, 75, 35);
+		}
 				// Role
-				ctx.font = '12px Roboto';
-				ctx.fillStyle = member.displayHexColor;
-				ctx.fillText(member.highestRole.name.toUpperCase(), 75, 50);
-
-				//If XBT:
-				if (member.roles.find("name", "Xail Bot Testing")) {
-				ctx.font = '12px Roboto';
-				ctx.fillStyle = '#3498db';
-				ctx.fillText("Xail Bot Testing", 205, 50);
+				if (member.highestRole.name == "@everyone") {
+					ctx.font = '12px Roboto';
+					ctx.fillStyle = "#FFF";
+					ctx.fillText("NO ROLE", 75, 50);
+				} else {
+					ctx.font = '12px Roboto';
+					ctx.fillStyle = member.displayHexColor;
+					ctx.fillText(member.highestRole.name.toUpperCase(), 75, 50);
 				}
 
 				// EXP TITLE
@@ -216,7 +220,7 @@ exports.run = (client, message, args) => {
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#E5E5E5';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-				ctx.fillText('YOUR BADGES', 25, 255);
+				ctx.fillText('Badge Showcase', 25, 255);
 				// Badges are spaced out +40 X for each badge
 				let slot1X = 25;
 				let slot2X = 65;

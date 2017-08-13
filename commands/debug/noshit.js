@@ -8,7 +8,7 @@ function play() {
 const voiceChannel = message.member.voiceChannel;
   voiceChannel.join()
   .then(connection => {
-	return connection.playFile('C://Users//Blake//Desktop//Xail Bot//website//audio//konami.mp3', {volume: 0.5});
+	return connection.playFile('C://Users//Blake//Desktop//Blake\'s Files//Documents//Programs//zBot//assets//music//audio//noreally.mp3', {volume: 0.5});
 	}).then(dispatcher => {
 dispatcher.on('end', () => {
 		play();

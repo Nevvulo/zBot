@@ -61,13 +61,13 @@
 
 			rl.on('line', function (line) {
 
-				if (line.includes(member.displayName + "#" + member.user.discriminator)) {
+				if (line.includes(member.id)) {
 					overallCount = overallCount + 1
 				}
 
-				if (line.includes("Warning") && line.includes(member.displayName + "#" + member.user.discriminator)) {
+				if (line.includes("Warning") && line.includes(member.id)) {
 					warnCount = warnCount + 1
-				} else if (line.includes("Mute") && line.includes(member.displayName + "#" + member.user.discriminator)) {
+				} else if (line.includes("Mute") && line.includes(member.id)) {
 					muteCount = muteCount + 1
 				}
 			});
@@ -78,23 +78,7 @@
 				msg += "**Total Cases** » " + overallCount;
 
 				embed.addField("Punishment History", msg, true);{
-					if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "224372132019306496") {
-						var msg = "**Role** » *Member* \n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "338587905670774784") {
-						var msg = "**Role** » *Subscriber* \n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "269802212367138817") {
-						var msg = "**Role** » *VIP* \n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "301298292308967426") {
-						var msg = "**Role** » *Administrator* \n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "268886465927315457") {
-						var msg = "**Role** » *Moderator* Level **1** (Fleece Police)\n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "223989611397906443") {
-						var msg = "**Role** » *Moderator* Level **2** (Adept Fleece Police)\n";
-					} else if (member.highestRole.toString().replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "") == "224371729466654721") {
-						var msg = "**Role** » *Owner / Streamer*\n";
-					} else {
-						var msg = "**Role** » *Bot*\n";
-					}
+					var msg = "**Role** » " + member.highestRole.name.toString() + "\n";
 
 					if (member.presence.status == "online") {
 						msg += "**Presence** » *Online*";

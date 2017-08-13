@@ -53,7 +53,7 @@ exports.run = (client, message, args) => {
 			message.channel.send(":no_entry_sign: **NOPE:** Come on. Surely someone out there loves you.");
 			break;
 		case 3:
-			message.channel.send(":no_entry_sign: **NOPE:** You can't hug nothing. <:Kappa:300124631522869248>");
+			message.channel.send(":no_entry_sign: **NOPE:** You can't hug nothing.");
 			break;
 		}
 		return;

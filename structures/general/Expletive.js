@@ -6,6 +6,7 @@ var caughtSwear;
 var botDelMessage = true;
 
 function newMessage(message) {
+  if (!moderationEnabled) return;
     if (botDelMessage && caughtSwear) {
       if (message.author.id == 303017211457568778) {
         console.log(colors.yellow("▲ Bot is about to delete: " + colors.grey(message)));
@@ -34,7 +35,7 @@ function newMessage(message) {
     caughtSwear = true;
       if (dxp != -1) { //extra bad word!
         log("▲ Expletive (level 2) caught in message by " + message.author.tag, logType.info);
-        channel = client.channels.get("229575537444651009");
+        channel = client.channels.get("345783379397967872");
   			channel.send({
   				embed: {
   					color: 14714691,
@@ -131,8 +132,9 @@ function newMessage(message) {
 
 module.exports = {
     name: "Expletive",
-    constructor: function(discordClient, commandEmitter) {
+    constructor: function(discordClient, commandEmitter, isModerationEnabled) {
         client = discordClient;
+        moderationEnabled = isModerationEnabled;
         commandEmitter.on('newMessage', newMessage);
     },
     destructor: function(commandEmitter) {

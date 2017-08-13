@@ -1,5 +1,4 @@
 exports.run = (client, message, args) => {
-if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
 doNotDelete = true;
 
 var gamemessage = "";
@@ -39,7 +38,4 @@ message.guild.fetchMember(message.author).then(function(member) {
 			break;
 	}
 });
-	} else {
-		message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
-	}	
 }

@@ -15,10 +15,15 @@ var specialAbilityUsed = {};
 var turn = "";
 var oppturn = "";
 var init = true;
+var end = false;
+var confend = false;
 var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
-var userChallenge;
 
 function newMessage(message) {
+  if (end) {
+    challenge.startedChallenge = "false";
+  }
+
   var msg = message.content;
   //CHALLENGE
 	if (challenge.startedChallenge && message.channel.name == challenge.channel) {
@@ -38,11 +43,11 @@ function newMessage(message) {
     oppturn = challenge.enemy;
 		init = false;
 		}
-
+    userChallenge = badgesC[turn.id];
 		// Only check for messages that start with attack, defend, heal or end.
 		if (msg == "attack" || msg == "defend" || msg == "heal" || msg == "end" || msg == "special") {
 		message.delete();
-		userChallenge = badgesC[turn.id];
+
 		// Check for turn
 		if (message.author.id != turn.id) {
 			message.reply(":crossed_swords: **CHALLENGE**: It is not your turn!");
@@ -406,11 +411,25 @@ function newMessage(message) {
 			if (turn == challenge.enemy) {
 			turn = challenge.author
       oppturn = challenge.enemy
+      userChallenge = badgesC[turn.id];
 			} else {
 			turn = challenge.enemy
       oppturn = challenge.author
+      userChallenge = badgesC[turn.id];
 			}
 		}
+
+    if (msg.toLowerCase().startsWith("end")) {
+      if (confend) {
+      message.channel.send(":crossed_swords: **CHALLENGE**: The war between " + challenge.enemy + " and " + challenge.author + " has **ended**.");
+      end = true;
+      return;
+      } else {
+      confend = true;
+      message.channel.send(":crossed_swords: **CHALLENGE**: Are you sure you want to end this challenge?");
+      return;
+    }
+    }
 
 		if (userChallenge.weapon !== "") {
 		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + turn + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");

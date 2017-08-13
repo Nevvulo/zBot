@@ -11,7 +11,7 @@ message.delete();
 		}).then(messages => {
 			const filteredMessages = messages.filter(filter);
 			message.channel.bulkDelete(filteredMessages);
-			message.channel.send(":white_check_mark: **OK:** I've deleted all messages created by Xail Bot.").then(message => {
+			message.channel.send(":white_check_mark: **OK:** I've deleted all messages created by zBot.").then(message => {
         message.delete({ timeout: 8000 });
       });
 		})

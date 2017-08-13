@@ -31,7 +31,7 @@ exports.run = (client, message, args) => {
 		presence.afk = false;
 		presence.game.name = null;
 		client.user.setPresence(presence);
-		message.guild.member(client.user).setNickname("Xail Bot - ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ ᴍᴏᴅᴇ");
+		message.guild.member(client.user).setNickname("zBot - ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ ᴍᴏᴅᴇ");
 
 		return;
 
@@ -47,7 +47,7 @@ exports.run = (client, message, args) => {
 		presence.afk = false;
 		presence.game.name = null;
 		client.user.setPresence(presence);
-		message.guild.member(client.user).setNickname("Xail Bot");
+		message.guild.member(client.user).setNickname("zBot");
 
 		return;
 	}

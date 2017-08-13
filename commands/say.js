@@ -11,7 +11,7 @@ if (arrayLength > 0) {
 	messagesay = messagesay.trim();
 }
 
-if (messagesay.includes("@everyone")) {
+if (messagesay.includes("@everyone") || messagesay.includes("@here")) {
 message.channel.send(":no_entry_sign: **NOPE:** You can't ping everyone!");
 return;
 }

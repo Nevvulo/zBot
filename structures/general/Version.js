@@ -1,20 +1,17 @@
 var git = require('git-last-commit');
-const fs = require('fs');
+const {
+	promisifyAll
+} = require('tsubaki');
+const fs = promisifyAll(require('fs'));
 var data = "";
 var trimmeddata = "";
 
 class Version {
-	static async getVersionNumber(includeVer) {
+	static async getVersionNumber() {
 		await fs.readFile('./data/main/version/vernum.txt', function(err, data) {
 		if(err) throw err;
-		data = data.toString()
-		//includeVer is if you want to include "ver." in the string.
-		if (includeVer == "true") {
+		data = data.toString();
 		return data;
-	} else {
-		trimmeddata = data.substr(5);
-		return trimmeddata;
-	}
 });
 
 	}

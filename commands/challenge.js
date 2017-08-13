@@ -13,19 +13,29 @@ var challengePending = []
 var challengeRequestFulfilled = false;
 
 var challengeInProgress = false;
+
 exports.run = (client, message, args) => {
+var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
+
+if (!badgesC[message.author.id])
+			badgesC[message.author.id] = {
+				weapon: "none"
+			};
+var userChallenge = badgesC[message.author.id];
+
+eval(`userChallenge.weapon = "none"`);
+		fs.writeFile('./data/challenge/equipment.json', JSON.stringify(badgesC, null, 2), function(err) {
+				if (err) {
+					console.error(err)
+				}
+			});
 
 message.delete ();
 
-var challengeEquipment = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
-	
-if (!challengeEquipment[message.author.id])
-			challengeEquipment[message.author.id] = {
-				weapon: "none"
-			};
-			
-
 // Init Variables
+if (challenge.startedChallenge == "false") {
+challengeInProgress = false;
+}
 
 if (challengeInProgress) {
 	message.reply(":no_entry_sign: **NOPE**: There is a challenge currently in progress.");
@@ -36,21 +46,20 @@ if (args[0] == "begin") {
 if (message.author.id == challengePending) {
 	if (message.mentions.users.first().id == waitingOnEnemyResponse) {
 		message.guild.fetchMember(waitingOnEnemyResponse.toString()).then(function(enemy) {
-		
+
 		exports.startedChallenge = "true";
 		exports.enemy = enemy;
 		exports.author = message.author;
 		exports.channel = message.channel.name;
-		
-		var userChallenge = challengeEquipment[message.author.id];
-		
+
+		challengeInProgress = true;
 		if (userChallenge.weapon == "gold") {
-		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");	
+		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");
 		} else {
 		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `end`");
 		}
 		return;
-		
+
 		})
 	} else {
 		message.reply(":no_entry_sign: **ERROR**: You need to invite this person to a challenge first before you begin one.");
@@ -84,7 +93,7 @@ return;
 if (message.mentions.users.first() == undefined) {
 message.reply(":no_entry_sign: **ERROR**: You need to specify which user you want to challenge by mentioning them. (ie. `+challenge " + message.author.tag + "`)");
 return;
-} 
+}
 
 var author = message.author
 var enemy = message.mentions.users.first()
@@ -106,9 +115,9 @@ return;
 		message.reply(":no_entry_sign: **NOPE**: You've already initiated a challenge request, please wait until your current request expires before trying again.");
 		return;
 	} else {
-		
+
 		message.channel.send(":crossed_swords: **CHALLENGE**: " + message.author + " has challenged " + enemy + " to battle!\n" + enemy + " has 60 seconds to accept this challenge by using `+challenge accept @" + message.author.tag + "`, or ignore it.");
-		
+
 		// Adds the user to the array so that they can't challenge someone for 60 seconds
 		challengePending.push(message.author.id);
 		waitingOnEnemyResponse.push(enemy.id);
