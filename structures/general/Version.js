@@ -7,13 +7,9 @@ var data = "";
 var trimmeddata = "";
 
 class Version {
-	static async getVersionNumber() {
-		await fs.readFile('./data/main/version/vernum.txt', function(err, data) {
-		if(err) throw err;
-		data = data.toString();
-		return data;
-});
-
+	static getVersionNumber(includeVer) {
+		if (includeVer) return "ver. 1.4.7";
+		else return "1.4.7"
 	}
 
 	static async getLatestCommit() {

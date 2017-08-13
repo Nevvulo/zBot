@@ -10,7 +10,7 @@ const fs = promisifyAll(require('fs'));
 exports.run = (client, message, args) => {
 	ver();
 	async function ver() {
-	version = Version.getVersionNumber();
+	version = Version.getVersionNumber(true);
 	console.log(version)
 	setTimeout(() => {
 		git.getLastCommit(function(err, commit) {
