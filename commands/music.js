@@ -8,7 +8,7 @@ const bot = require('./../bot.js');
 const maintenance = require('./debug/maintenance.js');
 var colors = require('colors');
 
-var queue = [];
+var queue = {};
 var music = {};
 var skipCount = 3;
 var currentSong = null;
@@ -18,6 +18,7 @@ var songRepeat = false;
 var musicEnd = false;
 var debug = false;
 exports.run = (client, message, args) => {
+	if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 if (maintenance.maintenanceEnabled == true) {
 		debug = true;
 	} else {
@@ -94,64 +95,16 @@ if (maintenance.maintenanceEnabled == true) {
 			return;
 
 		} else if (music == "queue") {
-			let tosend = [];
-		  if (queue == "") {
-		      //Debugging information.
-		      if (debug == true) {
-		          message.channel.send(":page_facing_up: **DEBUG:** __queue__ is " + queue + ".");
-		      }
-
-		      message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
-		      return;
-		  }
-		  queue.forEach((item, i) => {
-		      yt.getInfo(item, function(err, info) {
-		          tosend.splice(i, 0, `${i+1}. ${info.title}\n`)
-		          if (tosend.length == queue.length) {
-		              queueMessage(tosend);
-		          }
-		      });
-		  });
-
-		  function queueMessage(mSend) {
-		      //Debugging information.
-		      if (debug == true) {
-		          message.channel.send(":page_facing_up: **DEBUG:** Sending ```" + mSend + "```\n mSend.length is currently " + mSend.length + ".");
-		      }
-
-					function natcmp(a, b) {
-				    var ra = a.match(/\D+|\d+/g);
-				    var rb = b.match(/\D+|\d+/g);
-				    var r = 0;
-
-				    while(!r && ra.length && rb.length) {
-				        var x = ra.shift(), y = rb.shift(),
-				            nx = parseInt(x), ny = parseInt(y);
-
-				        if(isNaN(nx) || isNaN(ny))
-				            r = x > y ? 1 : (x < y ? -1 : 0);
-				        else
-				            r = nx - ny;
-				    }
-				    return r || ra.length - rb.length;
-				}
-
-		      function sortNumber(a, b) {
-		          return a - b;
-		      }
-		      parseInt(mSend.sort(natcmp));
-		      message.channel.send(`__**${message.guild.name}'s Music Queue:**__ Currently **${mSend.length}** songs queued ${(mSend.length > 9 ? '*[Only next 10 shown]*' : '')}\n\`\`\`${mSend.slice(0,10).join('\n')}\`\`\``);
-		      tosend = [];
-		  }
-		  return;
-
+			if (queue[message.guild.id] === undefined) return message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
+					let tosend = [];
+					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - Requested by: ${song.requester}`);});
+					message.channel.send(`__**${message.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 		} else if (music == "next") {
 			if (queue == "") {
 				//Debugging information.
 				if (debug == true) {
 					message.channel.send(":page_facing_up: **DEBUG:** __queue__ is " + queue + ".");
 				}
-
 				message.channel.send(":no_entry_sign: **ERROR:** There are no songs that are next.");
 				return;
 			}
@@ -173,14 +126,13 @@ if (maintenance.maintenanceEnabled == true) {
 			}
 			return;
 		} else if (music == "end") {
-
 			if (voiceChannel.members.size < 3 || message.member.roles.find("name", "Fleece Police")) {
 				//Debugging information.
 				if (debug == true) {
 					message.channel.send(":page_facing_up: **DEBUG:** " + message.author + " cleared the queue.");
 				}
 
-				queue = [];
+				queue[message.guild.id] = [];
 				musicEnd = true;
 				voiceChannel.leave();
 				message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
@@ -191,26 +143,41 @@ if (maintenance.maintenanceEnabled == true) {
 					message.channel.send(":page_facing_up: **DEBUG:** " + message.author + " is in " + voiceChannel.name + ", which currently has " + voiceChannel.members.size + " members in it. They are not permitted to clear the queue.");
 				}
 
-				message.reply(":no_entry_sign: **NOPE:** You can't do that yet, there are other people in this channel listening to the music!");
+				message.reply(":no_entry_sign: **NOPE:** You can't do that, there are other people in this channel listening to the music!");
 				return;
 			}
 		}
-		queueMusic();
 
-		function queueMusic() {
+
+		if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
+			yt.getInfo(music, (err, info) => {
+			if (queue[message.guild.id].playing || queue[message.guild.id].songs.length > 0) {
+			console.log(colors.bgYellow("▲ There is a song already playing."));
+					if(err) return message.channel.send('Invalid YouTube Link: ' + err);
+					if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
+					queue[message.guild.id].songs.push({url: music, title: info.title, requester: message.author.username});
+					message.channel.send(":white_check_mark: **OK:** I've added **" + info.title + "** into the queue.");
+			return;
+		} else {
+			var firstTime = {url: music, title: info.title, requester: message.author.username};
+			console.log(queue)
+			queueMusic(firstTime);
+		}
+			});
+		}
+
+
+		function queueMusic(song) {
+			console.log("song = " + song)
 			//Debugging information.
 			if (debug == true) {
 				message.channel.send(":page_facing_up: **DEBUG:** In function __queueMusic__, checking for commands...");
 			}
 
-			if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
-				queue.push(music);
-			}
-
-			yt.getInfo(queue[0], function (err, info) {
+			yt.getInfo(music, function (err, info) {
 				if (err) {
 					message.reply(":no_entry_sign: **ERROR:** I couldn't find the video that you specified.");
-					queue.shift()
+					queue[message.guild.id].songs.shift();
 					return;
 				}
 			});
@@ -223,34 +190,16 @@ if (maintenance.maintenanceEnabled == true) {
 				if (songRepeat == true) {
 					currentSong = currentSong;
 				} else {
-					currentSong = queue[0];
-				}
-			}
-
-			if (connection.speaking == true && music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
-				//Debugging information.
-				if (debug == true) {
-					message.channel.send(":page_facing_up: **DEBUG:** There is a song currently playing, added song to end of queue.");
-				}
-
-				console.log(colors.bgYellow("▲ There is a song already playing."));
-				yt.getInfo(music, function (err, info) {
-					message.channel.send(":white_check_mark: **OK:** I've added **" + info.title + "** into the queue.");
-				});
-				return;
-			} else {
-				//Debugging information.
-				if (debug == true) {
-					message.channel.send(":page_facing_up: **DEBUG:** :warning: connection.speaking is currently false.");
+					currentSong = song.url;
 				}
 			}
 
 			if (bot.npEnabled == true) {
-				yt.getInfo(currentSong, function (err, info) {
-					console.log("Now playing " + info.title)
-					message.channel.send(":headphones: **NOW PLAYING:** " + info.title);
-				});
+					console.log("Now playing " + song.url)
+					message.channel.send(":headphones: **NOW PLAYING:** " + song.title);
 			}
+
+			queue[message.guild.id].playing = true;
 
 			const streamOptions = {
 				seek: 0,
@@ -267,7 +216,7 @@ if (maintenance.maintenanceEnabled == true) {
 				if (debug == true) {
 					message.channel.send(":page_facing_up: **DEBUG:** Repeat is off, shifting to next song.");
 				}
-				queue.shift();
+				queue[message.guild.id].songs.shift();
 			}
 
 			dispatcher.on('end', () => {
@@ -284,11 +233,12 @@ if (maintenance.maintenanceEnabled == true) {
 					if (debug == true) {
 						message.channel.send(":page_facing_up: **DEBUG:** Playing the next song in the queue, " + queue[0] + ".");
 					}
-					queueMusic(streamfunc);
+					queueMusic(queue[message.guild.id].songs.shift());
 				} else {
 					musicEnd = false;
 					console.log("Music ended.");
 					message.channel.send(":mute: The queue is empty.");
+					queue[message.guild.id].playing = false;
 				}
 			});
 		}
