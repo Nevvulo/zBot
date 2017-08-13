@@ -1,2 +1,2 @@
-# Xail-Bot
-Discord bot made for Rainbow Gaming.
+# zBot
+An all-in-one Discord bot.
