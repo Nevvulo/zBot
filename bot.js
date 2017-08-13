@@ -2,7 +2,7 @@
  *
  *   zBot: An all-in-one bot.
  *   Copyright (C) 2017 Victor Tran and Rylan Arbour
- *	 Rewritten and redesigned by zBlake
+ *	 Rewritten and redesigned by zBlake.
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
