@@ -25,7 +25,7 @@ const api = require('./data/main/keys/keys.js');
 //This is just to make the console look fancier
 var colors = require('colors');
 const replace = require("replace");
-const maintenanceM = require('./commands/debug/maintenance.js');
+const developer = require('./commands/debug/developer.js');
 const events = require('events');
 const commandEmitter = new events.EventEmitter();
 
@@ -71,11 +71,11 @@ global.log = function(logMessage, type = logType.debug) {
 }
 
 //Maintenance check
-var maintenance = false;
-if (maintenanceM.maintenanceEnabled == true) {
-	maintenance = true;
+var developerMode = false;
+if (developer.developerMode == true) {
+	developerMode = true;
 } else {
-	maintenance = false;
+	developerMode = false;
 }
 
 var moderationEnabled = false;
@@ -83,6 +83,7 @@ var moderationEnabled = false;
 const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience.js');
+const Version = require('./structures/general/Version.js')
 const Spam = require('./structures/general/Spam.js')
 Spam.constructor(client, commandEmitter, moderationEnabled);
 const Expletive = require('./structures/general/Expletive.js')
@@ -105,6 +106,8 @@ var currentChannel = "";
 
 //Misc.
 var userAFK = [];
+var lockBox = [];
+var commandHistory = [];
 
 //Moderation
 var doNotDelete = false;
@@ -113,7 +116,6 @@ var ignoreMessage = false;
 async function setGame() {
 	let presence = {};
 	presence.game = {};
-	presence.status = "online";
 	presence.afk = false;
 
 	await fs.readFile('./data/main/setGame/setGame.txt', function(err, data){
@@ -134,6 +136,51 @@ client.on('ready', () => {
 	setGame();
 });
 
+
+process.stdin.resume();
+process.stdin.setEncoding('utf-8');
+process.stdin.on('data', processConsoleInput);
+
+function processConsoleInput(line) {
+    commandHistory.unshift(line);
+    	text = line.trim();
+    	currentGuild = client.guilds.last(); //because zBot is only connected to 1 guild
+    	switch (text) {
+    		case "stop":
+    			log("zBot will now shutdown.", logType.info)
+    			process.exit(0);
+    			break;
+    		case "setchannel":
+    			log("Set text channel to nothing.", logType.info)
+    			currentChannel = "";
+    			break;
+    		default:
+    			if (text.startsWith("log")) {
+    				log(text.substr(4), logType.info);
+    			} else if (text.startsWith("setchannel")) {
+    				if (currentGuild != "") {
+    					currentGuild.channels.forEach(function (channel) {
+    						if (channel.name == text.substr(11)) {
+    							currentChannel = channel;
+    							log("Set text channel to #" + text.substr(11) + ". All messages sent through the 'send' command will be redirected to that channel.", logType.info)
+    						}
+    					})
+    				} else {
+    					return;
+    				}
+    			} else if (text.startsWith("send")) {
+    				if (currentChannel != "") {
+    					currentChannel.send(text.substr(5))
+    				}
+    		} else if (text.startsWith("sudo")) {
+    			if (currentChannel != "") {
+    				currentChannel.send(sudoCommand);
+    			}
+    		}
+    	}
+}
+
+
 function messageChecker(oldMessage, newMessage) {
 	var message;
 
@@ -148,7 +195,6 @@ function messageChecker(oldMessage, newMessage) {
   commandEmitter.emit('newMessage', message);
 
 	exports.userAFK = userAFK;
-
 	if (message.mentions.users.size > 0 && message.author.bot == false) {
 		if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
 			message.reply(":information_source: **" + message.mentions.users.first().username + "** is currently *AFK*. They may not respond to your message for a while.").then(message => {
@@ -177,54 +223,6 @@ function messageChecker(oldMessage, newMessage) {
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
-
-
-process.stdin.resume();
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', sendCLIMessage);
-
-function sendCLIMessage(text) {
-	text = text.trim();
-	currentGuild = client.guilds.first(); //because zBot is only connected to 1 guild
-	currentGuild.channels.forEach(function (channel) {
-	if (channel.name == "admins") {
-			currentChannel = channel
-	}
-	})
-	switch (text) {
-		case "stop":
-			log("zBot will now shutdown.", logType.info)
-			process.exit(0);
-			break;
-		case "setchannel":
-			log("Set text channel to nothing.", logType.info)
-			currentChannel = "";
-			break;
-		default:
-			if (text.startsWith("log")) {
-				log(text.substr(4), logType.info);
-			} else if (text.startsWith("setchannel")) {
-				if (currentGuild != "") {
-					currentGuild.channels.forEach(function (channel) {
-						if (channel.name == text.substr(11)) {
-							currentChannel = channel;
-							log("Set text channel to #" + text.substr(11) + ". All messages sent through the 'send' command will be redirected to that channel.", logType.info)
-						}
-					})
-				} else {
-					return;
-				}
-			} else if (text.startsWith("send")) {
-				if (currentChannel != "") {
-					currentChannel.send(text.substr(5))
-				}
-		} else if (text.startsWith("sudo")) {
-			if (currentChannel != "") {
-				currentChannel.send(sudoCommand);
-			}
-		}
-	}
-}
 
 client.on('guildMemberAdd', function(guildMember) {
 		channel = client.channels.get("345783379397967872");
@@ -338,7 +336,7 @@ client.on('messageDeleteBulk', function(messages) {
 		return; //Don't want to be doing this in panic mode!
 
 	//Debugging information.
-	if (maintenance == true) {
+	if (developerMode == true) {
 	channel = client.channels.get("325540027972976650");
 	channel.send(":page_facing_up: **DEBUG:** BulkDelete function called. Deleted " + messages.size + " messages.");
 	}
