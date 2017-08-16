@@ -101,7 +101,7 @@ exports.run = (client, message, args) => {
 										format: 'png'
 									})
 								},
-								description: ":warning: You have received a warning on Rainbow Gaming.\n",
+								description: ":warning: You have received a warning on " + message.guild.name + ".\n",
 								fields: [{
 									name: '**Reason**',
 									value: warnReason

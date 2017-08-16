@@ -86,7 +86,6 @@ exports.run = (client, message, args) => {
 	}
 
 	doNotDelete = true;
-	if (message.member.roles.find("name", "Adept Fleece Police") || message.member.roles.find("name", "Head of the Flock")) {
 		doNotDelete = true;
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
@@ -138,7 +137,4 @@ exports.run = (client, message, args) => {
 				break;
 			}
 		});
-	} else {
-		message.reply(":no_entry_sign: **NOPE:** You don't have access to this command.");
-	}
 }
