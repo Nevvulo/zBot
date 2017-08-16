@@ -5,7 +5,7 @@ const readline = require('readline');
 const csvWriter = require('csv-write-stream');
 const yt = require('ytdl-core');
 const bot = require('./../bot.js');
-const maintenance = require('./debug/maintenance.js');
+const maintenance = require('./debug/developer.js');
 var colors = require('colors');
 
 var queue = {};
@@ -16,10 +16,12 @@ var usersVotedSkip = [];
 var queueList = "";
 var songRepeat = false;
 var musicEnd = false;
-var debug = false;
+var debug = true;
+var firstSong = true;
 exports.run = (client, message, args) => {
+	console.log(debug)
 	if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
-if (maintenance.maintenanceEnabled == true) {
+if (maintenance.developerMode == true) {
 		debug = true;
 	} else {
 		debug = false;
@@ -28,16 +30,16 @@ if (maintenance.maintenanceEnabled == true) {
 	args = args.toString();
 	music = args.split(" ").toString();
 	//Debugging information.
-	if (debug == true) {
+	if (debug) {
 		message.channel.send(":page_facing_up: **DEBUG:** User *" + message.author + "* entered arguments " + music);
-		message.channel.send(":page_facing_up: **DEBUG:** The queue is currently ```" + queue + "```, and has " + queue.length + " songs.");
+		message.channel.send(":page_facing_up: **DEBUG:** The queue is currently ```" + queue[message.guild.id].songs + "```, and has " + queue[message.guild.id].songs.length + " songs.");
 	}
 
 	const voiceChannel = message.member.voiceChannel;
 
 	if (!voiceChannel) {
 		//Debugging information.
-		if (debug == true) {
+		if (debug) {
 			message.channel.send(":page_facing_up: **DEBUG:** User *" + message.author + "* wasn't found in a voice channel.");
 		}
 
@@ -102,16 +104,14 @@ if (maintenance.maintenanceEnabled == true) {
 		} else if (music == "next") {
 			if (queue == "") {
 				//Debugging information.
-				if (debug == true) {
+				if (debug) {
 					message.channel.send(":page_facing_up: **DEBUG:** __queue__ is " + queue + ".");
 				}
 				message.channel.send(":no_entry_sign: **ERROR:** There are no songs that are next.");
 				return;
 			}
-			yt.getInfo(queue[0], function (err, info) {
-				message.channel.send(":fast_forward: **NEXT SONG:** " + info.title);
-				message.delete ();
-			});
+				message.channel.send(":fast_forward: **NEXT SONG:** " + queue[message.guild.id].songs.title);
+				message.delete();
 			return;
 		} else if (music == "repeat") {
 			if (songRepeat == true) {
@@ -128,7 +128,7 @@ if (maintenance.maintenanceEnabled == true) {
 		} else if (music == "end") {
 			if (voiceChannel.members.size < 3 || message.member.roles.find("name", "Fleece Police")) {
 				//Debugging information.
-				if (debug == true) {
+				if (debug) {
 					message.channel.send(":page_facing_up: **DEBUG:** " + message.author + " cleared the queue.");
 				}
 
@@ -139,7 +139,7 @@ if (maintenance.maintenanceEnabled == true) {
 				return;
 			} else {
 				//Debugging information.
-				if (debug == true) {
+				if (debug) {
 					message.channel.send(":page_facing_up: **DEBUG:** " + message.author + " is in " + voiceChannel.name + ", which currently has " + voiceChannel.members.size + " members in it. They are not permitted to clear the queue.");
 				}
 
@@ -148,43 +148,43 @@ if (maintenance.maintenanceEnabled == true) {
 			}
 		}
 
-
 		if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
+			console.log(firstSong)
+			console.log(queue[message.guild.id].playing)
 			yt.getInfo(music, (err, info) => {
+				if (err) {
+					message.reply(":no_entry_sign: **ERROR:** I couldn't find the video that you specified.");
+					dispatcher.end();
+					return;
+				}
+			if (firstSong) {
+				firstSong = false;
+				let song = {url: music, title: info.title, requester: message.author.username}
+				queueMusic(song)
+				return;
+			}
 			if (queue[message.guild.id].playing || queue[message.guild.id].songs.length > 0) {
 			console.log(colors.bgYellow("▲ There is a song already playing."));
-					if(err) return message.channel.send('Invalid YouTube Link: ' + err);
 					if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 					queue[message.guild.id].songs.push({url: music, title: info.title, requester: message.author.username});
 					message.channel.send(":white_check_mark: **OK:** I've added **" + info.title + "** into the queue.");
+					console.log(queue[message.guild.id].songs)
 			return;
-		} else {
-			var firstTime = {url: music, title: info.title, requester: message.author.username};
-			console.log(queue)
-			queueMusic(firstTime);
-		}
+			}
 			});
 		}
 
-
 		function queueMusic(song) {
+			queue[message.guild.id].playing = true;
 			console.log("song = " + song)
 			//Debugging information.
-			if (debug == true) {
+			if (debug) {
 				message.channel.send(":page_facing_up: **DEBUG:** In function __queueMusic__, checking for commands...");
 			}
 
-			yt.getInfo(music, function (err, info) {
-				if (err) {
-					message.reply(":no_entry_sign: **ERROR:** I couldn't find the video that you specified.");
-					queue[message.guild.id].songs.shift();
-					return;
-				}
-			});
-
 			if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
 				//Debugging information.
-				if (debug == true) {
+				if (debug) {
 					message.channel.send(":page_facing_up: **DEBUG:** __music__ is not equal to any of the available commands, setting __currentSong__ to __queue__.");
 				}
 				if (songRepeat == true) {
@@ -199,8 +199,6 @@ if (maintenance.maintenanceEnabled == true) {
 					message.channel.send(":headphones: **NOW PLAYING:** " + song.title);
 			}
 
-			queue[message.guild.id].playing = true;
-
 			const streamOptions = {
 				seek: 0,
 				volume: 0.7
@@ -211,18 +209,10 @@ if (maintenance.maintenanceEnabled == true) {
 
 			dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
 
-			if (songRepeat == false) {
-				//Debugging information.
-				if (debug == true) {
-					message.channel.send(":page_facing_up: **DEBUG:** Repeat is off, shifting to next song.");
-				}
-				queue[message.guild.id].songs.shift();
-			}
-
 			dispatcher.on('end', () => {
 				if (queue == "" && songRepeat == false) {
 					//Debugging information.
-					if (debug == true) {
+					if (debug) {
 						message.channel.send(":page_facing_up: **DEBUG:** Queue is empty and repeat is off.");
 					}
 					musicEnd = true;
@@ -230,10 +220,12 @@ if (maintenance.maintenanceEnabled == true) {
 
 				if (musicEnd !== true) {
 					//Debugging information.
-					if (debug == true) {
-						message.channel.send(":page_facing_up: **DEBUG:** Playing the next song in the queue, " + queue[0] + ".");
+					if (debug) {
+						message.channel.send(":page_facing_up: **DEBUG:** Playing the next song in the queue, " + queue[message.guild.id].songs + ".");
 					}
-					queueMusic(queue[message.guild.id].songs.shift());
+					let nextSong = queue[message.guild.id].songs.shift();
+					console.log(nextSong)
+					queueMusic(nextSong);
 				} else {
 					musicEnd = false;
 					console.log("Music ended.");
