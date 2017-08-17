@@ -1,4 +1,5 @@
 const sql = require('sqlite');
+const Discord = require('discord.js');
 sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
@@ -30,7 +31,7 @@ exports.run = (client, message, args) => {
 		}
 		//Send array.
 		await console.log();
-
+		const embed =  new Discord.MessageEmbed();
 		message.channel.send({embed: {
 		title: "ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ » ",
 		color: 3191350,

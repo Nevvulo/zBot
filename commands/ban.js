@@ -12,9 +12,10 @@ exports.run = (client, message, args) => {
 	message.delete();
 
 	if (banConfirm == true) {
+		
 		banMember = banMember.toString();
-		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").toString();
-
+		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
+console.log(banMember)
 		banConfirm = false;
 		message.guild.fetchMember(banMember).then(function (member) {
 			//Write ban information to .csv file
@@ -31,6 +32,7 @@ exports.run = (client, message, args) => {
 
 
 			channel = client.channels.get("345783379397967872");
+			const embed = new Discord.MessageEmbed()
 			channel.send({
 				embed: {
 					color: 11475996,
@@ -77,8 +79,8 @@ exports.run = (client, message, args) => {
 				}
 			});
 
-			message.channel.send(":white_check_mark: " + member.displayName + " was successfully banned.");
-			message.guild.ban(banMember, 7, banReason);
+			message.channel.send(":white_check_mark: " + member.displayName + " was successfully banned. (but not really since i commented it out woo)");
+			//message.guild.ban(banMember, 7, banReason);
 			banMember = null;
 
 		});
@@ -106,6 +108,7 @@ exports.run = (client, message, args) => {
 
 		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
 			banMember = member;
+			console.log(banMember)
 			if (member.roles.find("name", "Fleece Police")) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t ban other moderators.');
 			} else {
@@ -118,7 +121,7 @@ exports.run = (client, message, args) => {
 			}
 		}).catch(function (reason) {
 			if (banConfirm == false && banMember == null || ("") || undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See mod:help for more information.');
+				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See +help for more information.');
 				message.delete();
 				return;
 			}

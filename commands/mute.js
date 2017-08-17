@@ -31,6 +31,7 @@ exports.run = (client, message, args) => {
 
 
 			channel = client.channels.get("345783379397967872");
+			const embed = new Discord.MessageEmbed()
 			channel.send({
 				embed: {
 					color: 11475996,

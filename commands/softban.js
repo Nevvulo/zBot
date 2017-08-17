@@ -13,7 +13,7 @@ exports.run = (client, message, args) => {
 
 	if (banConfirm == true) {
 		banMember = banMember.toString();
-		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").toString();
+		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
 
 		banConfirm = false;
 		message.guild.fetchMember(banMember).then(function (member) {
@@ -31,6 +31,7 @@ exports.run = (client, message, args) => {
 
 
 			channel = client.channels.get("345783379397967872");
+			const embed = new Discord.MessageEmbed()
 			channel.send({
 				embed: {
 					color: 11475996,

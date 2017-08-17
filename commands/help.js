@@ -4,7 +4,7 @@ var msg = "";
 exports.run = (client, message, args) => {
 doNotDelete = false;
 
-const embed = new Discord.RichEmbed();
+const embed = new Discord.MessageEmbed();
 var general = "copyright\nwarranty\ncredits\nafk\ninfo\ndog\ncat\nhelp\nhug\nping\nmusic"
 var social = "profile\nstats\nequip\nleaderboard"
 var misc = "git\nitems\npfp\nisay"

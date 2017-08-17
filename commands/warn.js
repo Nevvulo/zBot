@@ -65,6 +65,7 @@ exports.run = (client, message, args) => {
 						console.log(colors.green("* Successfully wrote warning for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
 						channel = client.channels.get("345783379397967872");
+						const embed = new Discord.MessageEmbed()
 						channel.send({
 							embed: {
 								color: 15056925,

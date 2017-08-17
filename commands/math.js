@@ -1,5 +1,6 @@
 const math = require('mathjs');
 const moment = require('moment');
+const Discord = require('discord.js');
 
 exports.run = (client, message, args) => {
 message.delete();
@@ -34,6 +35,7 @@ if (arrayLength > 0) {
 	}
 
 try {
+	const embed = new Discord.MessageEmbed()
 message.channel.send({
 			embed: {
 				color: 3191350,
@@ -54,7 +56,7 @@ message.channel.send({
 			}
 		})
 } catch (err) {
-
+	const embed = new Discord.MessageEmbed()
 	message.channel.send({
 		embed: {
 			color: 14714691,

@@ -13,7 +13,7 @@ var uptime = moment.duration(process.uptime() * 1000).format('D [days], H [hrs],
 const memTotal = process.memoryUsage().heapTotal / 1024 / 1024
 const memUsed = process.memoryUsage().heapUsed / 1024 / 1024
 var parser = math.parser();
-    const embed = new Discord.RichEmbed()
+    const embed = new Discord.MessageEmbed()
       .setTitle('GitHub Repository')
       .addField('Node Version', "`" + process.version + "`", true)
       .addField('Discord.js Version', "`" + Discord.version + "`", true)

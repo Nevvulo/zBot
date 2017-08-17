@@ -1,3 +1,4 @@
+const Discord = require('discord.js');
 exports.run = (client, message, args) => {
 
 	function clean(text) {
@@ -17,7 +18,7 @@ const argseval = message.content.split(" ").slice(1);
 			if (typeof evaled !== "string")
 				evaled = require("util").inspect(evaled);
 			message.delete();
-
+			const embed = new Discord.MessageEmbed()
 			message.channel.send({
 				embed: {
 					color: 3191350,
@@ -41,7 +42,7 @@ const argseval = message.content.split(" ").slice(1);
 			})
 		} catch (err) {
 			message.delete();
-
+			const embed = new Discord.MessageEmbed()
 			message.channel.send({
 				embed: {
 					color: 3191350,

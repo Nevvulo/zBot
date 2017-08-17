@@ -15,7 +15,7 @@ exports.run = (client, message, args) => {
 	setTimeout(() => {
 		git.getLastCommit(function(err, commit) {
 	message.delete();
-	const embed = new Discord.RichEmbed()
+	const embed = new Discord.MessageEmbed()
 		.addField('GitHub Repository', Version.getGitHubLink(), true)
 		.addField('zBot Version', version, true)
 		.addField('Latest Commit', commit.subject, true)

@@ -124,6 +124,7 @@ async function setGame() {
 	var fileContentLines = data.split( '\n' );
 	var randomLineIndex = Math.floor( Math.random() * fileContentLines.length );
 	var randomLine = fileContentLines[ randomLineIndex ];
+  presence.game.type = 0;
 	presence.game.name = randomLine;
 	client.user.setPresence(presence);
 	})
@@ -252,54 +253,38 @@ client.on('guildMemberAdd', function(guildMember) {
 		}
 		//channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*")
 
-		channel = client.channels.get("345783379397967872");
-		channel.send({
-			embed: {
-				color: 3191350,
-				author: {
-					name: "ᴜꜱᴇʀ ᴊᴏɪɴᴇᴅ »  " + guildMember.user.tag,
-					icon_url: guildMember.user.displayAvatarURL
-				},
-				fields: [{
-						name: '**Discriminator**',
-						value: "#" + guildMember.user.discriminator
-					},
-					{
-						name: '**User Created**',
-						value: guildMember.user.createdAt.toDateString() + " at " + guildMember.user.createdAt.toLocaleTimeString()
-					},
-					{
-						name: '**User Joined**',
-						value: guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString()
-					}
-				],
-				timestamp: new Date()
-			}
-		});
+	embed = new Discord.MessageEmbed();
+    embed.setAuthor("ᴜꜱᴇʀ ᴊᴏɪɴᴇᴅ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
+    embed.setColor("#d16c2e");
+    embed.setDescription(":wave: <@" + guildMember.id + "> has joined " + guildMember.guild.name + ".\n")
 
+    var msg = guildMember.user.createdAt.toDateString() + " at " + guildMember.user.createdAt.toLocaleTimeString()
+    embed.addField("**User Created**", msg);
+
+	var msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString()
+    embed.addField("**User Joined**", msg);
+	embed.setFooter("For more information on this user, type +uinfo " + guildMember.user.username + ".");
+
+	channel.send({ embed });
 });
 
 client.on('guildMemberRemove', function(guildMember) {
-		channel = client.channels.get("345783379397967872");
-		channel.send({
-			embed: {
-				color: 13724718,
-				author: {
-					name: "ᴜꜱᴇʀ ǫᴜɪᴛ »  " + guildMember.user.tag,
-					icon_url: guildMember.user.displayAvatarURL
-				},
-				fields: [{
-						name: '**Username**',
-						value: guildMember.user.tag
-					},
-					{
-						name: '**User Joined**',
-						value: guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString()
-					}
-				],
-				timestamp: new Date()
-			}
-		});
+	var channel = client.channels.get("345783379397967872");
+
+	embed = new Discord.MessageEmbed();
+    embed.setAuthor("ᴜꜱᴇʀ ǫᴜɪᴛ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
+    embed.setColor("#d16c2e");
+    embed.setDescription(":wave: <@" + guildMember.id + "> has left " + guildMember.guild.name + ".\n")
+
+    var msg = guildMember.user.tag;
+    embed.addField("**Username**", msg);
+
+    var msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString();
+    embed.addField("**User Joined**", msg);
+	embed.setTimestamp(new Date());
+
+	channel.send({ embed });
+
 });
 
 client.on('messageDelete', function(message) {
@@ -307,41 +292,34 @@ client.on('messageDelete', function(message) {
 	if (message.content.startsWith("+")) return;
   if (message.author.bot) return;
 	var channel = client.channels.get("345783379397967872");
-  channel.send({
-    embed: {
-      color: 14714691,
-      author: {
-        name: "ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag,
-        icon_url: message.member.user.displayAvatarURL
-      },
-      description: ":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n",
-      fields: [{
-          name: '**Message**',
-          value: message.cleanContent
-        },
-        {
-          name: '**Reason**',
-          value: "Message manually removed by user.\n"
-        }
-      ],
-      timestamp: new Date()
-    }
-  });
+
+	embed = new Discord.MessageEmbed();
+    embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag, message.member.user.avatarURL( {format: 'png'} ));
+    embed.setColor("#e08743");
+    embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n")
+
+    var msg = message.cleanContent;
+    embed.addField("**Message**", msg);
+
+    var msg = "Message manually deleted by user.\n";
+    embed.addField("**Reason**", msg);
+	embed.setTimestamp(new Date());
+
+	channel.send({ embed });
 });
 
 client.on('messageDeleteBulk', function(messages) {
 	var channel = null;
-
+	channel = client.channels.get("345783379397967872");
 	if (panicMode[messages.first().guild.id])
 		return; //Don't want to be doing this in panic mode!
 
 	//Debugging information.
 	if (developerMode == true) {
-	channel = client.channels.get("325540027972976650");
 	channel.send(":page_facing_up: **DEBUG:** BulkDelete function called. Deleted " + messages.size + " messages.");
 	}
 
-	channel = client.channels.get("345783379397967872");
+
 
 	if (channel != null) {
 		log("▲ " + messages.size + " messages deleted using bulkDelete.", logType.warn);
@@ -362,28 +340,22 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 
 		if (channel != null) {
 
-				channel = client.channels.get("345783379397967872");
-				channel.send({
-					embed: {
-						color: 16040514,
-						author: {
-							name: "ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.tag,
-							icon_url: oldMessage.author.displayAvatarURL
-						},
-						description: ":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n",
-						fields: [{
-								name: '**Old Content**',
-								value: oldMessageContent
-							},
-							{
-								name: '**New Content**',
-								value: newMessage.cleanContent
-							}
-						],
-						timestamp: new Date()
-					}
-				});
-				return;
+	var channel = client.channels.get("345783379397967872");
+
+	embed = new Discord.MessageEmbed();
+    embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.tag, oldMessage.member.user.avatarURL( {format: 'png'} ));
+    embed.setColor("#f4c242");
+    embed.setDescription(":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n")
+
+    var msg = oldMessage.cleanContent;
+    embed.addField("**Previous Content**", msg);
+
+    var msg = newMessage.cleanContent;
+    embed.addField("**Updated Content**", msg);
+	embed.setTimestamp(new Date());
+
+	channel.send({ embed });
+	return;
 
 		}
 	}
