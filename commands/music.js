@@ -149,15 +149,13 @@ if (maintenance.developerMode == true) {
 		}
 
 		if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
-			console.log(firstSong)
-			console.log(queue[message.guild.id].playing)
 			yt.getInfo(music, (err, info) => {
 				if (err) {
 					message.reply(":no_entry_sign: **ERROR:** I couldn't find the video that you specified.");
 					dispatcher.end();
 					return;
 				}
-			if (firstSong) {
+			if (firstSong || queue[message.guild.id].songs.length < 1) {
 				firstSong = false;
 				let song = {url: music, title: info.title, requester: message.author.username}
 				queueMusic(song)
@@ -207,7 +205,7 @@ if (maintenance.developerMode == true) {
 					filter: 'audioonly'
 				});
 
-			dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
+			const dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
 
 			dispatcher.on('end', () => {
 				if (queue == "" && songRepeat == false) {
@@ -218,19 +216,23 @@ if (maintenance.developerMode == true) {
 					musicEnd = true;
 				}
 
-				if (musicEnd !== true) {
+				if (musicEnd == false) {
 					//Debugging information.
 					if (debug) {
 						message.channel.send(":page_facing_up: **DEBUG:** Playing the next song in the queue, " + queue[message.guild.id].songs + ".");
 					}
 					let nextSong = queue[message.guild.id].songs.shift();
 					console.log(nextSong)
+
+					if (nextSong == undefined) {
+						console.log("Music ended.");
+						message.channel.send(":mute: The queue is empty.");
+						queue[message.guild.id].playing = false;
+						dispatcher.end();
+						voiceChannel.leave();
+						return;
+					}
 					queueMusic(nextSong);
-				} else {
-					musicEnd = false;
-					console.log("Music ended.");
-					message.channel.send(":mute: The queue is empty.");
-					queue[message.guild.id].playing = false;
 				}
 			});
 		}
