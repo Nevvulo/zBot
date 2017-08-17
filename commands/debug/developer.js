@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 var debug = false;
+var npEnable = false;
 
 exports.run = (client, message, args) => {
 	message.delete ();
@@ -17,6 +18,16 @@ exports.run = (client, message, args) => {
 			message.channel.send(":white_check_mark: **OK:** I've deleted all of the debug messages.");
 		})
 		return;
+	}
+
+	if (args == "npEnabled") {
+		message.channel.send(":white_check_mark: **OK:** *NowPlaying* module has been toggled.");
+		if (npEnable) {
+		exports.npEnabled = false;
+	} else {
+		exports.npEnabled = true;
+	}
+	return;
 	}
 
 	if (debug == false) {
