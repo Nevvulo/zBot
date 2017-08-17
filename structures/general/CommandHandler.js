@@ -2,12 +2,14 @@ const Discord = require("discord.js");
 const events = require('events');
 const commandEmitter = new events.EventEmitter();
 const colors = require('colors');
+const fs = require('fs');
+
+var errorMessage = "";
 
 function newMessage(message) {
   var msg = message.content;
   // Command handler for bot, mod and debug commands.
 	if (msg.toLowerCase().startsWith("+")) {
-
 		//Un-comment to activate Lockdown Mode. 	return message.channel.send(":no_entry_sign: **EMERGENCY**: *Xail Bot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/Xail-Bot/wiki/Lockdown-Mode");
 		var command = msg.substr(1).split(" ").slice(0, 1);
 		var args = msg.split(" ").slice(1);
@@ -37,12 +39,34 @@ function newMessage(message) {
     				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
     			}
     				log(err.stack, logType.warning);
+            if (err.toString().includes("module")) { return; } else { callError(err) }
+            async function callError(error) {
+            await fs.readFile('./data/main/errorHandle/errorMessage.txt', function(err, data){
+            if(err) throw err;
+            data = data.toString();
+            var fileContentLines = data.split( '\n' );
+            var randomLineIndex = Math.floor( Math.random() * fileContentLines.length );
+            var randomLine = fileContentLines[ randomLineIndex ];
+
+            embed = new Discord.MessageEmbed();
+            embed.setAuthor("ᴇʀʀᴏʀ »  ");
+            embed.setColor("#991400");
+            embed.setDescription(":no_entry_sign: " + randomLine)
+
+            var msg = error;
+            embed.addField("**Error Content**", msg);
+
+            embed.setFooter("If you see this message whilst trying to use a command, please DM zBlake#6715.")
+
+            message.channel.send({ embed });
+          })
+          }
     			}
     	}
 
 	// Debug command handler
 	if (msg.toLowerCase().startsWith("d+")) {
-		if (message.member.roles.find("name", "Admin") || message.guild.ownerID == message.author.id || message.author.id == 246574843460321291 || message.member.roles.find("name", "zBot")) {
+		if (message.member.roles.find("name", "Admin") || message.guild.ownerID == message.author.id || message.author.id == 246574843460321291 || message.author.id == 345766303052857344) {
 			var command = msg.substr(2).split(" ").slice(0, 1);
 			var args = msg.split(" ").slice(1);
 
