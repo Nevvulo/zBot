@@ -132,3 +132,10 @@ var badge = args[1].toString();
 				}
 			});
 }
+
+let command = 'equip'
+, description = 'Allows you to equip specific items to your profile.'
+, usage = '+equip **[type of item]** **[item name]**'
+, example = '+equip **background** **polymountains**'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, example: example}

@@ -22,3 +22,10 @@ exports.run = (client, message, args) => {
 
     exports.enabled = panicMode;
 }
+
+let command = 'panic'
+, description = 'When activated, deletes all incoming messages in this guild.'
+, usage = '+panic'
+, throttle = {usages: 2, duration: 10}
+, permission = 'admin';
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

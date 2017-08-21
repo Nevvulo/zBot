@@ -25,8 +25,11 @@ exports.run = (client, message, args) => {
 	message.channel.send({ embed })
 	});
 }, 100);
-
 	}
-
-
 };
+
+let command = 'git'
+, description = 'Shows GitHub information regarding zBot.'
+, usage = '+git'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

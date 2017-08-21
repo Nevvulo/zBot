@@ -12,7 +12,7 @@ sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
 	args = args.toString();
-	
+
 	//USERNAME/MENTION SYSTEM
 	if (args == "") {
 		args = message.author.id;
@@ -149,3 +149,9 @@ exports.run = (client, message, args) => {
 
 	});
 }
+
+let command = 'stats'
+, description = 'A simplified version of the `profile` command.'
+, usage = '+stats (user)'
+, throttle = {usages: 3, duration: 10}
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

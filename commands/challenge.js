@@ -130,3 +130,9 @@ return;
 		}, 60000);
 	}
 }
+
+let command = 'challenge'
+, description = 'Challenge somebody to a dual.'
+, usage = '+challenge **[mention]**'
+, throttle = {usages: 4, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

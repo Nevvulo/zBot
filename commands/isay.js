@@ -124,5 +124,10 @@ exports.run = (client, message, args) => {
 		}
 
 		drawStats();
-
 }
+
+let command = 'isay'
+, description = 'Displays your message in an image.'
+, usage = '+isay **[message]**'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

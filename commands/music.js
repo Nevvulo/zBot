@@ -241,3 +241,9 @@ if (maintenance.developerMode == true) {
 	message.delete ();
 	return;
 }
+
+let command = 'music'
+, description = 'Music player that can play YouTube videos.'
+, usage = '+music **[link]** (queue|skip|next|repeat|end)'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

@@ -16,7 +16,7 @@ message.delete();
       });
 		})
 	return;
-} 
+}
 
 if (args.toString() == "everything") {
 if (deleteEverythingConfirm == false) {
@@ -27,9 +27,9 @@ return;
 }
 	message.channel.clone();
 	message.channel.delete();
-	
+
 	var delchannel = message.channel;
-	
+
 	client.channels.get("196793479899250688").sendMessage(":white_check_mark: **OK:** I successfully deleted the channel you were just in and re-created it. All messages in the channel have been removed.").then(message => {
         message.delete({ timeout: 8000 });
       });
@@ -63,6 +63,13 @@ if (num != args) {
 				break;
 		}
 	});
-}	
+}
 
 }
+
+let command = 'rm'
+, description = 'Removes a specified amount of messages in the current channel.'
+, usage = '+rm **[number 1-100]**'
+, throttle = {usages: 3, duration: 10}
+, permission = 'mod';
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

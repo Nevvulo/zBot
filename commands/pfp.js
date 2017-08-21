@@ -139,5 +139,10 @@ message.guild.fetchMember(args).then(function (member) {
 
 				drawStats();
 	});
-
 }
+
+let command = 'pfp'
+, description = 'When activated, deletes all incoming messages in this guild.'
+, usage = '+pfp (user) (upsidedown|gradient|saturation)'
+, throttle = {usages: 2, duration: 10}
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

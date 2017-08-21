@@ -346,3 +346,9 @@ exports.run = (client, message, args) => {
 	})
 	})
 }
+
+let command = 'profile'
+, description = 'Displays yours or another users profile.'
+, usage = '+profile (user)'
+, throttle = {usages: 3, duration: 10}
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

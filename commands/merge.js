@@ -27,3 +27,9 @@ message.channel.send(":ship: `" + arr1.toString().replace(/,/g, "").slice(0, arr
 message.delete();
 return;
 }
+
+let command = 'merge'
+, description = 'Alternative command to `ship`, different name merging technique.'
+, usage = '+merge'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

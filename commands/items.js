@@ -20,7 +20,7 @@ exports.run = (client, message, args) => {
 				family: 'Roboto'
 			}) // eslint-disable-line max-len
 			const Image = Canvas.Image;
-			
+
 			var canvas = new Canvas(1920, 1080)
 			var ctx = canvas.getContext('2d')
 			const base = new Image();
@@ -38,7 +38,7 @@ exports.run = (client, message, args) => {
 			};
 
 			base.src = await fs.readFileAsync('./assets/items/images/badges.png');
-			
+
 			generate();
 
 			return message.channel.send({
@@ -52,3 +52,9 @@ exports.run = (client, message, args) => {
 
 		drawItems();
 }
+
+let command = 'items'
+, description = 'Shows an image of all the obtainable items that you can get through zBot.'
+, usage = '+items'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

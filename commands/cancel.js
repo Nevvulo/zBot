@@ -23,3 +23,9 @@ exports.run = (client, message, args) => {
     }
     message.delete();
 }
+
+let command = 'cancel'
+, description = 'Cancels a pending action.'
+, usage = '+cancel'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

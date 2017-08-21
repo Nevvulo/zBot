@@ -25,7 +25,7 @@ parser.set('jiffy', math.eval('0.01 seconds')); // A tick in a computer
 parser.set('now', nowDate); // A tick in a computer
 parser.set('friends', 'none'); // A tick in a computer
 parser.set('blakecuteness', math.eval('0')); // A tick in a computer
-parser.set('pumas_game_library', math.eval('Infinity')); // A tick in a computer
+parser.set('victor', "sorry can't calculate that too smart"); // A tick in a computer
 
 if (arrayLength > 0) {
 		for (let i = 0; i < arrayLength; i++) {
@@ -79,3 +79,9 @@ message.channel.send({
 return;
 }
 }
+
+let command = 'math'
+, description = 'Math evaluation command.'
+, usage = '+math **[equation]**'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

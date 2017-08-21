@@ -139,3 +139,10 @@ exports.run = (client, message, args) => {
 			}
 		});
 }
+
+let command = 'mute'
+, description = 'Mutes a specified user in this guild.'
+, usage = '+mute **[mention]** **[reason]**'
+, throttle = {usages: 3, duration: 10}
+, permission = 'mod';
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

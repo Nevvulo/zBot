@@ -1,15 +1,21 @@
 const Discord = require('discord.js');
+const Help = require('./../structures/general/Help.js');
+const Version = require('./../structures/general/Version.js');
 var msg = "";
 
 exports.run = (client, message, args) => {
+if (args[0] !== undefined) {
+  return message.channel.send(Help.getCommandHelp(args[0]));
+} else {
+
 doNotDelete = false;
 
 const embed = new Discord.MessageEmbed();
-var general = "copyright\nwarranty\ncredits\nafk\ninfo\ndog\ncat\nhelp\nhug\nping\nmusic"
+var general = "copyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\nping\nmusic"
 var social = "profile\nstats\nequip\nleaderboard"
-var misc = "git\nitems\npfp\nisay"
+var misc = "git\nitems\npfp\nisay\ngraph\nmath\ndog\ncat"
 var fun = "ship\nmerge\nchallenge\n8ball"
-var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nsay\npermit\nsetgame\nreboot\ncancel"
+var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nsay\npermit\nsetgame\nfind\ncancel\nfilter"
 
 embed.addField("General", general, true);
 embed.addField("Social", social, true);
@@ -17,37 +23,15 @@ embed.addField("Moderator", mod, true);
 embed.addField("Fun", fun, true);
 embed.addField("Misc.", misc, true);
 
-embed.setFooter("this is in progress");
+embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));
 message.channel.send({ embed });
 
-
-if (args == "mod" && message.member.roles.find("name", "Bot Owners")) {
-    var helpMessage = "**Moderator commands only:**```\n" +
-        "* mod		    		Toggles moderation status.\n";
-
-    helpMessage = helpMessage +
-        "rm [number]       		Deletes a number of messages.\n" +
-        "uinfo [user]      		Gets information about a user.\n" +
-        "warn [user] [reason]      Give a warning to a user.\n" +
-        "ban [user] [reason]       Ban someone from the server.\n" +
-		"mute [user] [reason]       Mute somebody on the server.\n" +
-		"softban [user] [reason]       Softban someone on the server.\n" +
-        "say [message]	   	  Say something under the bot's name.\n" +
-		"permit [user]	   	  Permit a user to post any links for 3 minutes.\n" +
-        "setgame [game]			Set what the bot is playing to whatever you want.\n" +
-        "* panic     		      Toggles panic mode.\n" +
-        "deletemessages    		Automatically removes bot messages after 10 seconds.\n" +
-        "cancel            		Cancels a pending operation.\n" +
-        "help              		Prints this help message.\n" +
-        "reboot            		Asks zBot to reconnect.\n" +
-        "\n" +
-        "* = denotes an admin only command\n" +
-		"The user argument currently only works when said user is mentioned.\n" +
-        "These commands need to be prefixed with +\n" +
-        "```";
-    message.delete();
-    message.channel.send(helpMessage);
-	return;
-}
 message.delete();
 }
+}
+
+let command = 'help'
+, description = 'Displays all available information about commands and help for zBot.'
+, usage = '+help (command)'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

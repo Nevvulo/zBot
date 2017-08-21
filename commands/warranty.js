@@ -8,3 +8,9 @@ message.author.send(
 );
 message.delete();
 }
+
+let command = 'warranty'
+, description = 'See warranty information related to zBot.'
+, usage = '+warranty'
+, throttle = {usages: 1, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

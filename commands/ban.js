@@ -12,7 +12,7 @@ exports.run = (client, message, args) => {
 	message.delete();
 
 	if (banConfirm == true) {
-		
+
 		banMember = banMember.toString();
 		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
 console.log(banMember)
@@ -141,3 +141,10 @@ console.log(banMember)
 			}
 		});
 }
+
+let command = 'ban'
+, description = 'Ban a specified user from this server.'
+, usage = '+ban **[mention]** **[reason]**'
+, throttle = {usages: 3, duration: 10}
+, permission = 'mod'
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

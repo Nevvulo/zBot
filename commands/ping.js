@@ -4,3 +4,9 @@ exports.run = (client, message, args) => {
 	});
 	return;
 }
+
+let command = 'ping'
+, description = 'Shows the ping time for zBot.'
+, usage = '+ping | +pong'
+, throttle = {usages: 4, duration: 10}
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

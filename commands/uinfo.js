@@ -5,39 +5,22 @@
 	var overallCount = 0;
 	const readline = require('readline');
 	const fs = require('fs');
+	const UserFinder = require('./../structures/general/UserFinder.js')
 	const rl = readline.createInterface({
 			input: fs.createReadStream('./data/punishment/Punishment Tracker.csv')
 		});
 
-	function getUserID(user) {
-		var u = user;
-		if (user.user != null) {
-			u = user.user;
-		}
-		return u.id;
-	}
 	args = args.toString();
 	args = args.replace(",", " ").replace(",", " ").replace(",", " ").toString();
 
-	console.log(args);
-	if (!args.includes("<")) {
-		var foundUsers = client.users.findAll("username", args);
-		if (foundUsers.length == 0) {
-			message.channel.send(':no_entry_sign: **ERROR:** Couldn\'t find anyone with that username. You might want to try again.');
-			return;
-		} else {
-			for (let user of foundUsers) {
-				args = getUserID(user);
-			}
-		}
-	} else {
-		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-		console.log("Username not provided for arguments.");
+	args = UserFinder.getUser(args)
+	console.log(args)
+	if (args == ':no_entry_sign: **ERROR:** Couldn\'t find anyone with that username. You might want to try again.') {
+		message.channel.send(args)
 	}
-
 	message.guild.fetchMember(args).then(function (member) {
 
-		const embed = new Discord.RichEmbed();
+		const embed = new Discord.MessageEmbed();
 		embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + member.user.username + "#" + member.user.discriminator, member.user.avatarURL( {format: 'png'} ));
 		embed.setColor("#c64ed3");{
 			var msg = "**Created** » " + member.user.createdAt.toDateString() + " at " + member.user.createdAt.toLocaleTimeString() + "\n";
@@ -77,7 +60,7 @@
 				msg += "**Total Number of Mutes** » " + muteCount + "\n";
 				msg += "**Total Cases** » " + overallCount;
 
-				embed.addField("Punishment History", msg, true);{
+				embed.addField("Punishment History", msg);{
 					var msg = "**Role** » " + member.highestRole.name.toString() + "\n";
 
 					if (member.presence.status == "online") {
@@ -90,7 +73,7 @@
 						msg += "**Presence** » *Do Not Disturb*";
 					}
 
-					embed.addField("Identification", msg, true);
+					embed.addField("Identification", msg);
 				}{
 					msg = null;
 
@@ -114,7 +97,7 @@
 						var msg = "No extra information.\n";
 					}
 
-					embed.addField("More Information", msg, true);
+					embed.addField("More Information", msg);
 				}
 
 				embed.setFooter("User ID: " + member.user.id);
@@ -141,3 +124,10 @@
 		}
 	});
 }
+
+let command = 'uinfo'
+, description = 'View specific information on a user.'
+, usage = '+uinfo **[user]**'
+, throttle = {usages: 3, duration: 10}
+, permission = 'mod';
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

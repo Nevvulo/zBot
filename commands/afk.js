@@ -22,3 +22,9 @@ afk.userAFK.push(message.author.id);
 message.delete();
 return;
 }
+
+let command = 'afk'
+, description = 'Toggle your AFK status in zBot.'
+, usage = '+afk'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

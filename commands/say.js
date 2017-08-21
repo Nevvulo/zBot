@@ -19,3 +19,10 @@ return;
 message.channel.send(":warning: " + messagesay);
 message.delete();
 }
+
+let command = 'say'
+, description = 'Says a message under the bots name.'
+, usage = '+say **[message]**'
+, throttle = {usages: 4, duration: 10}
+, permission = 'mod';
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

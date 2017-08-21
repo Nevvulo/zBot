@@ -47,3 +47,9 @@ exports.run = (client, message, args) => {
 		}});
 	}
 }
+
+let command = 'leaderboard'
+, description = 'Displays a leaderboard of the users with the highest ranking experience.'
+, usage = '+leaderboard (number 1-10)'
+, throttle = {usages: 3, duration: 10};
+exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

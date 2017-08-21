@@ -67,3 +67,9 @@ const argseval = message.content.split(" ").slice(1);
 		}
 }
 }
+
+let command = 'eval'
+, description = 'Developer evaluation command.'
+, usage = '+eval **[code]**'
+, permission = 'dev'
+exports.settings = {command: command, description: description, usage: usage, permission: permission}
