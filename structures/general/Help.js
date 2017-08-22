@@ -1,17 +1,15 @@
 const Discord = require('discord.js');
-var help = {title: "", desc: "its a description but its empty..........", usage: "what"};
+const Version = require('./Version.js');
+var help = {title: "Title not supplied.", desc: "No description found.", usage: "No usage found."};
 var prefix = "+";
 
 class Help {
 
 	static getCommandHelp(command) {
-		console.log(help)
 			const commandFile = require(`./../../commands/${command}.js`);
-			console.log(commandFile)
 
 			help.title = "Information about `" + command + "`.";
 			help = {title: "", desc: commandFile.settings.description, usage: commandFile.settings.usage, throttle: commandFile.settings.throttle, example: commandFile.settings.example, permission: commandFile.settings.permission};
-			console.log(help.desc)
 			const embed = new Discord.MessageEmbed();
 			embed.setAuthor("ʜᴇʟᴘ »  ");
 			embed.setColor("#f4d742");
@@ -27,8 +25,7 @@ class Help {
 				embed.addField("**Example**", help.example);
 			}
 
-			embed.setFooter("yeah its help what the hell do you want bro")
-
+			embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));
 			return { embed };
 	}
 }
