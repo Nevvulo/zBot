@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const events = require('events');
 const commandEmitter = new events.EventEmitter();
+const Settings = require('./Settings.js');
 
 var spamObject = {
     lastMessages: {},
@@ -9,7 +10,7 @@ var spamObject = {
 };
 
 function newMessage(message) {
-    if (!moderationEnabled) return;
+    if (Settings.getValue(message.guild, "spamFilter") == false) return;
 	if (message.author.bot) return;
 	var msg = message.content
 
@@ -74,7 +75,11 @@ function newMessage(message) {
                 if (spamCountingUser >= 3) {
                     if (spamCountingUser == 6) {
 											message.reply("Quite enough of this. I'm not warning you anymore.")
-											channel = client.channels.get("345783379397967872");
+                      if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
+                          channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+                      } else {
+                          log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+                      }
 											channel.send({
 												embed: {
 													color: 14714691,
@@ -174,9 +179,8 @@ function newMessage(message) {
 
 module.exports = {
     name: "Spam",
-    constructor: function(discordClient, commandEmitter, isModerationEnabled) {
+    constructor: function(discordClient, commandEmitter) {
         client = discordClient;
-        moderationEnabled = isModerationEnabled;
         commandEmitter.on('newMessage', newMessage);
     },
     destructor: function(commandEmitter) {

@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const Settings = require('./../structures/general/Settings.js');
 exports.run = (client, message, args) => {
 
 	function clean(text) {

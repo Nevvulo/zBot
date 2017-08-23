@@ -2,11 +2,12 @@ const Discord = require("discord.js");
 const events = require('events');
 const commandEmitter = new events.EventEmitter();
 const colors = require('colors');
+const Settings = require('./Settings.js');
 var caughtSwear;
 var botDelMessage = true;
 
 function newMessage(message) {
-  if (!moderationEnabled) return;
+  if (Settings.getValue(message.guild, "expletiveFilter") == false) return;
     if (botDelMessage && caughtSwear) {
       if (message.author.id == 303017211457568778) {
         console.log(colors.yellow("▲ Bot is about to delete: " + colors.grey(message)));
@@ -35,7 +36,11 @@ function newMessage(message) {
     caughtSwear = true;
       if (dxp != -1) { //extra bad word!
         log("▲ Expletive (level 2) caught in message by " + message.author.tag, logType.info);
-        channel = client.channels.get("345783379397967872");
+        if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
+            channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+        } else {
+            log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+        }
   			channel.send({
   				embed: {
   					color: 14714691,
@@ -132,9 +137,8 @@ function newMessage(message) {
 
 module.exports = {
     name: "Expletive",
-    constructor: function(discordClient, commandEmitter, isModerationEnabled) {
+    constructor: function(discordClient, commandEmitter) {
         client = discordClient;
-        moderationEnabled = isModerationEnabled;
         commandEmitter.on('newMessage', newMessage);
     },
     destructor: function(commandEmitter) {

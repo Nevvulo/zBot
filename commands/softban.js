@@ -29,8 +29,11 @@ exports.run = (client, message, args) => {
 			writer.end()
 			console.log(colors.green("* Successfully wrote softban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
-
-			channel = client.channels.get("345783379397967872");
+			if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
+					channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+			} else {
+					log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+			}
 			const embed = new Discord.MessageEmbed()
 			channel.send({
 				embed: {

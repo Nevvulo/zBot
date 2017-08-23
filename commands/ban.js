@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+const Settings = require('./../structures/general/Settings.js');
 var colors = require('colors');
 
 var banReason = {};
@@ -29,9 +30,12 @@ console.log(banMember)
 			writer.write([member.id, new Date(), "Ban", message.author.username, banReason])
 			writer.end()
 			console.log(colors.green("* Successfully wrote ban for user '" + colors.underline(member.displayName) + "' to CSV file."));
-
-
-			channel = client.channels.get("345783379397967872");
+			
+			if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
+								channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+						} else {
+								log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+						}
 			const embed = new Discord.MessageEmbed()
 			channel.send({
 				embed: {
