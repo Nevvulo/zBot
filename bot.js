@@ -78,16 +78,15 @@ if (developer.developerMode == true) {
 	developerMode = false;
 }
 
-var moderationEnabled = false;
-
 const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience.js');
+const Settings = require('./structures/general/Settings.js');
 const Version = require('./structures/general/Version.js')
 const Spam = require('./structures/general/Spam.js')
-Spam.constructor(client, commandEmitter, moderationEnabled);
+Spam.constructor(client, commandEmitter);
 const Expletive = require('./structures/general/Expletive.js')
-Expletive.constructor(client, commandEmitter, moderationEnabled);
+Expletive.constructor(client, commandEmitter);
 const Conversation = require('./structures/general/Conversation.js')
 Conversation.constructor(client, commandEmitter);
 const Challenge = require('./structures/games/Challenge.js')
@@ -97,7 +96,7 @@ ExperienceManager.constructor(client, commandEmitter);
 const CommandHandler = require('./structures/general/CommandHandler.js')
 CommandHandler.constructor(client, commandEmitter);
 const Blacklist = require('./structures/general/Blacklist.js')
-Blacklist.constructor(client, commandEmitter);
+Blacklist.constructor(client, commandEmitter)
 
 //Console
 var sudoCommand = "";
@@ -135,8 +134,20 @@ client.on('ready', () => {
 	log("> zBot is now online!", logType.success)
 	client.setInterval(setGame, 300000);
 	setGame();
+  client.setInterval(function(){Settings.saveConfig()}, 30000);
 });
-
+    	main();
+    	function main(){
+      var chartData = [];
+      client.setInterval(function(){
+        var randomPrice = (Math.random()*10.25) +1.25;
+        chartData.push(randomPrice);
+        if(chartData.length > 50){
+         chartData.splice(0, 1);
+        }
+        exports.chartData = chartData
+      },50 );
+  }
 
 process.stdin.resume();
 process.stdin.setEncoding('utf-8');
@@ -219,14 +230,32 @@ function messageChecker(oldMessage, newMessage) {
 	if (message.author.id !== 303017211457568778 && !message.author.bot) {
     	console.log(colors.gray("[ MESSAGE ] " + message.author.username + " » " + msg));
 		}
+
   }
 // END OF MESSAGE Function
+
+function saveSettings(showOkMessage = false) {
+    log("Saving settings...");
+    fs.writeFile('./data/main/settings/Settings.json', JSON.stringify(settings, null, 4), "utf8", function(error) {
+        if (error) {
+            log("Settings couldn't be saved.", logType.critical);
+        } else {
+            log("Settings saved!");
+        }
+
+        setTimeout(saveSettings, 30000);
+    });
+}
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
 
 client.on('guildMemberAdd', function(guildMember) {
-		channel = client.channels.get("345783379397967872");
+  if (client.channels.has(Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
+      channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
+  } else {
+      log("Chat Logs channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
+  }
 		let randomjoin = "";
 		switch (Math.floor(Math.random() * 1000) % 7) {
 			case 0:
@@ -255,7 +284,7 @@ client.on('guildMemberAdd', function(guildMember) {
 
 	embed = new Discord.MessageEmbed();
     embed.setAuthor("ᴜꜱᴇʀ ᴊᴏɪɴᴇᴅ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
-    embed.setColor("#d16c2e");
+    embed.setColor("#39cc45");
     embed.setDescription(":wave: <@" + guildMember.id + "> has joined " + guildMember.guild.name + ".\n")
 
     var msg = guildMember.user.createdAt.toDateString() + " at " + guildMember.user.createdAt.toLocaleTimeString()
@@ -268,8 +297,22 @@ client.on('guildMemberAdd', function(guildMember) {
 	channel.send({ embed });
 });
 
+client.on('guildCreate', function(guild) {
+log("New Guild: " + guild.id, logType.info);
+Settings.newGuild(guild)
+guild.owner.send(":wave: **Hey!** Thanks for inviting me to your server! I'm *zBot*, and I am an 'all-in-one' bot created by zBlake#6715. I feature moderation tools, entertainment, customizable profiles and lots more!\n\n:warning: **zBot** is currently undergoing a big update. You may experience temporary downtime or glitches every so often, and I apologize for this. However, this update should be finished very soon.\n*:information_source: To get started using zBot, type `+help` to see what you can do!*\n:gear: If you want to configure my settings, such as which channel logs get sent to, you can run `+config settings` and see the settings that are customizable. It's highly recommended that you spend a few minutes configuring my settings first, so that you can choose where logs and other messages are sent.\n\nIf you ever need any helo, please vist the GitHub page here: **https://github.com/zBlakee/zBot** and you can find some information in the 'Wiki'. Have fun!");
+});
+
+client.on('guildRemove', function(guild) {
+
+});
+
 client.on('guildMemberRemove', function(guildMember) {
-	var channel = client.channels.get("345783379397967872");
+  if (client.channels.has(Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
+      channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
+  } else {
+      log("Member logging channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
+  }
 
 	embed = new Discord.MessageEmbed();
     embed.setAuthor("ᴜꜱᴇʀ ǫᴜɪᴛ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
@@ -291,7 +334,11 @@ client.on('messageDelete', function(message) {
   if (`${Date.now() - message.createdTimestamp}` < 1900) return;
 	if (message.content.startsWith("+")) return;
   if (message.author.bot) return;
-	var channel = client.channels.get("345783379397967872");
+  if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
+      channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+  } else {
+      log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+  }
 
 	embed = new Discord.MessageEmbed();
     embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag, message.member.user.avatarURL( {format: 'png'} ));
@@ -336,12 +383,13 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
   }
 	var channel = null;
 	if (oldMessage.guild != null) {
-			channel = client.channels.get("345783379397967872");
+    if (client.channels.has(Settings.getValue(oldMessage.guild, "modLogsChannel"))) {
+        channel = client.channels.get(Settings.getValue(oldMessage.guild, "modLogsChannel"));
+    } else {
+        log("Moderation logging channel " + Settings.getValue(oldMessage.guild, "modLogsChannel") + " not found", logType.critical);
+    }
 
 		if (channel != null) {
-
-	var channel = client.channels.get("345783379397967872");
-
 	embed = new Discord.MessageEmbed();
     embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.tag, oldMessage.member.user.avatarURL( {format: 'png'} ));
     embed.setColor("#f4c242");

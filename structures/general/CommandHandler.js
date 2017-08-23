@@ -10,7 +10,7 @@ function newMessage(message) {
   var msg = message.content;
   // Command handler for bot, mod and debug commands.
 	if (msg.toLowerCase().startsWith("+")) {
-		//Un-comment to activate Lockdown Mode. 	return message.channel.send(":no_entry_sign: **EMERGENCY**: *Xail Bot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/Xail-Bot/wiki/Lockdown-Mode");
+		//Un-comment to activate Lockdown Mode. return message.channel.send(":no_entry_sign: **EMERGENCY**: *zBot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/zBot/wiki/Lockdown-Mode");
 		var command = msg.substr(1).split(" ").slice(0, 1);
 		var args = msg.split(" ").slice(1);
 
@@ -24,7 +24,7 @@ function newMessage(message) {
     				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
     		} else if (message.author.id !== "246574843460321291") {
     			// If command is a moderator command
-    			if (command == "mod" || command == "filter" || command == "rm" || command == "uinfo" || command == "warn" || command == "ban" || command == "softban" || command == "mute" || command == "say" || command == "permit" || command == "setgame" || command == "reboot" || command == "cancel") {
+    			if (commandFile.settings.permission == "mod") {
     			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
           return;
     			} else {
