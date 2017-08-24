@@ -30,7 +30,7 @@ console.log(banMember)
 			writer.write([member.id, new Date(), "Ban", message.author.username, banReason])
 			writer.end()
 			console.log(colors.green("* Successfully wrote ban for user '" + colors.underline(member.displayName) + "' to CSV file."));
-			
+
 			if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
 								channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
 						} else {
@@ -83,8 +83,8 @@ console.log(banMember)
 				}
 			});
 
-			message.channel.send(":white_check_mark: " + member.displayName + " was successfully banned. (but not really since i commented it out woo)");
-			//message.guild.ban(banMember, 7, banReason);
+			message.channel.send(":white_check_mark: " + member.displayName + " was successfully banned.");
+			message.guild.ban(banMember, 7, banReason);
 			banMember = null;
 
 		});
@@ -112,8 +112,7 @@ console.log(banMember)
 
 		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
 			banMember = member;
-			console.log(banMember)
-			if (member.roles.find("name", "Fleece Police")) {
+			if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t ban other moderators.');
 			} else {
 				if (ban == ("")) {

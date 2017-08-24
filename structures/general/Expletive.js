@@ -29,7 +29,7 @@ function newMessage(message) {
       message.delete();
     }
 
-    var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|penis|cunt|faggot|fark|fck|fag|wank|nigger|nigga|slut|bastard|bitch|asshole|dick|d1ck|d!ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard|porn|stfu)(\b|\s|$|.|\,|\ )/i);
+    var exp = msg.search(/(\b|\s|^|.|\,|\ )(fuck|penis|cunt|faggot|fark|fck|fag|wank|nigger|nigga|slut|bastard|bitch|asshole|dick|d1ck|d!ck|b1tch|b!tch|blowjob|cock|nigg|fuk|cnut|pussy|c0ck|retard)(\b|\s|$|.|\,|\ )/i);
     var dxp = msg.search(/(\b|\s|^|.|\,|\ )(cunt|b1tch|b!tch|bitch|cnut)(\b|\s|$|.|\,|\ )/i);
 
     if (exp != -1) { //Gah! They're not supposed to say that!
@@ -40,6 +40,7 @@ function newMessage(message) {
             channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
         } else {
             log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+            return;
         }
   			channel.send({
   				embed: {

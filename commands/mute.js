@@ -111,7 +111,7 @@ exports.run = (client, message, args) => {
 
 		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
 			muteMember = member;
-			if (member.roles.find("name", "Fleece Police")) {
+		if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
 			} else {
 				if (mute == ("")) {

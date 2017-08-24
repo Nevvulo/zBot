@@ -11,19 +11,22 @@ if (args[0] !== undefined) {
 doNotDelete = false;
 
 const embed = new Discord.MessageEmbed();
-var general = "copyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\nping\nmusic"
+
+var general = "config\ncopyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\nping\nmusic"
 var social = "profile\nstats\nequip\nleaderboard"
 var misc = "git\nitems\npfp\nisay\ngraph\nmath\ndog\ncat"
 var fun = "ship\nmerge\nchallenge\n8ball"
 var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nsay\npermit\nsetgame\nfind\ncancel\nfilter"
 
+embed.setAuthor("zBot • Help • version " + Version.getVersionNumber() + " »  ", client.user.avatarURL( {format: 'png' }));
+embed.setColor("#42aab2");
+embed.setDescription(":information_source: These are all of the commands available in zBot. To view more information about a specific command, type `+help [command]`.")
 embed.addField("General", general, true);
-embed.addField("Social", social, true);
 embed.addField("Moderator", mod, true);
-embed.addField("Fun", fun, true);
 embed.addField("Misc.", misc, true);
+embed.addField("Social", social, true);
+embed.addField("Fun", fun, true);
 
-embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));
 message.channel.send({ embed });
 
 message.delete();

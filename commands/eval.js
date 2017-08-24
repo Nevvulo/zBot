@@ -66,6 +66,8 @@ const argseval = message.content.split(" ").slice(1);
 				m.react("❌");
 			})
 		}
+} else {
+	message.channel.send(":no_entry_sign: **NOPE**: You don't have permission to use this command.")
 }
 }
 

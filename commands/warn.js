@@ -34,7 +34,7 @@ exports.run = (client, message, args) => {
 			warnMember = warnMember.toString();
 			warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
 
-			if (member.roles.find("name", "Fleece Police")) {
+			if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t warn other moderators.');
 			} else {
 				if (warning == ("")) {

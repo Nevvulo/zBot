@@ -27,6 +27,7 @@ var colors = require('colors');
 const replace = require("replace");
 const developer = require('./commands/debug/developer.js');
 const events = require('events');
+const moment = require('moment');
 const commandEmitter = new events.EventEmitter();
 
 global.logType = {
@@ -134,7 +135,7 @@ client.on('ready', () => {
 	log("> zBot is now online!", logType.success)
 	client.setInterval(setGame, 300000);
 	setGame();
-  client.setInterval(function(){Settings.saveConfig()}, 30000);
+  client.setInterval(function(){Settings.saveConfig()}, 300000);
 });
     	main();
     	function main(){
@@ -228,24 +229,11 @@ function messageChecker(oldMessage, newMessage) {
 	}
 
 	if (message.author.id !== 303017211457568778 && !message.author.bot) {
-    	console.log(colors.gray("[ MESSAGE ] " + message.author.username + " » " + msg));
+    	console.log(colors.gray("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg)));
 		}
 
   }
 // END OF MESSAGE Function
-
-function saveSettings(showOkMessage = false) {
-    log("Saving settings...");
-    fs.writeFile('./data/main/settings/Settings.json', JSON.stringify(settings, null, 4), "utf8", function(error) {
-        if (error) {
-            log("Settings couldn't be saved.", logType.critical);
-        } else {
-            log("Settings saved!");
-        }
-
-        setTimeout(saveSettings, 30000);
-    });
-}
 
 client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
@@ -255,6 +243,7 @@ client.on('guildMemberAdd', function(guildMember) {
       channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
   } else {
       log("Chat Logs channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
+      return;
   }
 		let randomjoin = "";
 		switch (Math.floor(Math.random() * 1000) % 7) {
@@ -300,11 +289,12 @@ client.on('guildMemberAdd', function(guildMember) {
 client.on('guildCreate', function(guild) {
 log("New Guild: " + guild.id, logType.info);
 Settings.newGuild(guild)
-guild.owner.send(":wave: **Hey!** Thanks for inviting me to your server! I'm *zBot*, and I am an 'all-in-one' bot created by zBlake#6715. I feature moderation tools, entertainment, customizable profiles and lots more!\n\n:warning: **zBot** is currently undergoing a big update. You may experience temporary downtime or glitches every so often, and I apologize for this. However, this update should be finished very soon.\n*:information_source: To get started using zBot, type `+help` to see what you can do!*\n:gear: If you want to configure my settings, such as which channel logs get sent to, you can run `+config settings` and see the settings that are customizable. It's highly recommended that you spend a few minutes configuring my settings first, so that you can choose where logs and other messages are sent.\n\nIf you ever need any helo, please vist the GitHub page here: **https://github.com/zBlakee/zBot** and you can find some information in the 'Wiki'. Have fun!");
+guild.owner.send(":wave: **Hey!** Thanks for inviting me to your server! I'm *zBot*, and I am an 'all-in-one' bot created by zBlake#6715. I feature moderation tools, entertainment, customizable profiles and lots more!\n\n:warning: **zBot** is currently undergoing a big update. You may experience temporary downtime or glitches every so often, and I apologize for this. However, this update should be finished very soon.\n*:information_source: To get started using zBot, type `+help` to see what you can do!*\n:gear: If you want to configure my settings, such as which channel logs get sent to, you can run `+config settings` and see the settings that are customizable. It's highly recommended that you spend a few minutes configuring my settings first, so that you can choose where logs and other messages are sent.\n\nIf you ever need any help, feel free to visit the GitHub page here: **https://github.com/zBlakee/zBot** and you can find some information in the 'Wiki'. Have fun!");
 });
 
 client.on('guildRemove', function(guild) {
-
+log("Guild removed: " + guild.id, logType.info);
+Settings.removeGuild(guild)
 });
 
 client.on('guildMemberRemove', function(guildMember) {
@@ -312,6 +302,7 @@ client.on('guildMemberRemove', function(guildMember) {
       channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
   } else {
       log("Member logging channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
+      return;
   }
 
 	embed = new Discord.MessageEmbed();
@@ -338,6 +329,7 @@ client.on('messageDelete', function(message) {
       channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
   } else {
       log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+      return;
   }
 
 	embed = new Discord.MessageEmbed();
@@ -378,7 +370,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 	if (oldMessage.cleanContent == newMessage.cleanContent) return; //Ignore
   if (oldMessage.author.bot) return;
   var oldMessageContent = oldMessage.cleanContent;
-  if (oldMessage.cleanContent == "") {
+  if (oldMessageContent == "" || oldMessageContent == null) {
     oldMessageContent = "*No message was provided.*";
   }
 	var channel = null;
@@ -387,6 +379,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
         channel = client.channels.get(Settings.getValue(oldMessage.guild, "modLogsChannel"));
     } else {
         log("Moderation logging channel " + Settings.getValue(oldMessage.guild, "modLogsChannel") + " not found", logType.critical);
+        return;
     }
 
 		if (channel != null) {

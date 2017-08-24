@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+const Settings = require('./../structures/general/Settings.js');
 var colors = require('colors');
 
 var banReason = {};
@@ -110,7 +111,7 @@ exports.run = (client, message, args) => {
 
 		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
 			banMember = member;
-			if (member.roles.find("name", "Fleece Police")) {
+		 	if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t softban other moderators.');
 			} else {
 				if (ban == ("")) {
