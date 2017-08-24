@@ -3,6 +3,7 @@ const events = require('events');
 const commandEmitter = new events.EventEmitter();
 const colors = require('colors');
 const fs = require('fs');
+const Settings = require('./Settings.js');
 
 var errorMessage = "";
 
@@ -22,7 +23,7 @@ function newMessage(message) {
     			// ACE prevention
     			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
     				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
-    		} else if (message.author.id !== "246574843460321291") {
+    		} else if (!message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
     			// If command is a moderator command
     			if (commandFile.settings.permission == "mod") {
     			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
@@ -30,8 +31,14 @@ function newMessage(message) {
     			} else {
     			commandFile.run(client, message, args);
     			}
-    		} else {
-    			commandFile.run(client, message, args);
+    		} else if (message.author.id !== message.guild.ownerID) {
+          if (commandFile.settings.permission == "owner") {
+            message.reply(':no_entry_sign: **NOPE:** Only ' + message.guild.owner.displayName + ' can run this command.');
+            return;
+          } else {
+            commandFile.run(client, message, args);
+          }
+
     			}
     		} catch (err) {
     			// ACE prevention

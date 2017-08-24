@@ -1,21 +1,21 @@
-var doModeration = true;
+const Settings = require('./../structures/general/Settings.js');
 
 exports.run = (client, message, args) => {
     message.delete();
-    if (doModeration) {
+    if (Settings.getValue(message.guild, "expletiveFilter") == true || Settings.getValue(message.guild, "spamFilter") == true) {
         message.channel.send(':arrow_forward: **Moderation** has been toggled off.');
-        doModeration = false;
+        Settings.editSetting(message.guild, "expletiveFilter", false)
+        Settings.editSetting(message.guild, "spamFilter", false)
     } else {
         message.channel.send(':arrow_forward: **Moderation** has been toggled on.');
-        doModeration = true;
+        Settings.editSetting(message.guild, "expletiveFilter", true)
+        Settings.editSetting(message.guild, "spamFilter", true)
     }
-
-    exports.enabled = doModeration;
 }
 
 let command = 'mod'
 , description = 'Toggles moderation on/off for this guild.'
 , usage = '+mod'
 , throttle = {usages: 3, duration: 10}
-, permission = 'admin';
+, permission = 'mod';
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

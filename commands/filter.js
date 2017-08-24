@@ -1,20 +1,18 @@
-var expletiveFilter = true;
+const Settings = require('./../structures/general/Settings.js');
 
 exports.run = (client, message, args) => {
 	message.delete();
-	if (expletiveFilter) {
+	if (Settings.getValue(message.guild, "expletiveFilter") == true) {
 		message.channel.send(':arrow_forward: **Expletive Filter** has been toggled off.');
-		expletiveFilter = false;
+		Settings.editSetting(message.guild, "expletiveFilter", false)
 	} else {
 		message.channel.send(':arrow_forward: **Expletive Filter** has been toggled on.');
-		expletiveFilter = true;
+		Settings.editSetting(message.guild, "expletiveFilter", true)
 	}
-
-exports.enabled = expletiveFilter;
 }
 
 let command = 'filter'
 , description = 'Toggles the expletive filter on/off.'
 , usage = '+filter'
-, permission = 'admin'
+, permission = 'mod'
 exports.settings = {command: command, description: description, usage: usage, permission: permission}

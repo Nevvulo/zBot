@@ -3,11 +3,10 @@ const events = require('events');
 const commandEmitter = new events.EventEmitter();
 const Settings = require('./Settings.js');
 
-var spamObject = {
-    lastMessages: {},
-    spamCounting: {},
-    nonSpamCounting: {}
-};
+var lastMessages = {};
+var fastMessage = {};
+var fastMessageCount = {};
+var sameMessageCount = {};
 
 function newMessage(message) {
     if (Settings.getValue(message.guild, "spamFilter") == false) return;
@@ -35,7 +34,7 @@ function newMessage(message) {
 
 	//This below code is testing how many characters in a single post, and if there are more than 17 (subject to change) then delete message.
 	//Check for spam in a single message
-	if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{17,}[^0-9]/gi.test(msg) == true) {
+	if (/(\*(\*))?(~~)?(`)?(__(\*)(\*\*)(\*\*\*))?(.)\9{32,}[^0-9]/gi.test(msg) == true) {
 		caughtSpam = true;
 		message.delete()
 		return;
@@ -47,38 +46,25 @@ function newMessage(message) {
 		}
 	}
 
-        //Spam filtering enabled for this server
-        var lastMessagesOfUser = spamObject.lastMessages[message.author.id];
-        if (lastMessagesOfUser == null) {
-            lastMessagesOfUser = [];
-        }
+              //Spam limiting
+            if (lastMessages[message.author.id] != msg) {
+            sameMessageCount[message.author.id] = 0;
+            }
 
-        var spamCountingUser = spamObject.spamCounting[message.author.id];
-        if (spamCountingUser == null) {
-            spamCountingUser = 0;
-        }
+            if (message.content.length < 1) {
+            return;
+            }
+            lastMessages[message.author.id] = msg
+            sameMessageCount[message.author.id] += 1;
 
-        var nonSpamCountingUser = spamObject.nonSpamCounting[message.author.id];
-        if (nonSpamCountingUser == null) {
-            nonSpamCountingUser = 0;
-        }
-
-        var messageText = message.content.toLowerCase();
-        if (messageText.length > 3) {
-            if (lastMessagesOfUser.includes(messageText)) {
-                spamCountingUser++;
-
-                if (nonSpamCountingUser > 0) {
-                    nonSpamCountingUser--;
-                }
-
-                if (spamCountingUser >= 3) {
-                    if (spamCountingUser == 6) {
+                if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
+                    if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 6) {
 											message.reply("Quite enough of this. I'm not warning you anymore.")
                       if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
                           channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
                       } else {
                           log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+                          return;
                       }
 											channel.send({
 												embed: {
@@ -100,8 +86,9 @@ function newMessage(message) {
 													timestamp: new Date()
 												}
 											});
-                    } else if (spamCountingUser > 6) {
-
+                    } else if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 6) {
+                    message.delete();
+                    return;
                     } else {
                         //warning messages
 												log("▲ Spam limits activated for " + message.author.tag, logType.info);
@@ -152,28 +139,6 @@ function newMessage(message) {
 									}
 									message.delete();
                 }
-            } else {
-                //Add last message to array
-                lastMessagesOfUser.push(messageText);
-
-                //Remove 11th message if there is one
-                if (lastMessagesOfUser.length > 10) {
-                    lastMessagesOfUser.splice(0, 1);
-                }
-
-                nonSpamCountingUser++;
-            }
-
-            if (nonSpamCountingUser == 10) {
-                spamCountingUser = 0;
-                nonSpamCountingUser = 0;
-            }
-        }
-
-        //Set Variables
-        spamObject.lastMessages[message.author.id] = lastMessagesOfUser;
-        spamObject.spamCounting[message.author.id] = spamCountingUser;
-        spamObject.nonSpamCounting[message.author.id] = nonSpamCountingUser;
 }
 
 

@@ -4,7 +4,7 @@ doNotDelete = true;
     var argsArray = message.content.split(" ").slice(1);
     var arrayLength = argsArray.length;
 
-    if (arrayLength > 1) {
+    if (arrayLength > 0) {
         for (let i = 0; i < arrayLength; i++) {
             ball = (ball + argsArray[i] + " ");
         }

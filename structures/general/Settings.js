@@ -53,7 +53,7 @@ class Settings {
 	}
 
 	static saveConfig() {
-		console.log("Saving settings...");
+		log("Saving settings...", logType.info);
     var contents = JSON.stringify(Config, null, 4);
     //Write to secondary file first
     fs.writeFile("./data/main/settings/settings.prewrite.json", contents, "utf8", function(error) {

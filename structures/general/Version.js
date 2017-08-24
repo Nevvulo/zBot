@@ -8,8 +8,8 @@ var trimmeddata = "";
 
 class Version {
 	static getVersionNumber(includeVer) {
-		if (includeVer) return "ver. 1.4.7";
-		else return "1.4.7"
+		if (includeVer) return "ver. 1.0.0";
+		else return "1.0.0"
 	}
 
 	static async getLatestCommit() {
