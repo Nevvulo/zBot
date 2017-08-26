@@ -29,6 +29,8 @@ const developer = require('./commands/debug/developer.js');
 const events = require('events');
 const moment = require('moment');
 const commandEmitter = new events.EventEmitter();
+const gitCommits = require('git-commits');
+const path = require('path');
 
 global.logType = {
     debug: 0,
@@ -136,6 +138,19 @@ client.on('ready', () => {
 	client.setInterval(setGame, 300000);
 	setGame();
   client.setInterval(function(){Settings.saveConfig()}, 300000);
+
+  //Version handler
+  var repoPath = path.resolve(process.env.REPO || (__dirname + './.git'));
+  var commitArray = []
+  gitCommits(repoPath, {
+    limit: 300
+  }).on('data', function(commit) {
+    commitArray.push(commit.title)
+  }).on('error', function(err) {
+    throw err;
+  }).on('end', function() {
+    exports.version = commitArray.length.toString().split('').join('.');
+  });
 });
     	main();
     	function main(){
