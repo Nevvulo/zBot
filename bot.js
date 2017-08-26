@@ -300,8 +300,16 @@ Settings.removeGuild(guild)
 client.on('guildMemberRemove', function(guildMember) {
   if (client.channels.has(Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
       channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
+      if (guildMember.id == "345766303052857344") {
+        log("Guild removed: " + guildMember.guild.id, logType.info);
+        Settings.removeGuild(guildMember.guild)
+      }
   } else {
       log("Member logging channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
+      if (guildMember.id == "345766303052857344") {
+        log("Guild removed: " + guildMember.guild.id, logType.info);
+        Settings.removeGuild(guildMember.guild)
+      }
       return;
   }
 
