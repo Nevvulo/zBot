@@ -25,15 +25,12 @@ if (argument == "set") {
   if (setting == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a setting to edit.");
   if (value == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a new value to this setting.");
   if (Settings.getValue(message.guild, setting) == undefined) return message.channel.send(":no_entry_sign: **ERROR**: The setting you've provided doesn't exist. Try `+config settings` to see all of the available settings you can view.");
-  if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule" && typeof(value) !== "boolean") return message.channel.send(":no_entry_sign: **ERROR**: You can only change this setting to one of the following values: __true__ or __false__.");
 
   if (setting == "modLogsChannel" || setting == "memberLogsChannel") {
-    console.log(value)
-  if (!message.guild.channels.exists("name", value) || !message.guild.channels.exists("id", value)) {
-      message.channel.send(":no_entry_sign: **NOPE**: That channel doesn't exist. Please enter the name of a channel (ex. general) and try again.");
+  if (!message.guild.channels.exists("name", value)) {
+      message.channel.send(":no_entry_sign: **NOPE**: That channel doesn't exist. Please enter the name or ID of a channel and try again.");
   } else {
       var channel = message.guild.channels.find("name", value);
-      console.log(channel.id)
       if (channel.type != "text") {
           message.channel.send(":no_entry_sign: **NOPE**: That's not a text channel.");
           return;
@@ -46,6 +43,7 @@ if (argument == "set") {
           } else {
           message.channel.send(":white_check_mark: **OK**: I've set member alerts to be sent to <#" + channel.id + ">.")
           Settings.editSetting(message.guild, setting, channel.id);
+          Settings.saveConfig()
           return;
           }
       }
@@ -64,6 +62,12 @@ if (argument == "set") {
           return;
     }
     return;
+  }
+
+  if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule") {
+    if (value == "true" || value == "false") {} else {
+    return message.channel.send(":no_entry_sign: **ERROR**: You can only change this setting to one of the following values: __true__ or __false__.");
+  }
   }
 
   Settings.editSetting(message.guild, setting, value)
