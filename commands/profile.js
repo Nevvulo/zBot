@@ -67,14 +67,14 @@ exports.run = (client, message, args) => {
 	var userProfile = badgesP[member.id];
 
 
-	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}'`).then(row => {
+	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
 		async function drawStats() {
 			var uSlot = slots[member.id];
 			message.delete ();
 
 			//Fix error with late promise
 			var totalExperience = `${row.experience}`;
-			const totalExp = await Experience.getTotalExperience(member.id);
+			const totalExp = await Experience.getTotalExperience(member.id, message.guild.id);
 			const level = await Experience.getLevel(member.id);
 			const levelBounds = await Experience.getLevelBounds(level);
 			const currentExp = await Experience.getCurrentExperience(member.id);
@@ -94,13 +94,6 @@ exports.run = (client, message, args) => {
 				family: 'Viga'
 			}) // eslint-disable-line max-len
 			const Image = Canvas.Image;
-
-			function randomColor(){
-		  var r = Math.floor(Math.random()*100);
-		  var g = Math.floor(Math.random()*100);
-		  var b = Math.floor(Math.random()*100);
-		  return "rgb("+ r + "," + g + "," + b +")";
-			}
 
 			var color=-25;
 			function texter(str, x, y){
@@ -142,7 +135,7 @@ exports.run = (client, message, args) => {
 				ctx.shadowBlur = 3;
 
 				// Username
-				if (member.id == 184050823326728193 || member.id == 246574843460321291) {
+				if (member.id == 246574843460321291) {
 					texter(member.displayName, 75, 35)
 				} else if (member.highestRole.name == "@everyone") {
 				ctx.font = '16px Roboto';

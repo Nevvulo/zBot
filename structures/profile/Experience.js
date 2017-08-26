@@ -4,8 +4,8 @@ var totalXP = 0;
 
 class Experience {
 
-	static async getTotalExperience(userID) {
-		await sql.get(`SELECT * FROM experience WHERE userId ='${userID}'`).then(row => {
+	static async getTotalExperience(userID, guild) {
+		await sql.get(`SELECT * FROM experience WHERE userId ='${userID}' AND guild = '${guild}'`).then(row => {
 			totalXP = `${row.experience}`;
 			return totalXP;
 		})

@@ -47,14 +47,25 @@ exports.run = (client, message, args) => {
 
 		async function drawStats() {
 			message.delete ();
-			const totalExp = await Experience.getTotalExperience(member.id);
-
+			const totalExp = await Experience.getTotalExperience(member.id, message.guild.id);
 			const level = await Experience.getLevel(member.id);
 			const levelBounds = await Experience.getLevelBounds(level);
 			const currentExp = await Experience.getCurrentExperience(member.id);
 
 			function fontFile(name) {
 				return path.join(__dirname, '..', '/assets/', 'stats', 'fonts', name)
+			}
+
+			var color=-25;
+			function texter(str, x, y){
+			  for(var i = 0; i <= str.length; ++i){
+			      var ch = str.charAt(i);
+
+						ctx.font = '16px Roboto';
+			      ctx.fillStyle = 'hsla('+(color=color+25%360)+', 50%, 50%, 1)'
+			      ctx.fillText(ch, x, y);
+			      x += ctx.measureText(ch).width;
+			  }
 			}
 
 			Canvas.registerFont(fontFile('UniSansHeavy.ttf'), {
@@ -83,14 +94,27 @@ exports.run = (client, message, args) => {
 				ctx.shadowBlur = 3;
 
 				// Username
+				if (member.id == 246574843460321291) {
+					texter(member.displayName, 75, 35)
+				} else if (member.highestRole.name == "@everyone") {
+				ctx.font = '16px Roboto';
+				ctx.fillStyle = "#FFF";
+				ctx.fillText(member.displayName, 75, 35);
+				} else {
 				ctx.font = '16px Roboto';
 				ctx.fillStyle = member.displayHexColor;
 				ctx.fillText(member.displayName, 75, 35);
-
+				}
 				// Role
-				ctx.font = '12px Roboto';
-				ctx.fillStyle = member.displayHexColor;
-				ctx.fillText(member.highestRole.name.toUpperCase(), 75, 50);
+				if (member.highestRole.name == "@everyone") {
+					ctx.font = '12px Roboto';
+					ctx.fillStyle = "#FFF";
+					ctx.fillText("NO ROLE", 75, 50);
+				} else {
+					ctx.font = '12px Roboto';
+					ctx.fillStyle = member.displayHexColor;
+					ctx.fillText(member.highestRole.name.toUpperCase(), 75, 50);
+				}
 
 				// EXP TITLE
 				ctx.font = '22px Uni Sans Heavy CAPS';
