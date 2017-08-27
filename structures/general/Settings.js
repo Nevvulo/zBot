@@ -28,6 +28,9 @@ class Settings {
 				"expletiveFilter": false,
 				"spamFilter": true,
 				"moderatorRole": "Moderator",
+				"muteRole": "Muted",
+				"prefix": "+",
+				"experienceTracking": true,
 				"musicNPModule": false,
 				"modLogsChannel": 0,
 				"memberLogsChannel": 0
