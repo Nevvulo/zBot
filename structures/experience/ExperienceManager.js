@@ -4,20 +4,19 @@ const commandEmitter = new events.EventEmitter();
 const fs = require('fs');
 const sql = require('sqlite');
 sql.open('./data/user/userData.sqlite')
+const Settings = require('./../general/Settings.js');
 var talkedRecently = [];
 
 function newMessage(message) {
+  if (Settings.getValue(message.guild, "experienceTracking") == false) return;
+  if (message.author.bot) return;
+  if (message.channel.type !== 'text') return;
   //✦ Experience handler, including levels, badges and experience gained per message. ✦
   message.guild.fetchMember(message.author).then(function(member) {
     const filter = message => message.author.id === member.user.id && member.user.bot == false;
     message.channel.fetchMessages({
       limit: 100
     }).then(messages => {
-      if (message.author.bot)
-        return;
-      if (message.channel.type !== 'text')
-        return;
-
       sql.get(`SELECT * FROM experience WHERE userId = '${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
         if (!row) {
           sql.run('INSERT INTO experience (guild, userId, experience) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 1]);
@@ -59,7 +58,7 @@ function newMessage(message) {
         }
 
         // If message author has a moderator role:
-        if (member.roles.find("name", "Fleece Police")) {
+        if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
           sql.run(`UPDATE badges SET moderator = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
         }
 
@@ -69,7 +68,7 @@ function newMessage(message) {
         }
 
         // If message author has 100/100 on the photographer progress badge:
-        sql.get(`SELECT * FROM badgeprogress WHERE userId ='${member.id}'`).then(row => {
+        sql.get(`SELECT * FROM badgeprogress WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
         if (`${row.photographer}` > 100) {
           sql.run(`UPDATE badges SET photographer = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
         }
@@ -89,6 +88,23 @@ function newMessage(message) {
           sql.run('INSERT INTO badges (guild, userId, developer, active, moderator, essaywriter, friendship, photographer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, 0, 0, 0, 0, 0, 0]);
         });
       });
+
+      //SLOTS
+
+      sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
+        if (!row) {
+          sql.run('INSERT INTO slots (guild, userId, slot1, slot2, slot3, slot4, slot5, slot6) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, "empty", "empty", "empty", "empty", "empty", "empty"]);
+        } else {
+
+        }
+      }).catch(() => {
+        console.error;
+        sql.run('CREATE TABLE IF NOT EXISTS slots (guild TEXT, userId TEXT, slot1 TEXT, slot2 TEXT, slot3 TEXT, slot4 TEXT, slot5 TEXT, slot6 TEXT)').then(() => {
+          sql.run('INSERT INTO slots (guild, userId, slot1, slot2, slot3, slot4, slot5, slot6) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, "empty", "empty", "empty", "empty", "empty", "empty"]);
+        });
+      });
+
+      //BADGEPROGRESS
 
       sql.get(`SELECT * FROM badgeprogress WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
         if (!row) {
