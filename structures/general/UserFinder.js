@@ -1,40 +1,52 @@
 class UserFinder {
 
-	static getUser(args) {
-    var prevArgs = args
-    args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-
-    if (args == "") {
-      console.log(args)
-      console.log("Args is empty.")
-      var foundUsersU = client.users.findAll("username", prevArgs);
-      var foundUsersD = client.users.findAll("displayname", prevArgs);
-      if (foundUsersU.length > 0) {
-        for (let user of foundUsersU) {
-          return UserFinder.getUserID(user);
-        }
-      } else if (foundUsersD.length > 0) {
-        for (let user of foundUsersD) {
-          return UserFinder.getUserID(user);
-        }
-      } else {
-        throw "I couldn't find a user with that name. Check your spelling, and try again."
-      }
-  	} else {
-      return args;
-  	}
+	static getUser(query) {
+		if (query.startsWith("<@!") && query.endsWith(">")) {
+			query = query.substr(3);
+			query = query.slice(0, -1);
+	} else if (query.startsWith("<@") && query.endsWith(">")) {
+			query = query.substr(2);
+			query = query.slice(0, -1);
 	}
+	var searchResults = [];
 
+	for (let [snowflake, user] of client.users) {
+			if (user.username.toLowerCase() == query.toLowerCase()) {
+					searchResults.unshift(user);
+			} else if (user.username.toLowerCase().indexOf(query.toLowerCase()) != -1) {
+					searchResults.push(user);
+			} else if (user.id == query) {
+					searchResults.unshift(user);
+			}
+	}
+	if (searchResults.length < 1) {
+		throw "I couldn't find any users under that search."
+	}
+	return searchResults;
+  	}
 
+		static getUserUsernames(query) {
+			if (query.startsWith("<@!") && query.endsWith(">")) {
+				query = query.substr(3);
+				query = query.slice(0, -1);
+		} else if (query.startsWith("<@") && query.endsWith(">")) {
+				query = query.substr(2);
+				query = query.slice(0, -1);
+		}
+		var searchResults = [];
 
-    static getUserID(user) {
-      var u = user;
-      if (user.user != null) {
-        u = user.user;
-      }
-      return u.id;
-    }
-
+		for (let [snowflake, user] of client.users) {
+				if (user.username.toLowerCase() == query.toLowerCase()) {
+						searchResults.unshift(user.username);
+				} else if (user.username.toLowerCase().indexOf(query.toLowerCase()) != -1) {
+						searchResults.push(user.username);
+				} else if (user.id == query) {
+						searchResults.unshift(user.username);
+				}
+		}
+		
+		return searchResults;
+	  	}
 
 }
 
