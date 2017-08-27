@@ -1,11 +1,12 @@
 const Discord = require('discord.js');
 const Version = require('./Version.js');
+const Settings = require('./Settings.js')
 var help = {title: "Title not supplied.", desc: "No description found.", usage: "No usage found."};
 var prefix = "+";
 
 class Help {
 
-	static getCommandHelp(command) {
+	static getCommandHelp(command, guild) {
 			const commandFile = require(`./../../commands/${command}.js`);
 
 			help.title = "Information about `" + command + "`.";
@@ -20,9 +21,9 @@ class Help {
 				embed.setColor("#f48841");
 			}
 			embed.addField("**Description**", help.desc);
-			embed.addField("**Usage**", help.usage);
+			embed.addField("**Usage**", Settings.getValue(guild, "prefix") + help.usage);
 			if (help.example !== undefined) {
-				embed.addField("**Example**", help.example);
+				embed.addField("**Example**", Settings.getValue(guild, "prefix") + help.example);
 			}
 
 			embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));
