@@ -219,7 +219,6 @@ function messageChecker(oldMessage, newMessage) {
 	}
 	var msg = message.content;
 
-	if (message.guild == null) return;
   commandEmitter.emit('newMessage', message);
 
 	exports.userAFK = userAFK;
@@ -243,7 +242,7 @@ function messageChecker(oldMessage, newMessage) {
 		message.delete();
 	}
 
-	if (message.author.id !== 303017211457568778 && !message.author.bot) {
+	if (message.author.id !== 303017211457568778 && !message.author.bot && message.channel.type !== 'dm') {
     	console.log(colors.gray("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg)));
 		}
 
@@ -296,7 +295,7 @@ client.on('guildMemberAdd', function(guildMember) {
 
 	var msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString()
     embed.addField("**User Joined**", msg);
-	embed.setFooter("For more information on this user, type +uinfo " + guildMember.user.username + ".");
+	embed.setFooter("For more information on this user, type " + Settings.getValue(message.guild, "prefix") + "uinfo " + guildMember.user.username + ".");
 
 	channel.send({ embed });
 });
@@ -346,7 +345,7 @@ client.on('guildMemberRemove', function(guildMember) {
 
 client.on('messageDelete', function(message) {
   if (`${Date.now() - message.createdTimestamp}` < 1900) return;
-	if (message.content.startsWith("+")) return;
+	if (message.content.startsWith(Settings.getValue(message.guild, "prefix"))) return;
   if (message.author.bot) return;
   if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
       channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
