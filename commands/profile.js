@@ -66,7 +66,7 @@ exports.run = (client, message, args) => {
 
 	var userProfile = badgesP[member.id];
 
-
+sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(rows => {
 	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
 		async function drawStats() {
 			var uSlot = slots[member.id];
@@ -222,68 +222,56 @@ exports.run = (client, message, args) => {
 				let slot5X = 185;
 				let slot6X = 225;
 
+
 				// + SUBSCRIBER BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "subscriber") {
+				if (eval(`rows.slot${i}`) == "subscriber") {
 					ctx.drawImage(subbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 				}
 
-				// + ACTIVE BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "active") {
+				if (eval(`rows.slot${i}`) == "active") {
 					ctx.drawImage(activebadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-				}
+			}
 
-				// + MODERATOR BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "moderator") {
+				if (eval(`rows.slot${i}`) == "moderator") {
 					ctx.drawImage(modbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-				}
+			}
 
-				// + ESSAYWRITER BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "essaywriter") {
+				if (eval(`rows.slot${i}`) == "essaywriter") {
 					ctx.drawImage(essaywriterbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-				}
+			}
 
-				// + XBT BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "xbt") {
-					ctx.drawImage(xbtbadge, eval(`slot${i}X`), 260, 25, 25);
-				}
-				}
-
-				// + FRIENDSHIP BADGE
-				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "friendship") {
+				if (eval(`rows.slot${i}`) == "friendship") {
 					ctx.drawImage(friendshipbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-				}
+			}
 
-				// + DEVELOPER BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "developer") {
+				if (eval(`rows.slot${i}`) == "developer") {
 					ctx.drawImage(devbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
-				}
+			}
 
-				// + PHOTOGRAPHER BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`uSlot.slot${i}`) == "photographer") {
+				if (eval(`rows.slot${i}`) == "photographer") {
 					ctx.drawImage(photographerbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 				}
 
-				if (eval(`uSlot.slot1`) == "empty") {
-					if (eval(`uSlot.slot2`) == "empty") {
-						if (eval(`uSlot.slot3`) == "empty") {
-							if (eval(`uSlot.slot4`) == "empty") {
-								if (eval(`uSlot.slot5`) == "empty") {
-									if (eval(`uSlot.slot6`) == "empty") {
+				if (eval(`rows.slot1`) == "empty") {
+					if (eval(`rows.slot2`) == "empty") {
+						if (eval(`rows.slot3`) == "empty") {
+							if (eval(`rows.slot4`) == "empty") {
+								if (eval(`rows.slot5`) == "empty") {
+									if (eval(`rows.slot6`) == "empty") {
 				ctx.font = '13px Roboto';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#ba2a2a';
@@ -295,6 +283,7 @@ exports.run = (client, message, args) => {
 						}
 					}
 				}
+
 
 
 				// Image
@@ -318,8 +307,6 @@ exports.run = (client, message, args) => {
 			modbadge.src = await fs.readFileAsync('./assets/profile/badges/moderator.png');
 			activebadge.src = await fs.readFileAsync('./assets/profile/badges/active.png');
 			essaywriterbadge.src = await fs.readFileAsync('./assets/profile/badges/essaywriter.png');
-			streamerbadge.src = await fs.readFileAsync('./assets/profile/badges/streamer.png');
-			xbtbadge.src = await fs.readFileAsync('./assets/profile/badges/xbt.png');
 			friendshipbadge.src = await fs.readFileAsync('./assets/profile/badges/friendship.png');
 			photographerbadge.src = await fs.readFileAsync('./assets/profile/badges/photographer.png');
 
@@ -338,10 +325,11 @@ exports.run = (client, message, args) => {
 
 	})
 	})
+	})
 }
 
 let command = 'profile'
 , description = 'Displays yours or another users profile.'
-, usage = '+profile (user)'
+, usage = 'profile (user)'
 , throttle = {usages: 3, duration: 10}
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

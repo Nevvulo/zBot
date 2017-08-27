@@ -146,7 +146,7 @@ exports.run = (client, message, args) => {
 
 let command = 'softban'
 , description = 'Bans, and then un-bans a specified user from this guild, removing their messages in the process.'
-, usage = '+softban **[mention]** **[reason]**'
+, usage = 'softban **[mention]** **[reason]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod';
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

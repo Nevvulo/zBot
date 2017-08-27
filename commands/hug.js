@@ -74,6 +74,6 @@ exports.run = (client, message, args) => {
 
 let command = 'hug'
 , description = 'Give a hug to somebody!'
-, usage = '+hug **[string]**'
+, usage = 'hug **[string]**'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

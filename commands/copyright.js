@@ -22,6 +22,6 @@ message.delete();
 
 let command = 'copyright'
 , description = 'See copyright information related to zBot.'
-, usage = '+copyright'
+, usage = 'copyright'
 , throttle = {usages: 1, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

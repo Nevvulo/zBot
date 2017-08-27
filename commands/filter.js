@@ -13,6 +13,6 @@ exports.run = (client, message, args) => {
 
 let command = 'filter'
 , description = 'Toggles the expletive filter on/off.'
-, usage = '+filter'
+, usage = 'filter'
 , permission = 'mod'
 exports.settings = {command: command, description: description, usage: usage, permission: permission}

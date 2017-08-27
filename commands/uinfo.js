@@ -169,7 +169,7 @@ exports.run = (client, message, args) => {
 
 let command = 'uinfo'
 , description = 'View specific information on a user.'
-, usage = '+uinfo **[user]**'
+, usage = 'uinfo **[user]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod';
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

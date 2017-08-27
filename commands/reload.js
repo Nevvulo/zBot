@@ -5,9 +5,9 @@ exports.run = (client, message, args) => {
   message.reply(`The command ${args[0]} has been reloaded`);
 };
 
-let command = 'profile'
-, description = 'Displays yours or another users profile.'
-, usage = '+profile (user)'
+let command = 'reload'
+, description = 'Reloads a module'
+, usage = 'reload (module)'
 , throttle = {usages: 3, duration: 10}
 , permission = 'dev'
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

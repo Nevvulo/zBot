@@ -83,7 +83,7 @@ exports.run = (client, message, args) => {
 			});
 
 			message.channel.send(":white_check_mark: **" + member + "** was successfully muted.");
-			member.addRole(muteMember.guild.roles.get("229623781973426177"));
+			member.addRole(muteMember.guild.roles.get(Settings.getValue(message.guild, "muteRole"));
 			muteMember = null;
 
 		});
@@ -146,7 +146,7 @@ exports.run = (client, message, args) => {
 
 let command = 'mute'
 , description = 'Mutes a specified user in this guild.'
-, usage = '+mute **[mention]** **[reason]**'
+, usage = 'mute **[mention]** **[reason]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod';
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

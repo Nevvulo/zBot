@@ -1,14 +1,22 @@
 const sql = require('sqlite');
 const Discord = require('discord.js');
 sql.open('./data/user/userData.sqlite');
+var limit = 5
 
 exports.run = (client, message, args) => {
 	leaderboard();
 	async function leaderboard() {
-		var limit = args;
+		limit = args;
+		if (args == [] || args == "") {
+			limit = 5
+		}
 
-		if (limit.isNaN || limit == 0 || limit == "" || limit == "NaN") {
-			var limit = 5;
+		if (limit > message.guild.memberCount) {
+			limit = message.guild.memberCount - 1
+		}
+
+		if (limit.isNaN || limit == 0 || limit == "" || limit == NaN) {
+			limit = 5;
 		}
 
 		if (limit > 10) {
@@ -18,15 +26,11 @@ exports.run = (client, message, args) => {
 
 		var tosend = [];
 		//SQL query in variable.
-		var test = await sql.all(`SELECT userId, experience FROM experience ORDER BY experience DESC LIMIT ${limit}`);
+		var test = await sql.all(`SELECT * FROM experience WHERE guild = '${message.guild.id}' ORDER BY experience DESC LIMIT ${limit}`);
 		//Loop through all users in query and push them to an array.
 		for (let i = 0; i < limit; i++) {
 			message.guild.fetchMember(test[i].userId).then(function (member) {
-
-				//Don't count Blake or Xail Bot Testing.
-				//if (member.id !== "246574843460321291" || member.id !== "300551512873238538") {
 				tosend.push("**" + member.displayName + "**  ■  *" + test[i].experience + " experience*\n");
-				//}
 			})
 		}
 		//Send array.
@@ -50,6 +54,6 @@ exports.run = (client, message, args) => {
 
 let command = 'leaderboard'
 , description = 'Displays a leaderboard of the users with the highest ranking experience.'
-, usage = '+leaderboard (number 1-10)'
+, usage = 'leaderboard (number 1-10)'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

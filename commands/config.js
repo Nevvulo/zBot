@@ -27,10 +27,18 @@ if (argument == "set") {
   if (Settings.getValue(message.guild, setting) == undefined) return message.channel.send(":no_entry_sign: **ERROR**: The setting you've provided doesn't exist. Try `+config settings` to see all of the available settings you can view.");
 
   if (setting == "modLogsChannel" || setting == "memberLogsChannel") {
-  if (!message.guild.channels.exists("name", value)) {
+    var type = "name";
+  if (!message.guild.channels.exists("name", value) && !message.guild.channels.exists("id", value)) {
       message.channel.send(":no_entry_sign: **NOPE**: That channel doesn't exist. Please enter the name or ID of a channel and try again.");
-  } else {
-      var channel = message.guild.channels.find("name", value);
+      type = "none";
+  } else if (message.guild.channels.exists("name", value) && !message.guild.channels.exists("id", value)) {
+      type = "name";
+    } else {
+      type = "id";
+    }
+
+    if (type !== "none") {
+      var channel = message.guild.channels.find(type, value);
       if (channel.type != "text") {
           message.channel.send(":no_entry_sign: **NOPE**: That's not a text channel.");
           return;
@@ -51,26 +59,34 @@ if (argument == "set") {
     return;
   }
 
-  if (setting == "moderatorRole") {
+  if (setting == "moderatorRole" || setting == "muteRole") {
   if (!message.guild.roles.exists("name", value)) {
       message.channel.send(":no_entry_sign: **NOPE**: That role doesn't exist. Please enter the name of a role (ex. Moderator) and try again.");
   } else {
       var role = message.guild.roles.find("name", value);
+      if (setting == "moderatorRole") {
           message.channel.send(":white_check_mark: **OK**: I've set the moderator role of this guild to " + role.name + ".")
           Settings.editSetting(message.guild, setting, role.id);
           Settings.saveConfig()
           return;
+        } else {
+          message.channel.send(":white_check_mark: **OK**: I've set the muted role of this guild to " + role.name + ".")
+          Settings.editSetting(message.guild, setting, role.id);
+          Settings.saveConfig()
+          return;
+        }
     }
     return;
   }
 
-  if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule") {
+  if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule" || setting == "experienceTracking") {
     if (value == "true" || value == "false") {} else {
     return message.channel.send(":no_entry_sign: **ERROR**: You can only change this setting to one of the following values: __true__ or __false__.");
   }
   }
 
   Settings.editSetting(message.guild, setting, value)
+  Settings.saveConfig()
   message.channel.send(":white_check_mark: **OK**: I've set the setting *" + setting + "* to __" + value + "__.")
 }
 
@@ -83,7 +99,7 @@ if (argument == "settings") {
 
 let command = 'config'
 , description = 'Allows you to change the configuration of zBot.'
-, usage = '+config'
-, permission = 'owner'
+, usage = 'config'
+, permission = 'user'
 , throttle = {usages: 2, duration: 7};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

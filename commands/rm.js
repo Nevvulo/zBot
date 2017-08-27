@@ -69,7 +69,7 @@ if (num != args) {
 
 let command = 'rm'
 , description = 'Removes a specified amount of messages in the current channel.'
-, usage = '+rm **[number 1-100]**'
+, usage = 'rm **[number 1-100]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod';
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

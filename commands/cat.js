@@ -9,6 +9,6 @@ exports.run = (bot, message) => {
 
 let command = 'cat'
 , description = 'Displays a random image of a cat.'
-, usage = '+cat'
+, usage = 'cat'
 , throttle = {usages: 4, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

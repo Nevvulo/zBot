@@ -5,23 +5,12 @@ sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
 let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
-var badges = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf8'));
 
 if (!badgesC[message.author.id])
 			badgesC[message.author.id] = {
 				weapon: "none"
 			};
-// if the user has no badges, init to false.
-if (!badges[message.author.id])
-	badges[message.author.id] = {
-		slot1: "empty",
-		slot2: "empty",
-		slot3: "empty",
-		slot4: "empty",
-		slot5: "empty",
-		slot6: "empty"
-	};
 
 // if the user has no badges, init to false.
 if (!badgesP[message.author.id])
@@ -32,50 +21,52 @@ if (!badgesP[message.author.id])
 
 var userProfile = badgesP[message.author.id];
 var userChallenge = badgesC[message.author.id];
-var userSlots = badges[message.author.id];
 
 message.delete();
 
-if (args == "listbadges") {
+if (args[0] == "list") {
+if (args[1] == "badges") {
 let tosend = []
 sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(rows => {
 	let tempRows = JSON.stringify(rows, null, 2)
-	var jRows = JSON.parse(tempRows)
-	console.log("test " + jRows)
+	let jRows = JSON.parse(tempRows)
 	for (var key in jRows) {
 	     var value = jRows[key];
-			 console.log(key + " " + value);
-			 if (value > 0 && key !== "userId") {
-				console.log(key)
+			 if (value > 0 && key !== "userId" && key !== "guild") {
 			tosend.push(" " + key)
 			}
 	  }
 		message.reply(":white_check_mark: **OK:** These are the badges that you currently own:**" + tosend + "**.");
 		return;
 })
-} else if (args == "listbackgrounds") {
-
+} else {
+	var testFolder = './assets/profile/backgrounds';
+	var backgrounds = [];
+	fs.readdir(testFolder, (err, files) => {
+	  files.forEach(file => {
+			file = file.replace(".png", "")
+	    backgrounds.push(" " + file);
+	  });
+		message.reply(":white_check_mark: **OK:** Here are all of the backgrounds that you can equip:**" + backgrounds + "**.");
+	})
+}
 }
 
 var num = args[0];
-var badge = args[1].toString();
-
-		sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(row => {
+var badge = args[1]
+sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(rows => {
+		sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
 		if (num == 1 || num == 2 || num == 3 || num == 4 || num == 5 || num == 6) {
 		if (eval(`row.${badge}`) == 1 || badge == "empty") {
- 		eval(`userSlots.slot${num} = "${badge}"`);
+ 		sql.run(`UPDATE slots SET slot${num} = "${badge}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
 		message.reply(":white_check_mark: **OK:** You've successfully equipped the badge **" + badge + "** into slot **" + num + "**.");
-		fs.writeFile('./slots.json', JSON.stringify(badges, null, 2), function(err) {
-				if (err) {
-					console.error(err)
-				}
-			});
 		} else {
 		message.reply(":no_entry_sign: **NOPE:** You can't equip this badge because you don't own it or it doesn't exist.");
 		return;
 		}
 		}
 	})
+})
 
 		if (num == "background") {
 		eval(`userProfile.background = "${badge}"`);
@@ -92,16 +83,14 @@ var badge = args[1].toString();
 		if (num == "weapon") {
 		// all possible weapons:
 		// wooden, stone, iron, diamond, master
-		// sub sword: gold, gold sword will stun user with special ability
 		eval(`userChallenge.weapon = "${badge}"`);
 		fs.writeFile('./data/challenge/equipment.json', JSON.stringify(badgesC, null, 2), function(err) {
 				if (err) {
 					console.error(err)
 				}
 			});
-			message.reply(":white_check_mark: **OK:** You've successfully equipped the weapon **" + badge + "**. This can be used in challenges.");
+			message.reply(":white_check_mark: **OK:** You've successfully equipped a **" + badge + "** sword. This can be used in challenges.");
 		return;
-		//message.reply(":no_entry_sign: **NOPE:** You can't equip this background because you don't own it or it doesn't exist.");
 		}
 
 
@@ -126,16 +115,11 @@ var badge = args[1].toString();
 			}
 		}
 
-		fs.writeFile('./slots.json', JSON.stringify(badges, null, 2), function(err) {
-				if (err) {
-					console.error(err)
-				}
-			});
 }
 
 let command = 'equip'
 , description = 'Allows you to equip specific items to your profile.'
-, usage = '+equip **[type of item]** **[item name]**'
-, example = '+equip **background** **polymountains**'
+, usage = 'equip **[slot]** **[item name]**'
+, example = 'equip **background** **polymountains**'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, example: example}

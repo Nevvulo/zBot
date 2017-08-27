@@ -14,6 +14,6 @@ return;
 
 let command = 'ship'
 , description = 'Ships you with another random user.'
-, usage = '+ship'
+, usage = 'ship'
 , throttle = {usages: 3, duration: 10}
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

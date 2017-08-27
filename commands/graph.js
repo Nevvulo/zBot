@@ -154,6 +154,6 @@ drawStats();
 
 let command = 'graph'
 , description = 'Allows you to create custom graphs and plots.'
-, usage = '+graph **[information]** (spaces between each new number)'
+, usage = 'graph **[information]** (spaces between each new number)'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

@@ -176,6 +176,6 @@ exports.run = (client, message, args) => {
 
 let command = 'stats'
 , description = 'A simplified version of the `profile` command.'
-, usage = '+stats (user)'
+, usage = 'stats (user)'
 , throttle = {usages: 3, duration: 10}
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

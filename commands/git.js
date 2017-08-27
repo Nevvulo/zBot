@@ -41,6 +41,6 @@ exports.run = (client, message, args) => {
 
 let command = 'git'
 , description = 'Shows GitHub information regarding zBot.'
-, usage = '+git'
+, usage = 'git'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

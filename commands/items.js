@@ -55,6 +55,6 @@ exports.run = (client, message, args) => {
 
 let command = 'items'
 , description = 'Shows an image of all the obtainable items that you can get through zBot.'
-, usage = '+items'
+, usage = 'items'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

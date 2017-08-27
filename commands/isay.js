@@ -42,7 +42,6 @@ exports.run = (client, message, args) => {
 
 			var canvas = new Canvas(300, 90)
 				var ctx = canvas.getContext('2d')
-				const base = new Image();
 			const cond = new Image();
 
 			const generate = () => {
@@ -69,7 +68,6 @@ exports.run = (client, message, args) => {
 
 
 				// Environment Variables
-				ctx.drawImage(base, 0, 0, 300, 300);
 				ctx.scale(1, 1);
 				ctx.patternQuality = 'billinear';
 				ctx.filter = 'bilinear';
@@ -106,7 +104,6 @@ exports.run = (client, message, args) => {
 				ctx.drawImage(cond, 15, 20, 50, 50);
 			};
 
-			base.src = await fs.readFileAsync('./assets/profile/backgrounds/Empty.png');
 			cond.src = await request({
 					uri: message.member.user.avatarURL() ? message.member.user.avatarURL( {format: 'png'} ) : message.member.user.displayAvatarURL,
 					encoding: null
@@ -128,6 +125,6 @@ exports.run = (client, message, args) => {
 
 let command = 'isay'
 , description = 'Displays your message in an image.'
-, usage = '+isay **[message]**'
+, usage = 'isay **[message]**'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

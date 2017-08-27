@@ -29,6 +29,6 @@ var parser = math.parser();
 
 let command = 'info'
 , description = 'View technical information relating to zBot.'
-, usage = '+info'
+, usage = 'info'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

@@ -82,6 +82,6 @@ return;
 
 let command = 'math'
 , description = 'Math evaluation command.'
-, usage = '+math **[equation]**'
+, usage = 'math **[equation]**'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

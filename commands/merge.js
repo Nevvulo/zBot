@@ -30,6 +30,6 @@ return;
 
 let command = 'merge'
 , description = 'Alternative command to `ship`, different name merging technique.'
-, usage = '+merge'
+, usage = 'merge'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

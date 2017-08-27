@@ -7,6 +7,6 @@ exports.run = (client, message, args) => {
 
 let command = 'pong'
 , description = 'Shows the ping time for zBot.'
-, usage = '+pong | +ping'
+, usage = 'pong'
 , throttle = {usages: 4, duration: 10}
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

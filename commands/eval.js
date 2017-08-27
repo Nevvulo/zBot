@@ -1,5 +1,7 @@
 const Discord = require('discord.js');
 const Settings = require('./../structures/general/Settings.js');
+const sql = require('sqlite');
+sql.open('./data/user/userData.sqlite');
 exports.run = (client, message, args) => {
 
 	function clean(text) {
@@ -11,7 +13,7 @@ exports.run = (client, message, args) => {
 
 
 const argseval = message.content.split(" ").slice(1);
-	if (message.content.startsWith("+eval") && message.author.id == "246574843460321291") {
+	if (message.content.startsWith(Settings.getValue(message.guild, "prefix") + "eval") && message.author.id == "246574843460321291") {
 		try {
 			var code = argseval.join(" ");
 			var evaled = eval(code);
@@ -73,6 +75,6 @@ const argseval = message.content.split(" ").slice(1);
 
 let command = 'eval'
 , description = 'Developer evaluation command.'
-, usage = '+eval **[code]**'
+, usage = 'eval **[code]**'
 , permission = 'dev'
 exports.settings = {command: command, description: description, usage: usage, permission: permission}

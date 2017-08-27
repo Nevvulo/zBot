@@ -47,18 +47,44 @@ if (message.author.id == challengePending) {
 	if (message.mentions.users.first().id == waitingOnEnemyResponse) {
 		message.guild.fetchMember(waitingOnEnemyResponse.toString()).then(function(enemy) {
 
+			const voiceChannel = message.member.voiceChannel;
+				voiceChannel.join()
+				.then(connection => {
+				return connection.playFile('./assets/challenge/audio/challenge.mp3', {volume: 0.6});
+				}).then(dispatcher => {
+				dispatcher.on('error', console.log);
+			}).catch(console.log);
+
+		var dms = true
+		exports.challengeInDMS = dms
 		exports.startedChallenge = "true";
 		exports.enemy = enemy;
 		exports.author = message.author;
 		exports.channel = message.channel.name;
 
+		function sendBoth(messageToSend) {
+	  players = [client.users.get(message.author.id), client.users.get(enemy.id)]
+	  for (i in players) {
+	  players[i].send(messageToSend)
+	  }
+	  }
+
 		challengeInProgress = true;
+		if (!dms) {
 		if (userChallenge.weapon == "gold") {
 		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");
 		} else {
 		message.channel.send(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `end`");
 		}
 		return;
+	} else {
+		if (userChallenge.weapon == "gold") {
+		sendBoth(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `special` `end`");
+		} else {
+		sendBoth(":crossed_swords: **CHALLENGE**: It is " + message.author + "'s turn.\nWhat do you want to do? `attack` `defend` `heal` `end`");
+		}
+		return;
+	}
 
 		})
 	} else {
@@ -72,26 +98,22 @@ return;
 
 
 if (args[0] == "accept") {
-// If the user hasn't specified a user, throw an error.
-if (message.mentions.users.first() == undefined) {
-message.reply(":no_entry_sign: **ERROR**: You need to specify which user's challenge you are accepting by mentioning them. (ie. `+challenge accept @" + message.author.tag + "`)");
-return;
-// If the user isn't in the array, don't do anything.
-} else if (!(challengePending.indexOf(message.mentions.users.first().id) > -1)) {
-message.channel.send("challengePending = " + challengePending);
+var person = args[1].toString();
+person = person.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
+message.guild.fetchMember(person).then(function(member) {
+if (!(challengePending.indexOf(member.id) > -1)) {
 message.reply(":no_entry_sign: **ERROR**: You don't have a pending challenge request from that user.");
 return;
 // If the user was found in the array, begin game.
 } else {
-message.reply(":crossed_swords: **CHALLENGE**: " + message.author + " has accepted " + message.mentions.users.first() + "'s challenge!\n" + message.mentions.users.first() + " can now start the battle by using `+challenge begin @" + message.author.tag + "`.");
+message.reply(":crossed_swords: **CHALLENGE**: " + message.author + " has accepted " + member + "'s challenge!\n" + member + " can now start the battle by using `+challenge begin @" + message.author.tag + "`.");
 challengeRequestFulfilled = true;
 return;
 }
-}
-
-
-if (message.mentions.users.first() == undefined) {
-message.reply(":no_entry_sign: **ERROR**: You need to specify which user you want to challenge by mentioning them. (ie. `+challenge " + message.author.tag + "`)");
+}).catch (function (reason) {
+	message.reply(":no_entry_sign: **ERROR**: You need to specify which user's challenge you are accepting by mentioning them. (ie. `+challenge accept @" + message.author.tag + "`)");
+	return;
+});
 return;
 }
 
@@ -133,6 +155,6 @@ return;
 
 let command = 'challenge'
 , description = 'Challenge somebody to a dual.'
-, usage = '+challenge **[mention]**'
+, usage = 'challenge **[mention]**'
 , throttle = {usages: 4, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

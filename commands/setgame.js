@@ -42,7 +42,7 @@ message.guild.fetchMember(message.author).then(function(member) {
 
 let command = 'setgame'
 , description = 'Sets the game that the bot is playing to a specific string.'
-, usage = '+setgame **[string]**'
+, usage = 'setgame **[string]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod';
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

@@ -29,7 +29,7 @@ message.guild.fetchMember(message.author).then(function(member) {
 if (args.toString() == "commands") {
 message.channel.send("**COMMANDS FOR MILLIONAIRE:**\nbot:m setquestion [question]\nbot:m seta[1-4] [answer]\nbot:m setca [correct answer as letter]\nbot:m start\nbot:m final\nbot:m incorrect [users who are wong]");
 }
-	
+
 
 if (args.toString() == "intro") {
 if (message.author.id !== host) {
@@ -43,7 +43,6 @@ const voiceChannel = message.member.voiceChannel;
 	return connection.playFile('C://Users//Blake//Desktop//BOT//assets//wwtbam//audio//intro.mp3', {volume: 0.6});
 	}).then(dispatcher => {
 	dispatcher.on('error', console.error);
-		// You can also do things like dispatcher.pause() and dispatcher.end() here.
 	}).catch(console.error);
 }
 
@@ -183,7 +182,7 @@ if (arrayLength > 1) {
 	question = question.trim();
 	q = question;
 }
-		
+
 message.delete();
 message.channel.send(":white_check_mark: **OK:** The operation completed successfully.");
 }
@@ -306,7 +305,7 @@ cA = a1;
 } else if (cA == "B") {
 cA = a2;
 } else if (cA == "C") {
-cA = a3;	
+cA = a3;
 } else if (cA == "D") {
 cA = a4;
 }
@@ -346,7 +345,7 @@ if (questionNum == 1) {
 	qworth = 1000000;
 }
 console.log(args);
-message.channel.send("Welcome back to 'Who wants to be a millionaire?'. Next question is coming up right now for **$" + qworth + "**.");	
+message.channel.send("Welcome back to 'Who wants to be a millionaire?'. Next question is coming up right now for **$" + qworth + "**.");
 
 		switch (Math.floor(Math.random() * 1000) % 8) {
 		case 0:
@@ -386,7 +385,7 @@ const voiceChannel = message.member.voiceChannel;
 		// You can also do things like dispatcher.pause() and dispatcher.end() here.
 	}).catch(console.error);
 drawQuestion();
-}	
+}
 
 async function drawQuestion () {
 
@@ -396,9 +395,9 @@ var canvas = new Canvas(1021, 235)
 var ctx = canvas.getContext('2d')
 const base = new Image();
 const cond = new Image();
-	
-	
-const generate = () => {	
+
+
+const generate = () => {
 
 // Environment Variables
 			ctx.drawImage(base, 0, 0, 1021, 235);
@@ -415,35 +414,35 @@ const generate = () => {
 			ctx.textAlign = 'center';
 			ctx.fillStyle = '#E5E5E5';
 			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-			ctx.fillText(q, 511, 66);			
-			
+			ctx.fillText(q, 511, 66);
+
 // Answer 1
 			ctx.font = '25px Century Gothic';
 			ctx.textAlign = 'left';
 			ctx.fillStyle = '#E5E5E5';
 			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-			ctx.fillText(a1, 120, 145);		
-			
+			ctx.fillText(a1, 120, 145);
+
 // Answer 2
 			ctx.font = '25px Century Gothic';
 			ctx.textAlign = 'left';
 			ctx.fillStyle = '#E5E5E5';
 			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-			ctx.fillText(a2, 580, 145);		
+			ctx.fillText(a2, 580, 145);
 
 // Answer 3
 			ctx.font = '25px Century Gothic';
 			ctx.textAlign = 'left';
 			ctx.fillStyle = '#E5E5E5';
 			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-			ctx.fillText(a3, 120, 220);		
-			
+			ctx.fillText(a3, 120, 220);
+
 // Answer 4
 			ctx.font = '25px Century Gothic';
 			ctx.textAlign = 'left';
 			ctx.fillStyle = '#E5E5E5';
 			ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-			ctx.fillText(a4, 580, 220);		
+			ctx.fillText(a4, 580, 220);
 };
 
 base.src = await fs.readFileAsync('./assets/wwtbam/images/question.png');
