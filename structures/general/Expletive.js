@@ -7,6 +7,7 @@ var caughtSwear;
 var botDelMessage = true;
 
 function newMessage(message) {
+  if (message.channel.type !== 'text') return;
   if (Settings.getValue(message.guild, "expletiveFilter") == false) return;
     if (botDelMessage && caughtSwear) {
       if (message.author.id == 303017211457568778) {

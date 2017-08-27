@@ -9,7 +9,8 @@ var fastMessageCount = {};
 var sameMessageCount = {};
 
 function newMessage(message) {
-    if (Settings.getValue(message.guild, "spamFilter") == false) return;
+  if (message.channel.type !== 'text') return;
+  if (Settings.getValue(message.guild, "spamFilter") == false) return;
 	if (message.author.bot) return;
 	var msg = message.content
 

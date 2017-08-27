@@ -8,12 +8,13 @@ const Settings = require('./Settings.js');
 var errorMessage = "";
 
 function newMessage(message) {
+  if (message.channel.type !== 'text') return;
   var msg = message.content;
   // Command handler for bot, mod and debug commands.
-	if (msg.toLowerCase().startsWith("+")) {
+	if (msg.toLowerCase().startsWith(Settings.getValue(message.guild, "prefix"))) {
 		//Un-comment to activate Lockdown Mode. return message.channel.send(":no_entry_sign: **EMERGENCY**: *zBot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/zBot/wiki/Lockdown-Mode");
-		var command = msg.substr(1).split(" ").slice(0, 1);
-		var args = msg.split(" ").slice(1);
+		var command = msg.substr(Settings.getValue(message.guild, "prefix").length).split(" ").slice(0, 1);
+    var args = msg.split(" ").slice(1);
 
 		exports.commandIssuer = message.author.id;
 		log(message.author.username + " issued command " + command, logType.info);
