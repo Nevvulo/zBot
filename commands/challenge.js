@@ -45,7 +45,7 @@ if (challengeInProgress) {
 if (args[0] == "begin") {
 if (message.author.id == challengePending) {
 	if (message.mentions.users.first().id == waitingOnEnemyResponse) {
-		message.guild.fetchMember(waitingOnEnemyResponse.toString()).then(function(enemy) {
+		message.guild.members.fetch(waitingOnEnemyResponse.toString()).then(function(enemy) {
 
 			const voiceChannel = message.member.voiceChannel;
 				voiceChannel.join()
@@ -100,7 +100,7 @@ return;
 if (args[0] == "accept") {
 var person = args[1].toString();
 person = person.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-message.guild.fetchMember(person).then(function(member) {
+message.guild.members.fetch(person).then(function(member) {
 if (!(challengePending.indexOf(member.id) > -1)) {
 message.reply(":no_entry_sign: **ERROR**: You don't have a pending challenge request from that user.");
 return;
@@ -125,14 +125,7 @@ message.reply(":no_entry_sign: **NOPE**: You can't challenge yourself!");
 return;
 }
 
-//Idea:
-//
-// Make a text-based war game, similar in nature to Clash of Clans or Clash Royale, where you have a tower that can be
-// upgraded using Rainbows, and there are enemies/minions who come to attack your tower. Overtime the difficulty of the
-// enemies will get progressively harder, causing you to buy more upgrades with Rainbows. Additionally, you could complete
-// certain challenges to either gain rainbows, or automatically upgrade your weaponry.
 
-// Checks if they have challenged someone recently
 	if (challengePending.includes(message.author.id)) {
 		message.reply(":no_entry_sign: **NOPE**: You've already initiated a challenge request, please wait until your current request expires before trying again.");
 		return;

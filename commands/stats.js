@@ -43,7 +43,7 @@ exports.run = (client, message, args) => {
 		}
 	}
 
-	message.guild.fetchMember(args).then(function (member) {
+	message.guild.members.fetch(args).then(function (member) {
 
 		async function drawStats() {
 			message.delete ();
@@ -53,8 +53,20 @@ exports.run = (client, message, args) => {
 			const currentExp = await Experience.getCurrentExperience(member.id);
 
 			function fontFile(name) {
-				return path.join(__dirname, '..', '/assets/', 'stats', 'fonts', name)
+				return path.join(__dirname, '..', '/assets/', 'profile', 'fonts', name)
 			}
+
+			Canvas.registerFont(fontFile('UniSansHeavy.ttf'), {
+				family: "Uni Sans CAPS"
+			}) // eslint-disable-line max-len
+			Canvas.registerFont(fontFile('Roboto.ttf'), {
+				family: 'Roboto'
+			}) // eslint-disable-line max-len
+			Canvas.registerFont(fontFile('Viga-Regular.otf'), {
+				family: 'Viga'
+			}) // eslint-disable-line max-len
+			const Image = Canvas.Image;
+
 
 			var color=-25;
 			function texter(str, x, y){
@@ -67,14 +79,6 @@ exports.run = (client, message, args) => {
 			      x += ctx.measureText(ch).width;
 			  }
 			}
-
-			Canvas.registerFont(fontFile('UniSansHeavy.ttf'), {
-				family: "Uni Sans CAPS"
-			}) // eslint-disable-line max-len
-			Canvas.registerFont(fontFile('Roboto.ttf'), {
-				family: 'Roboto'
-			}) // eslint-disable-line max-len
-			const Image = Canvas.Image;
 
 			var canvas = new Canvas(300, 120)
 				var ctx = canvas.getContext('2d')

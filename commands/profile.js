@@ -2,6 +2,7 @@ const Experience = require('./../structures/profile/Experience');
 const Canvas = require('canvas');
 const userStats = require('./../bot.js');
 const path = require('path');
+const Find = require('./../structures/general/UserFinder.js');
 const request = require('request-promise');
 const {
 	promisifyAll
@@ -10,6 +11,7 @@ const fs = promisifyAll(require('fs'));
 const sql = require('sqlite');
 sql.open('./data/user/userData.sqlite');
 
+
 exports.run = (client, message, args) => {
 	let slots = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
 
@@ -17,33 +19,10 @@ exports.run = (client, message, args) => {
 	if (args == "") {
 		args = message.author.id;
 	} else {
-
-		function getUserID(user) {
-			var u = user;
-			if (user.user != null) {
-				u = user.user;
-			}
-			return u.id;
-		}
-		args = args.replace(",", " ").replace(",", " ").replace(",", " ");
-
-		if (!args.includes("<")) {
-			var foundUsers = client.users.findAll("username", args);
-			if (foundUsers.length == 0) {
-				message.channel.send(':no_entry_sign: **ERROR:** Couldn\'t find anyone with that username. You might want to try again.');
-				return;
-			} else {
-				for (let user of foundUsers) {
-					args = getUserID(user);
-				}
-			}
-		} else {
-			args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-			console.log("Username not provided for arguments.");
-		}
+		args = Find.getMember(args, message.guild).shift().id
 	}
 
-	message.guild.fetchMember(args).then(function (member) {
+	message.guild.members.fetch(args).then(function (member) {
 	let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
 
 	// if the user has no badges, init to false.
@@ -66,7 +45,7 @@ exports.run = (client, message, args) => {
 
 	var userProfile = badgesP[member.id];
 
-sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(rows => {
+sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(rows => {
 	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
 		async function drawStats() {
 			var uSlot = slots[member.id];
@@ -94,7 +73,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '$
 				family: 'Viga'
 			}) // eslint-disable-line max-len
 			const Image = Canvas.Image;
-
+			
 			var color=-25;
 			function texter(str, x, y){
 			  for(var i = 0; i <= str.length; ++i){

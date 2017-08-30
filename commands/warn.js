@@ -25,7 +25,7 @@ exports.run = (client, message, args) => {
 			warnReason = warning;
 		}
 
-		message.guild.fetchMember(args.split(" ").toString()).then(function(member) {
+		message.guild.members.fetch(args.split(" ").toString()).then(function(member) {
 			// Init variables
 			let warnReason = warning;
 			warnMember = member;
@@ -34,7 +34,7 @@ exports.run = (client, message, args) => {
 			warnMember = warnMember.toString();
 			warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
 
-			if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t warn other moderators.');
 			} else {
 				if (warning == ("")) {
@@ -51,17 +51,17 @@ exports.run = (client, message, args) => {
 						}
 					});
 					console.log(warnMember)
-					message.guild.fetchMember(warnMember).then(function(member) {
+					message.guild.members.fetch(warnMember).then(function(member) {
 
 						//Write warning information to .csv file
 						var writer = csvWriter({
-							headers: ["Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
+							headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
 							sendHeaders: false
 						})
 						writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
 							flags: 'a'
 						}))
-						writer.write([member.id, new Date(), "Warning", message.author.username, warnReason])
+						writer.write([message.guild.id, member.id, new Date(), "Warning", message.author.username, warnReason])
 						writer.end()
 						console.log(colors.green("* Successfully wrote warning for user '" + colors.underline(member.displayName) + "' to CSV file."));
 

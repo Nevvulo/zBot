@@ -17,16 +17,16 @@ exports.run = (client, message, args) => {
 		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
 
 		banConfirm = false;
-		message.guild.fetchMember(banMember).then(function (member) {
+		message.guild.members.fetch(banMember).then(function (member) {
 			//Write ban information to .csv file
 			var writer = csvWriter({
-				headers: ["Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
+				headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
 				sendHeaders: false
 			})
 			writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
 				flags: 'a'
 			}))
-			writer.write([member.id, new Date(), "Softban", message.author.username, banReason])
+			writer.write([message.guild.id, member.id, new Date(), "Softban", message.author.username, banReason])
 			writer.end()
 			console.log(colors.green("* Successfully wrote softban for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
@@ -109,9 +109,9 @@ exports.run = (client, message, args) => {
 			banReason = ban;
 		}
 
-		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
+		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			banMember = member;
-		 	if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+		 	if (banMember.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t softban other moderators.');
 			} else {
 				if (ban == ("")) {

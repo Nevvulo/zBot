@@ -17,16 +17,16 @@ exports.run = (client, message, args) => {
 		muteMember = muteMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
 		muteConfirm = false;
-		message.guild.fetchMember(muteMember).then(function (member) {
+		message.guild.members.fetch(muteMember).then(function (member) {
 			//Write mute information to .csv file
 			var writer = csvWriter({
-				headers: ["Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
+				headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
 				sendHeaders: false
 			})
 			writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
 				flags: 'a'
 			}))
-			writer.write([member.id, new Date(), "Mute", message.author.username, muteReason])
+			writer.write([message.guild.id, member.id, new Date(), "Mute", message.author.username, muteReason])
 			writer.end()
 			console.log(colors.green("* Successfully wrote mute for user '" + colors.underline(member.displayName) + "' to CSV file."));
 
@@ -83,7 +83,7 @@ exports.run = (client, message, args) => {
 			});
 
 			message.channel.send(":white_check_mark: **" + member + "** was successfully muted.");
-			member.addRole(muteMember.guild.roles.get(Settings.getValue(message.guild, "muteRole"));
+			member.addRole(muteMember.guild.roles.get(Settings.getValue(message.guild, "muteRole")));
 			muteMember = null;
 
 		});
@@ -109,9 +109,9 @@ exports.run = (client, message, args) => {
 			muteReason = mute;
 		}
 
-		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
+		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			muteMember = member;
-		if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+		if (muteMember.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
 			} else {
 				if (mute == ("")) {

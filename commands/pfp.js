@@ -28,23 +28,11 @@ exports.run = (client, message, args) => {
 console.log(messagesay)
 	let user = UserFinder.getUser(messagesay).shift().id
 	console.log(user)
-message.guild.fetchMember(user).then(function (member) {
+message.guild.members.fetch(user).then(function (member) {
 		async function drawStats() {
 			message.delete ();
 
-			function fontFile(name) {
-				return path.join(__dirname, '..', '/assets/', 'stats', 'fonts', name)
-			}
-
-			Canvas.registerFont(fontFile('UniSansHeavy.ttf'), {
-				family: "Uni Sans CAPS"
-			}) // eslint-disable-line max-len
-			Canvas.registerFont(fontFile('Roboto.ttf'), {
-				family: 'Roboto'
-			}) // eslint-disable-line max-len
-			const Image = Canvas.Image;
-
-			var canvas = new Canvas(100, 100)
+			const canvas = new Canvas(100, 100)
 				var ctx = canvas.getContext('2d')
 			const cond = new Image();
 
