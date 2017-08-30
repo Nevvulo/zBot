@@ -80,7 +80,17 @@ if (argument == "set") {
   }
 
   if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule" || setting == "experienceTracking") {
-    if (value == "true" || value == "false") {} else {
+    if (value == "true" || value == "false") {
+      var isTrueSet = (value == 'true');
+      if (isTrueSet) {
+      Settings.editSetting(message.guild, setting, true)
+    } else {
+      Settings.editSetting(message.guild, setting, false)
+    }
+      Settings.saveConfig()
+      message.channel.send(":white_check_mark: **OK**: I've set the setting *" + setting + "* to __" + value + "__.")
+      return;
+    } else {
     return message.channel.send(":no_entry_sign: **ERROR**: You can only change this setting to one of the following values: __true__ or __false__.");
   }
   }

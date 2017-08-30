@@ -434,7 +434,8 @@ if (process.argv[2] == "--beta") {
   client.login(api.beta()).catch(function() {
   	log("zBeta failed to establish a connection to the server.", logType.critical);
   });
-}
+} else {
 client.login(api.key()).catch(function() {
 	log("zBot failed to establish a connection to the server.", logType.critical);
 });
+}
