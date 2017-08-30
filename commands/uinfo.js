@@ -16,8 +16,7 @@ exports.run = (client, message, args) => {
 	args = UserFinder.getUser(args).shift().id
 	console.log(args)
 	if (message.guild.members.exists("id", args)) {
-
-			message.guild.fetchMember(args).then(function (member) {
+			message.guild.members.fetch(args).then(function (member) {
 				const embed = new Discord.MessageEmbed();
 				embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + member.user.username + "#" + member.user.discriminator, member.user.avatarURL( {format: 'png'} ));
 				embed.setColor("#c64ed3");{
@@ -104,7 +103,6 @@ exports.run = (client, message, args) => {
 						message.delete();
 					});
 				}
-				return;
 			}).catch (function (reason) {
 				console.log(reason)
 
@@ -123,6 +121,7 @@ exports.run = (client, message, args) => {
 					break;
 				}
 			});
+			return;
 	} else {
 		client.fetchUser(args).then(function(user) {
 			const embed = new Discord.MessageEmbed();

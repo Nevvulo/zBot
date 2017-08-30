@@ -1,4 +1,6 @@
 const fs = require('fs');
+const sql = require('sqlite');
+sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
 	var messagesay = "";
@@ -62,14 +64,9 @@ exports.run = (client, message, args) => {
 	message.channel.send(":hugging: **HUG:** " + message.author + " hugged " + messagesay + ". " + randsay);
 
 	//Friendship badge
-	var badges = JSON.parse(fs.readFileSync('./data/badges/Badge Tracker.json', 'utf8'));
-	var userBadges = badges[message.author.id];
-	userBadges.friendship = 1;
-	fs.writeFile('./data/badges/Badge Tracker.json', JSON.stringify(badges, null, 2), function(err) {
-				if (err) {
-					console.error(err)
-				}
-			});
+	sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
+		sql.run(`UPDATE badges SET friendship = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+	});
 }
 
 let command = 'hug'

@@ -126,15 +126,24 @@ exports.run = (client, message, args) => {
 					var messagesay = 0;
 					var argsArray = message.content.split(" ").slice(1);
 					var arrayLength = argsArray.length;
+					var name = "";
 
 					if (arrayLength > 0) {
 						for (let i = 0; i < arrayLength; i++) {
 							chartData.push(parseFloat(argsArray[i]))
+							var name = message.content.split("--name").slice(1);
+							if (isNaN(parseFloat(argsArray[i]))) {
+								message.reply(":no_entry_sign: **ERROR**: There was an error whilst generating this graph. Check your parameters, and remove any arguments that do not include numbers.")
+								return;
+							}
 							console.log(chartData)
 						}
+
+
 					} else {
 						console.log("false")
 						chartData = bot.chartData
+
 						console.log(bot.chartData)
 					}
 					drawGraph(chartData);

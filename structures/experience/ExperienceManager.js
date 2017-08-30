@@ -8,15 +8,12 @@ const Settings = require('./../general/Settings.js');
 var talkedRecently = [];
 
 function newMessage(message) {
+  if (message.channel.type !== 'text') return;
   if (Settings.getValue(message.guild, "experienceTracking") == false) return;
   if (message.author.bot) return;
-  if (message.channel.type !== 'text') return;
   //✦ Experience handler, including levels, badges and experience gained per message. ✦
-  message.guild.fetchMember(message.author).then(function(member) {
+  message.guild.members.fetch(message.author).then(function(member) {
     const filter = message => message.author.id === member.user.id && member.user.bot == false;
-    message.channel.fetchMessages({
-      limit: 100
-    }).then(messages => {
       sql.get(`SELECT * FROM experience WHERE userId = '${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
         if (!row) {
           sql.run('INSERT INTO experience (guild, userId, experience) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 1]);
@@ -67,15 +64,16 @@ function newMessage(message) {
           sql.run(`UPDATE badges SET active = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
         }
 
-        // If message author has 100/100 on the photographer progress badge:
-        sql.get(`SELECT * FROM badgeprogress WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
-        if (`${row.photographer}` > 100) {
+        // If message author has 50/50 on the photographer progress badge:
+        sql.get(`SELECT * FROM badgeprogress WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
+        if (row.photographer > 50) {
+
           sql.run(`UPDATE badges SET photographer = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
         }
         });
 
         // If message author is lvl 10 or higher:
-        sql.get(`SELECT * FROM experience WHERE userId ='${member.id}'`).then(row => {
+        sql.get(`SELECT * FROM experience WHERE userId ='${message.author.id}'`).then(row => {
         if (`${row.experience}` > 2500) {
           sql.run(`UPDATE badges SET essaywriter = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
         }
@@ -110,9 +108,9 @@ function newMessage(message) {
         if (!row) {
           sql.run('INSERT INTO badgeprogress (guild, userId, photographer) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 0]);
         }
-      sql.get(`SELECT * FROM badgeprogress WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
+      sql.get(`SELECT * FROM badgeprogress WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
       if (message.attachments.size > 0) {
-        sql.run(`UPDATE badges SET photographer = ${row.photographer + 1} WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+        sql.run(`UPDATE badgeprogress SET photographer = photographer + 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
       }
     })
     }).catch(() => {
@@ -121,8 +119,6 @@ function newMessage(message) {
         sql.run('INSERT INTO badgeprogress (guild, userId, photographer) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 0]);
       });
     });
-
-      })
     })
 }
 

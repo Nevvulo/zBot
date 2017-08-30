@@ -21,13 +21,20 @@ if (!badgesP[message.author.id])
 
 var userProfile = badgesP[message.author.id];
 var userChallenge = badgesC[message.author.id];
+var backgrounds = [];
+	var testFolder = './assets/profile/backgrounds';
+fs.readdir(testFolder, (err, files) => {
+	files.forEach(file => {
+		file = file.replace(".png", "")
+		backgrounds.push(" " + file);
+	});
 
 message.delete();
 
 if (args[0] == "list") {
 if (args[1] == "badges") {
 let tosend = []
-sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(rows => {
+sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(rows => {
 	let tempRows = JSON.stringify(rows, null, 2)
 	let jRows = JSON.parse(tempRows)
 	for (var key in jRows) {
@@ -40,15 +47,7 @@ sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}'`).then(rows =
 		return;
 })
 } else {
-	var testFolder = './assets/profile/backgrounds';
-	var backgrounds = [];
-	fs.readdir(testFolder, (err, files) => {
-	  files.forEach(file => {
-			file = file.replace(".png", "")
-	    backgrounds.push(" " + file);
-	  });
 		message.reply(":white_check_mark: **OK:** Here are all of the backgrounds that you can equip:**" + backgrounds + "**.");
-	})
 }
 }
 
@@ -69,6 +68,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '$
 })
 
 		if (num == "background") {
+			if (backgrounds.toString().includes(`${badge}`)) {
 		eval(`userProfile.background = "${badge}"`);
 		fs.writeFile('./data/profile/profile-background.json', JSON.stringify(badgesP, null, 2), function(err) {
 				if (err) {
@@ -77,8 +77,11 @@ sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '$
 			});
 			message.reply(":white_check_mark: **OK:** You've successfully equipped the background **" + badge + "**.");
 		return;
-		//message.reply(":no_entry_sign: **NOPE:** You can't equip this background because you don't own it or it doesn't exist.");
+	} else {
+		message.reply(":no_entry_sign: **NOPE:** You can't equip this background because you don't own it or it doesn't exist.");
+		return;
 		}
+	}
 
 		if (num == "weapon") {
 		// all possible weapons:
@@ -94,32 +97,35 @@ sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '$
 		}
 
 
-		if (num == "all") {
-			if (badge == "empty") {
-			userSlots.slot1 = "empty";
-			userSlots.slot2 = "empty";
-			userSlots.slot3 = "empty";
-			userSlots.slot4 = "empty";
-			userSlots.slot5 = "empty";
-			userSlots.slot6 = "empty";
-			userProfile.background = "default";
-			message.reply(":white_check_mark: **OK:** You've successfully unequipped **all** of your items.");
-			} else {
-			eval(`userSlots.slot1 = "${badge}"`);
-			eval(`userSlots.slot2 = "${badge}"`);
-			eval(`userSlots.slot3 = "${badge}"`);
-			eval(`userSlots.slot4 = "${badge}"`);
-			eval(`userSlots.slot5 = "${badge}"`);
-			eval(`userSlots.slot6 = "${badge}"`);
-			message.reply(`:white_check_mark: **OK:** You've successfully equipped the badge **${badge}** in to *all* of your slots.`);
+if (num == "clear") {
+	for (let i=1; i < 7; i++) {
+	sql.run(`UPDATE slots SET slot${i} = "empty" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+	}
+	eval(`userProfile.background = "default"`);
+	fs.writeFile('./data/profile/profile-background.json', JSON.stringify(badgesP, null, 2), function(err) {
+			if (err) {
+				console.error(err)
 			}
-		}
+		});
+	message.reply(":white_check_mark: **OK:** You've successfully unequipped **all** of your items.");
+}
 
+		if (num == "all") {
+				for (let i=1; i < 7; i++) {
+				sql.run(`UPDATE slots SET slot${i} = "${badge}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+				}
+			message.reply(`:white_check_mark: **OK:** You've successfully equipped the badge **${badge}** in to *all* of your slots.`);
+		}
+		});
+
+	if (args.toString() == "") {
+		message.reply(":no_entry_sign: **NOPE:** You need to specify what item you want to equip in to which slot. (ex. `equip [slot] [item name]`).\nTo view what items you own, try `equip list [badges / backgrounds]`.");
+	}
 }
 
 let command = 'equip'
 , description = 'Allows you to equip specific items to your profile.'
-, usage = 'equip **[slot]** **[item name]**'
-, example = 'equip **background** **polymountains**'
+, usage = 'equip **[slot]** **[item name]**\nequip **list** **badges**/**backgrounds**'
+, example = 'equip **background** **polymountains**\nParameter **slot** can be "background", "1-6" or "weapon".'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, example: example}

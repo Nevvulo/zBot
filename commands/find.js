@@ -6,7 +6,7 @@ exports.run = (client, message, args) => {
 	args = args.toString()
 	users = Find.getUserUsernames(args)
 	const embed = new Discord.MessageEmbed();
-	embed.setAuthor("Fɪɴᴅ » ", client.user.avatarURL( {format: "png"} ));
+	embed.setAuthor("ᖴɪɴᴅ » ", client.user.avatarURL( {format: "png"} ));
 	embed.setColor("#8babdd");
 	if (users.length == 1) {
 	var msg = users
@@ -34,6 +34,6 @@ exports.run = (client, message, args) => {
 
 let command = 'find'
 , description = 'Find a user.'
-, usage = 'find (user)'
+, usage = 'find **(user)**'
 , permission = 'mod'
 exports.settings = {command: command, description: description, usage: usage, permission: permission}

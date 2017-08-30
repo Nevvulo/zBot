@@ -100,6 +100,6 @@ doNotDelete = true;
 
 let command = '8ball'
 , description = 'Ask the 8-ball a question and get a random response.'
-, usage = '+8ball **[question]**'
+, usage = '8ball **[question]**'
 , throttle = {usages: 3, duration: 7};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}

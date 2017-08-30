@@ -15,7 +15,7 @@ var date = Date.now();
 var nowDate = moment().format('MMMM Do YYYY, h:mm:ss a');
 
 parser.set('xail', math.unit('187.96cm')); // Xails actual height
-parser.set('puma', math.unit('0 W')); // Puma has no energy
+parser.set('aren', math.unit('0 W')); // Puma has no energy
 parser.set('blake', math.unit('60.96cm')); // In reference to Fakin It, where the question was "Say how tall you are in feet", and I answered 2.
 parser.set('smol', math.eval('1.6 * 10^-35m')); // Planck length
 parser.set('tnt', math.eval('4.184 * 10^9 J')); // The energy 1 tnt produces
@@ -25,7 +25,8 @@ parser.set('jiffy', math.eval('0.01 seconds')); // A tick in a computer
 parser.set('now', nowDate); // A tick in a computer
 parser.set('friends', 'none'); // A tick in a computer
 parser.set('blakecuteness', math.eval('0')); // A tick in a computer
-parser.set('victor', "sorry can't calculate that too smart"); // A tick in a computer
+parser.set('victor', math.eval('999')); // A tick in a computer
+parser.set('rain', math.eval('1')); // A tick in a computer
 
 if (arrayLength > 0) {
 		for (let i = 0; i < arrayLength; i++) {
@@ -56,26 +57,7 @@ message.channel.send({
 			}
 		})
 } catch (err) {
-	const embed = new Discord.MessageEmbed()
-	message.channel.send({
-		embed: {
-			color: 14714691,
-			author: {
-				name: "ᴍᴀᴛʜ ᴇʀʀᴏʀ »  ",
-				icon_url: message.member.user.displayAvatarURL
-			},
-			description: ":no_entry_sign: **ERROR:** Error whilst calculating request.\n",
-			fields: [{
-					name: '**Error**',
-					value: err.toString().substr(7)
-				}
-			],
-			footer: {
-		    text: "Try again, check for errors, and if the problem persists please contact zBlake#6715."
-		  }
-		}
-	});
-
+	throw err.toString()
 return;
 }
 }

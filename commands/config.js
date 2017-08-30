@@ -85,6 +85,10 @@ if (argument == "set") {
   }
   }
 
+  if (setting == "prefix") {
+      value = value.split(" ")[0]
+}
+
   Settings.editSetting(message.guild, setting, value)
   Settings.saveConfig()
   message.channel.send(":white_check_mark: **OK**: I've set the setting *" + setting + "* to __" + value + "__.")
@@ -92,14 +96,14 @@ if (argument == "set") {
 
 
 if (argument == "settings") {
-  message.channel.send(":white_check_mark: **OK**: Here are all of the possible editable settings in zBot:\n**expletiveFilter** **spamFilter** **moderatorRole** **musicNPModule** **memberLogsChannel** **modLogsChannel**")
+  message.channel.send(":white_check_mark: **OK**: Here are all of the possible editable settings in zBot:\n**expletiveFilter** **spamFilter** **moderatorRole** **mutedRole** **prefix** **experienceTracking** **musicNPModule** **memberLogsChannel** **modLogsChannel**")
 }
 
 }
 
 let command = 'config'
 , description = 'Allows you to change the configuration of zBot.'
-, usage = 'config'
-, permission = 'user'
+, usage = 'config **(settings|set|view)** **(setting)** **(value)**'
+, permission = 'owner'
 , throttle = {usages: 2, duration: 7};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

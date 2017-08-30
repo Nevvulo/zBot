@@ -94,6 +94,8 @@ const Conversation = require('./structures/general/Conversation.js')
 Conversation.constructor(client, commandEmitter);
 const Challenge = require('./structures/games/Challenge.js')
 Challenge.constructor(client, commandEmitter);
+const Millionaire = require('./structures/games/Millionaire.js')
+Millionaire.constructor(client, commandEmitter);
 const ExperienceManager = require('./structures/experience/ExperienceManager.js')
 ExperienceManager.constructor(client, commandEmitter);
 const CommandHandler = require('./structures/general/CommandHandler.js')
@@ -140,7 +142,7 @@ client.on('ready', () => {
   client.setInterval(function(){Settings.saveConfig()}, 300000);
 
   //Version handler
-  var repoPath = path.resolve(process.env.REPO || (__dirname + './.git'));
+  var repoPath = path.resolve(process.env.REPO || (__dirname + '/.git'));
   var commitArray = []
   gitCommits(repoPath, {
     limit: 300
@@ -295,7 +297,7 @@ client.on('guildMemberAdd', function(guildMember) {
 
 	var msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString()
     embed.addField("**User Joined**", msg);
-	embed.setFooter("For more information on this user, type " + Settings.getValue(message.guild, "prefix") + "uinfo " + guildMember.user.username + ".");
+	embed.setFooter("For more information on this user, type " + Settings.getValue(guildMember.guild, "prefix") + "uinfo " + guildMember.user.username + ".");
 
 	channel.send({ embed });
 });
@@ -428,7 +430,11 @@ process.on("unhandledRejection", err => {
 	log("[UNCAUGHT PROMISE] " + err.stack, logType.critical);
 });
 
-
+if (process.argv[2] == "--beta") {
+  client.login(api.beta()).catch(function() {
+  	log("zBeta failed to establish a connection to the server.", logType.critical);
+  });
+}
 client.login(api.key()).catch(function() {
 	log("zBot failed to establish a connection to the server.", logType.critical);
 });
