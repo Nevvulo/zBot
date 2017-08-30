@@ -25,6 +25,31 @@ class UserFinder {
 	return searchResults;
   	}
 
+		static getMember(query, guild) {
+			if (query.startsWith("<@!") && query.endsWith(">")) {
+				query = query.substr(3);
+				query = query.slice(0, -1);
+		} else if (query.startsWith("<@") && query.endsWith(">")) {
+				query = query.substr(2);
+				query = query.slice(0, -1);
+		}
+		var searchResults = [];
+
+		for (let [snowflake, guildmember] of guild.members) {
+				if (guildmember.user.username.toLowerCase() == query.toLowerCase()) {
+						searchResults.unshift(guildmember);
+				} else if (guildmember.user.username.toLowerCase().indexOf(query.toLowerCase()) != -1) {
+						searchResults.push(guildmember);
+				} else if (guildmember.id == query) {
+						searchResults.unshift(guildmember);
+				}
+		}
+		if (searchResults.length < 1) {
+			throw "I couldn't find any users under that search."
+		}
+		return searchResults;
+	  	}
+
 		static getUserUsernames(query) {
 			if (query.startsWith("<@!") && query.endsWith(">")) {
 				query = query.substr(3);
@@ -44,7 +69,7 @@ class UserFinder {
 						searchResults.unshift(user.username);
 				}
 		}
-		
+
 		return searchResults;
 	  	}
 
