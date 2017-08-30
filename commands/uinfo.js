@@ -123,10 +123,10 @@ exports.run = (client, message, args) => {
 			});
 			return;
 	} else {
-		client.fetchUser(args).then(function(user) {
+		client.users.fetch(args).then(function(user) {
 			const embed = new Discord.MessageEmbed();
 			embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + user.tag, user.avatarURL( {format: 'png'} ));
-			embed.setDescription("This user is not apart of this server.")
+			embed.setDescription("This user is not a part of this server.")
 			embed.setColor("#c64ed3");{
 				var msg = "**Created** » " + user.createdAt.toDateString() + " at " + user.createdAt.toLocaleTimeString() + "\n";
 
