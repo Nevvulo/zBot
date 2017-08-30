@@ -4,8 +4,7 @@ const client = new Discord.Client();
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
 const yt = require('ytdl-core');
-const bot = require('./../bot.js');
-const maintenance = require('./debug/developer.js');
+const Settings = require('./../structures/general/Settings.js');
 var colors = require('colors');
 
 var queue = {};
@@ -18,34 +17,18 @@ var songRepeat = false;
 var musicEnd = false;
 var debug = true;
 var firstSong = true;
-exports.run = (client, message, args) => {
-	console.log(debug)
-	if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
-if (maintenance.developerMode == true) {
-		debug = true;
-	} else {
-		debug = false;
-	}
 
+exports.run = (client, message, args) => {
+client.fetchUser("287377351845609493", true)
+var musicAccount = client.fetchUser('287377351845609493').then(user => musicAccount = user.avatarURL( {format: 'png'} ))
+	if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 	args = args.toString();
 	music = args.split(" ").toString();
-	//Debugging information.
-	if (debug) {
-		message.channel.send(":page_facing_up: **DEBUG:** User *" + message.author + "* entered arguments " + music);
-		message.channel.send(":page_facing_up: **DEBUG:** The queue is currently ```" + queue[message.guild.id].songs + "```, and has " + queue[message.guild.id].songs.length + " songs.");
-	}
-
 	const voiceChannel = message.member.voiceChannel;
 
 	if (!voiceChannel) {
-		//Debugging information.
-		if (debug) {
-			message.channel.send(":page_facing_up: **DEBUG:** User *" + message.author + "* wasn't found in a voice channel.");
-		}
-
-		bot.doNotDelete = false;
 		message.reply(":no_entry_sign: **ERROR:** You aren't currently in a voice channel.");
-		message.delete ();
+		message.delete();
 		return;
 	}
 	voiceChannel.join()
@@ -58,7 +41,6 @@ if (maintenance.developerMode == true) {
 
 			if (voiceChannel.members.size < 3 || skipCount < 2) {
 				if (usersVotedSkip.includes(message.author.id)) {
-					bot.doNotDelete = false;
 					message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
 					return;
 				}
@@ -100,13 +82,18 @@ if (maintenance.developerMode == true) {
 			if (queue[message.guild.id] === undefined) return message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
 					let tosend = [];
 					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - Requested by: ${song.requester}`);});
-					message.channel.send(`__**${message.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
+					const embed = new Discord.MessageEmbed()
+						.setAuthor('ǫᴜᴇᴜᴇ » ')
+						if (tosend == [] || tosend.length < 1) {
+						embed.addField("Queued Songs", "There are no songs in the queue.")
+					} else {
+						embed.addField("Queued Songs", tosend.slice(0,15).join('\n'))
+					}
+						embed.setColor("#b3cc39")
+						embed.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
+					message.channel.send({ embed })
 		} else if (music == "next") {
 			if (queue == "") {
-				//Debugging information.
-				if (debug) {
-					message.channel.send(":page_facing_up: **DEBUG:** __queue__ is " + queue + ".");
-				}
 				message.channel.send(":no_entry_sign: **ERROR:** There are no songs that are next.");
 				return;
 			}
@@ -126,23 +113,13 @@ if (maintenance.developerMode == true) {
 			}
 			return;
 		} else if (music == "end") {
-			if (voiceChannel.members.size < 3 || message.member.roles.find("name", "Fleece Police")) {
-				//Debugging information.
-				if (debug) {
-					message.channel.send(":page_facing_up: **DEBUG:** " + message.author + " cleared the queue.");
-				}
-
-				queue[message.guild.id] = [];
+			if (voiceChannel.members.size < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+				queue[message.guild.id].songs = [];
 				musicEnd = true;
 				voiceChannel.leave();
 				message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
 				return;
 			} else {
-				//Debugging information.
-				if (debug) {
-					message.channel.send(":page_facing_up: **DEBUG:** " + message.author + " is in " + voiceChannel.name + ", which currently has " + voiceChannel.members.size + " members in it. They are not permitted to clear the queue.");
-				}
-
 				message.reply(":no_entry_sign: **NOPE:** You can't do that, there are other people in this channel listening to the music!");
 				return;
 			}
@@ -151,11 +128,10 @@ if (maintenance.developerMode == true) {
 		if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
 			yt.getInfo(music, (err, info) => {
 				if (err) {
-					message.reply(":no_entry_sign: **ERROR:** I couldn't find the video that you specified.");
-					dispatcher.end();
+					message.reply(":no_entry_sign: **ERROR:** I couldn't find the video that you specified. Make sure it's a valid **YouTube link** and try again.");
 					return;
 				}
-			if (firstSong || queue[message.guild.id].songs.length < 1) {
+			if (firstSong) {
 				firstSong = false;
 				let song = {url: music, title: info.title, requester: message.author.username}
 				queueMusic(song)
@@ -165,7 +141,12 @@ if (maintenance.developerMode == true) {
 			console.log(colors.bgYellow("▲ There is a song already playing."));
 					if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 					queue[message.guild.id].songs.push({url: music, title: info.title, requester: message.author.username});
-					message.channel.send(":white_check_mark: **OK:** I've added **" + info.title + "** into the queue.");
+					const embed = new Discord.MessageEmbed()
+						.setAuthor('ᴍᴜꜱɪᴄ ᴀᴅᴅᴇᴅ » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
+						.setDescription(":white_check_mark: **OK:** I've added **" + info.title + "** into the queue.")
+						.setColor("#b3cc39")
+						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
+					message.channel.send({ embed })
 					console.log(queue[message.guild.id].songs)
 			return;
 			}
@@ -174,27 +155,20 @@ if (maintenance.developerMode == true) {
 
 		function queueMusic(song) {
 			queue[message.guild.id].playing = true;
-			console.log("song = " + song)
-			//Debugging information.
-			if (debug) {
-				message.channel.send(":page_facing_up: **DEBUG:** In function __queueMusic__, checking for commands...");
-			}
+			console.log("song = " + song.title)
 
-			if (music !== "skip" && music !== "queue" && music !== "next" && music !== "repeat" && music !== "end") {
-				//Debugging information.
-				if (debug) {
-					message.channel.send(":page_facing_up: **DEBUG:** __music__ is not equal to any of the available commands, setting __currentSong__ to __queue__.");
-				}
 				if (songRepeat == true) {
 					currentSong = currentSong;
 				} else {
 					currentSong = song.url;
 				}
-			}
 
-			if (bot.npEnabled == true) {
-					console.log("Now playing " + song.url)
-					message.channel.send(":headphones: **NOW PLAYING:** " + song.title);
+			if (Settings.getValue(message.guild, "musicNPModule") == true) {
+				const embed = new Discord.MessageEmbed()
+					.addField('ᴍᴜꜱɪᴄ ᴘʟᴀʏɪɴɢ', ":headphones: **" + song.title + "** is now playing.", true)
+					.setColor("#39cc45")
+					.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
+				message.channel.send({ embed })
 			}
 
 			const streamOptions = {
@@ -208,26 +182,15 @@ if (maintenance.developerMode == true) {
 			const dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
 
 			dispatcher.on('end', () => {
-				if (queue == "" && songRepeat == false) {
-					//Debugging information.
-					if (debug) {
-						message.channel.send(":page_facing_up: **DEBUG:** Queue is empty and repeat is off.");
-					}
-					musicEnd = true;
-				}
-
 				if (musicEnd == false) {
-					//Debugging information.
-					if (debug) {
-						message.channel.send(":page_facing_up: **DEBUG:** Playing the next song in the queue, " + queue[message.guild.id].songs + ".");
-					}
-					let nextSong = queue[message.guild.id].songs.shift();
+					var nextSong = queue[message.guild.id].songs.shift();
 					console.log(nextSong)
 
 					if (nextSong == undefined) {
 						console.log("Music ended.");
 						message.channel.send(":mute: The queue is empty.");
 						queue[message.guild.id].playing = false;
+						firstSong = true
 						dispatcher.end();
 						voiceChannel.leave();
 						return;
@@ -241,6 +204,7 @@ if (maintenance.developerMode == true) {
 	message.delete ();
 	return;
 }
+
 
 let command = 'music'
 , description = 'Music player that can play YouTube videos.'
