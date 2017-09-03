@@ -3,7 +3,6 @@ const Settings = require('./../structures/general/Settings.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
-const cancel = require('./cancel.js')
 var colors = require('colors');
 
 var kickReason = {};
@@ -18,7 +17,7 @@ exports.run = (client, message, args) => {
 		kickMember = kickMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
 		kickConfirm = false;
-		message.guild.fetchMember(kickMember).then(function (member) {
+		message.guild.members.fetch(kickMember).then(function (member) {
 			//Write kick information to .csv file
 			var writer = csvWriter({
 				headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
@@ -110,7 +109,7 @@ exports.run = (client, message, args) => {
 			kickReason = kick;
 		}
 
-		message.guild.fetchMember(args.split(" ").toString()).then(function (member) {
+		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			kickMember = member;
 		if (kickMember.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t kick other moderators.');

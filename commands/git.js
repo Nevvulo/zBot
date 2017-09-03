@@ -31,7 +31,7 @@ exports.run = (client, message, args) => {
 		.addField('zBot Version', version, true)
 		.addField('Latest Commit', commitTitle, true)
 		.setColor(0x00FF00)
-		.setFooter('zBot - Derived from AstralMod v1, heavily modified by zBlake.')
+		.setFooter('zBot - GitHub information')
 		.setTimestamp()
 	message.channel.send({ embed })
 	});

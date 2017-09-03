@@ -15,10 +15,6 @@ class Version {
 		if (zBot.version !== undefined) return zBot.version
 	}
 
-	static async getLatestCommit() {
-
-	}
-
 	static getGitHubLink() {
 		return "https://www.github.com/zBlakee/zBot/";
 	}

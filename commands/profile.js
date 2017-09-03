@@ -13,8 +13,6 @@ sql.open('./data/user/userData.sqlite');
 
 
 exports.run = (client, message, args) => {
-	let slots = JSON.parse(fs.readFileSync('./slots.json', 'utf8'));
-
 	args = args.toString();
 	if (args == "") {
 		args = message.author.id;
@@ -24,17 +22,6 @@ exports.run = (client, message, args) => {
 
 	message.guild.members.fetch(args).then(function (member) {
 	let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
-
-	// if the user has no badges, init to false.
-		if (!slots[member.id])
-			slots[member.id] = {
-				slot1: "empty",
-				slot2: "empty",
-				slot3: "empty",
-				slot4: "empty",
-				slot5: "empty",
-				slot6: "empty"
-			};
 
 	// if the user has no badges, init to false.
 	if (!badgesP[member.id])
@@ -48,7 +35,6 @@ exports.run = (client, message, args) => {
 sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(rows => {
 	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
 		async function drawStats() {
-			var uSlot = slots[member.id];
 			message.delete ();
 
 			//Fix error with late promise
@@ -73,7 +59,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				family: 'Viga'
 			}) // eslint-disable-line max-len
 			const Image = Canvas.Image;
-			
+
 			var color=-25;
 			function texter(str, x, y){
 			  for(var i = 0; i <= str.length; ++i){

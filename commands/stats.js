@@ -12,35 +12,10 @@ sql.open('./data/user/userData.sqlite');
 
 exports.run = (client, message, args) => {
 	args = args.toString();
-
-	//USERNAME/MENTION SYSTEM
 	if (args == "") {
 		args = message.author.id;
 	} else {
-		function getUserID(user) {
-			var u = user;
-			if (user.user != null) {
-				u = user.user;
-			}
-			return u.id;
-		}
-
-		args = args.replace(",", " ").replace(",", " ").replace(",", " ").toString();
-
-		if (!args.includes("<")) {
-			var foundUsers = client.users.findAll("username", args);
-			if (foundUsers.length == 0) {
-				message.channel.send(':no_entry_sign: **ERROR:** Couldn\'t find anyone with that username. You might want to try again.');
-				return;
-			} else {
-				for (let user of foundUsers) {
-					args = getUserID(user);
-				}
-			}
-		} else {
-			args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-			console.log("Username not provided for arguments.");
-		}
+		args = Find.getMember(args, message.guild).shift().id
 	}
 
 	message.guild.members.fetch(args).then(function (member) {
