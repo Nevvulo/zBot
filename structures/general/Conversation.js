@@ -3,6 +3,7 @@ const events = require('events');
 const commandEmitter = new events.EventEmitter();
 const colors = require('colors');
 const Cleverbot = require('cleverbot');
+const api = require('./../../data/main/keys/keys.js')
 
 function newMessage(message) {
   var msg = message.content;
@@ -14,7 +15,7 @@ function newMessage(message) {
 		// If the message content starts with a mention to zBot, execute conversation code.
 		if (message.mentions.users.has(client.user.id)) {
       let clev = new Cleverbot({
-        key: 'CC3uiABdbt8rybKAicAPK7FuoSw'
+        key: api.cleverbot()
       });
 
       clev.query(conversationMessage)

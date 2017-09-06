@@ -17,7 +17,7 @@ var general = "config\ncopyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\nping\
 var social = "profile\nstats\nequip\nleaderboard"
 var misc = "git\nitems\npfp\nisay\ngraph\nmath\ndog\ncat"
 var fun = "ship\nmerge\nchallenge\n8ball"
-var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nsay\nfind\ncancel\nfilter"
+var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nkick\nsay\nfind\nfilter"
 
 embed.setAuthor("zBot • Help • version " + Version.getVersionNumber() + " »  ", client.user.avatarURL( {format: 'png' }));
 embed.setColor("#42aab2");

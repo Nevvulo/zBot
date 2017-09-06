@@ -31,6 +31,8 @@ const moment = require('moment');
 const commandEmitter = new events.EventEmitter();
 const gitCommits = require('git-commits');
 const path = require('path');
+const blessed = require('blessed')
+const readline = require('readline');
 
 global.logType = {
     debug: 0,
@@ -69,8 +71,12 @@ global.log = function(logMessage, type = logType.debug) {
 						logString = colors.green(logMessage);
             logFormatting = colors.bgGreen(colors.black("[ SUCCESS ]"));
             break;
+        default:
+            logString = logMessage;
+            logFormatting = ""
     }
-    console.log(logFormatting, logString);
+    logBox.log(logFormatting, logString)
+    //console.log(logFormatting, logString);
 }
 
 //Maintenance check
@@ -110,8 +116,11 @@ var currentChannel = "";
 
 //Misc.
 var userAFK = [];
-var lockBox = [];
+var recentErrors = [];
+var previousMessages = [];
 var commandHistory = [];
+var lockBox = [];
+var version = 0
 
 //Moderation
 var doNotDelete = false;
@@ -135,8 +144,9 @@ async function setGame() {
 
 }
 
+
 client.on('ready', () => {
-	log("> zBot is now online!", logType.success)
+	//log("> zBot is now online!", logType.success)
 	client.setInterval(setGame, 300000);
 	setGame();
   client.setInterval(function(){Settings.saveConfig()}, 300000);
@@ -151,29 +161,231 @@ client.on('ready', () => {
   }).on('error', function(err) {
     throw err;
   }).on('end', function() {
-    exports.version = commitArray.length.toString().split('').join('.');
+    version = commitArray.length.toString().split('').join('.');
+    exports.version = version
   });
 });
-    	main();
-    	function main(){
-      var chartData = [];
-      client.setInterval(function(){
-        var randomPrice = (Math.random()*10.25) +1.25;
-        chartData.push(randomPrice);
-        if(chartData.length > 50){
-         chartData.splice(0, 1);
-        }
-        exports.chartData = chartData
-      },50 );
+
+
+
+
+  //Set up screen
+  var screen = blessed.screen({
+      smartCSR: true,
+      dockBorders: true
+  });
+  screen.title = 'zBot ' + version;
+
+  var titleBox = blessed.text({
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "1",
+      content: "zBot version " + version + " - Console",
+      tags: true,
+      style: {
+          fg: 'black',
+          bg: 'white'
+      },
+      padding: {
+          left: 1
+      }
+  });
+  screen.append(titleBox);
+
+  var logBox = blessed.log({
+      top: 1,
+      left: 0,
+      width: "100%",
+      height: "100%-4",
+      tags: true,
+      style: {
+          fg: 'white',
+          bg: 'black',
+          scrollbar: {
+              bg: 'white'
+          }
+      },
+      padding: {
+          left: 1 // ,
+          // bottom: 2
+      },
+      scrollable: true,
+      mouse: true,
+      alwaysScroll: true,
+      scrollOnInput: true,
+      scrollbar: true //,
+      //clickable: true
+  });
+  screen.append(logBox);
+
+  var textBox = blessed.textbox({
+      top: "100%-3",
+      left: -1,
+      width: "100%+2",
+      height: 3,
+      tags: true,
+      value: "",
+      border: {
+          type: "line"
+      },
+      style: {
+          fg: 'white',
+          bg: 'black',
+          border: {
+              fg: 'white',
+              bg: 'black'
+          }
+      },
+      inputOnFocus: true
+  });
+  screen.append(textBox);
+
+  var keyBox = blessed.box({
+      top: "100%-1",
+      left: "0",
+      width: "100%",
+      height: 1,
+      tags: true,
+      style: {
+          fg: 'black',
+          bg: 'white'
+      },
+      padding: {
+          left: 1
+      }
+  });
+  screen.append(keyBox);
+
+  function clearBoxes() {
+      while (lockBox.length > 0) {
+          var box = lockBox.pop();
+          box.hide();
+          box.destroy();
+      }
+
   }
 
-process.stdin.resume();
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', processConsoleInput);
+  screen.key('C-c', function() {
+      shutdown();
+  });
+
+  screen.key('up', function() {
+      logBox.scroll(-1);
+      renderScreen();
+  });
+
+
+  screen.on('keypress', function(key) {
+      if (lockBox.length != 0) {
+          clearBoxes();
+      } else if (key != undefined && !textBox.focused && key != "\r") {
+          showTextBox();
+
+          if (key != ":") {
+              textBox.setValue("" + key);
+          }
+      }
+  });
+
+  screen.key('pageup', function() {
+      logBox.scroll(-logBox.height);
+      renderScreen();
+  });
+
+  screen.key('down', function() {
+      logBox.scroll(1);
+      renderScreen();
+  });
+
+  screen.key('pagedown', function() {
+      logBox.scroll(logBox.height);
+      renderScreen();
+  });
+
+  function showTextBox() {
+      logBox.height = "100%-4";
+      keyBox.content = "ESC Cancel Command   ENTER Issue Command";
+      textBox.show();
+      textBox.focus();
+
+      renderScreen();
+  }
+
+  var currentHistoryEntry = -1;
+
+  function hideTextBox() {
+      textBox.setValue("");
+      logBox.height = "100%-2";
+      keyBox.content = "^C Exit";
+      textBox.hide();
+      logBox.focus();
+
+      currentHistoryEntry = -1;
+
+      renderScreen();
+  }
+
+  textBox.key("enter", function() {
+    processConsoleInput(textBox.value)
+    textBox.setValue("");
+    hideTextBox();
+    hideTextBox();
+  });
+
+  textBox.key("up", function() {
+      currentHistoryEntry++;
+      if (commandHistory[currentHistoryEntry] != null) {
+          textBox.setValue(commandHistory[currentHistoryEntry]);
+      } else {
+          currentHistoryEntry = -1;
+          textBox.setValue("");
+      }
+      renderScreen();
+  });
+
+  textBox.key("down", function() {
+      currentHistoryEntry--
+      if (commandHistory[currentHistoryEntry] != null) {
+          textBox.setValue(commandHistory[currentHistoryEntry]);
+      } else {
+          currentHistoryEntry = -1;
+          textBox.setValue("");
+      }
+      renderScreen();
+  });
+
+  textBox.on("cancel", function() {
+      hideTextBox();
+  });
+
+  function renderScreen() {
+      screen.render();
+  }
+
+  renderScreen();
+  hideTextBox();
+
+
+
+  var stdinInterface = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: false
+  });
+
+
+
+
+
+
+
+
+
 
 function processConsoleInput(line) {
+  var text = line;
     commandHistory.unshift(line);
-    	text = line.trim();
     	currentGuild = client.guilds.last(); //because zBot is only connected to 1 guild
     	switch (text) {
     		case "stop":
@@ -206,12 +418,40 @@ function processConsoleInput(line) {
     			if (currentChannel != "") {
     				currentChannel.send(sudoCommand);
     			}
-    		}
+    		} else if (text.startsWith("errors")) {
+          if (recentErrors.length < 1) {
+            logBox.log("No errors have been logged.")
+          }
+          for (i in recentErrors) {
+          for (let i=0; i < 3; i++) {
+    			logBox.log(previousMessages[i])
+        }
+        logBox.log(recentErrors[i])
+        }
+      } else if (text.startsWith("throw")) {
+          new TypeError(text.substr(6))
+        }
     	}
+}
+
+function shutdown() {
+    if (Settings !== null) {
+        log("Saving settings...");
+        try {
+            Settings.saveConfig()
+            log("Settings saved!", logType.success);
+        } catch (exception) {
+            log("Settings couldn't be saved. You may lose some settings.", logType.critical);
+        }
+    }
+
+    log("Now exiting zBot.", logType.success);
+    process.exit(0);
 }
 
 
 function messageChecker(oldMessage, newMessage) {
+  renderScreen();
 	var message;
 
 	if (newMessage == null) {
@@ -220,9 +460,7 @@ function messageChecker(oldMessage, newMessage) {
 		message = newMessage;
 	}
 	var msg = message.content;
-
   commandEmitter.emit('newMessage', message);
-
 	exports.userAFK = userAFK;
 	if (message.mentions.users.size > 0 && message.author.bot == false) {
 		if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
@@ -233,6 +471,16 @@ function messageChecker(oldMessage, newMessage) {
 			});
 		}
 	} else {}
+  if (message.author.bot) return;
+  if (previousMessages.length > 3) {
+    previousMessages.shift()
+  }
+  previousMessages.push(colors.gray("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg)))
+
+
+  	if (message.author.id !== 303017211457568778 && !message.author.bot && message.channel.type !== 'dm') {
+      	logBox.log("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg));
+  		}
 
 	// If panicMode has no value, init to false.
 	if (panicMode.enabled == undefined) {
@@ -243,10 +491,6 @@ function messageChecker(oldMessage, newMessage) {
 	if (panicMode.enabled) {
 		message.delete();
 	}
-
-	if (message.author.id !== 303017211457568778 && !message.author.bot && message.channel.type !== 'dm') {
-    	console.log(colors.gray("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg)));
-		}
 
   }
 // END OF MESSAGE Function
@@ -346,9 +590,10 @@ client.on('guildMemberRemove', function(guildMember) {
 });
 
 client.on('messageDelete', function(message) {
-  if (`${Date.now() - message.createdTimestamp}` < 1900) return;
+  if (`${Date.now() - message.createdTimestamp}` < 2000) return;
 	if (message.content.startsWith(Settings.getValue(message.guild, "prefix"))) return;
   if (message.author.bot) return;
+  if (message.cleanContent.length > 1023) return;
   if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
       channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
   } else {
@@ -397,6 +642,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
   if (oldMessageContent == "" || oldMessageContent == null) {
     oldMessageContent = "*No message was provided.*";
   }
+  if (oldMessage.cleanContent.length > 1023 || newMessage.cleanContent.length > 1023) return;
 	var channel = null;
 	if (oldMessage.guild != null) {
     if (client.channels.has(Settings.getValue(oldMessage.guild, "modLogsChannel"))) {
@@ -428,6 +674,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 
 process.on("unhandledRejection", err => {
 	log("[UNCAUGHT PROMISE] " + err.stack, logType.critical);
+  recentErrors.push(log("[UNCAUGHT PROMISE] " + err.stack, logType.critical))
 });
 
 if (process.argv[2] == "--beta") {
