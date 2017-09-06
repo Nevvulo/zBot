@@ -24,7 +24,6 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 	if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 	const searchString = args.slice(0).join(' ');
 	const url = args[0] ? args[0].replace(/<(.+)>/g, '$1') : '';
-	console.log(url)
 	const voiceChannel = message.member.voiceChannel;
 
 	if (!voiceChannel) {
@@ -50,8 +49,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 				skipCount = 3
 					yt.getInfo(currentSong, function (err, info) {
 						message.channel.send(":white_check_mark: **OK:** " + message.author + " skipped **" + info.title + "**.").then(() => {
-							var nextSong = queue[message.guild.id].songs.shift();
-							queueMusic(nextSong);
+							message.guild.voiceConnection.dispatcher.end("Skip")
 						});
 					});
 				return;
@@ -84,13 +82,12 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 		} else if (url == "queue") {
 			if (queue[message.guild.id] === undefined) return message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
 					let tosend = [];
-					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - Requested by: ${song.requester}`);});
+					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. **${song.title}**  ■  *Requested by ${song.requester}*`);});
 					const embed = new Discord.MessageEmbed()
-						.setAuthor('ǫᴜᴇᴜᴇ » ')
 						if (tosend == [] || tosend.length < 1) {
 						embed.addField("Queued Songs", "There are no songs in the queue.")
 					} else {
-						embed.addField("Queued Songs", tosend.slice(0,15).join('\n'))
+						embed.addField("Queued Songs", tosend.slice(0,5).join('\n'))
 					}
 						embed.setColor("#b3cc39")
 						embed.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
@@ -109,7 +106,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 				message.channel.send(":repeat_one: Repeat is now turned off.");
 			} else {
 				yt.getInfo(currentSong, function (err, info) {
-					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `+music repeat` again to toggle off.");
+					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" + Settings.getValue(message.guild, "prefix") + "music repeat` again to toggle off.");
 					message.delete ();
 					songRepeat = true;
 				});
@@ -119,7 +116,9 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 			if (voiceChannel.members.size < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				queue[message.guild.id].songs = [];
 				musicEnd = true;
+				message.guild.voiceConnection.dispatcher.end("End")
 				voiceChannel.leave();
+				firstSong = true;
 				message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
 				return;
 			} else {
@@ -131,14 +130,38 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 		async function results() {
 		if (url !== "skip" && url !== "queue" && url !== "next" && url !== "repeat" && url !== "end") {
 			try {
+				//First check to see if arguments are a URL
 				var video = await youtube.getVideo(url);
 			} catch (error) {
 			try {
+				//If not a URL, perform search
 				var videos = await youtube.searchVideos(searchString, 1);
 				var video = await youtube.getVideoByID(videos[0].id);
 			} catch (err) {
-				console.error(err);
-				return message.channel.send(':no_entry_sign: **ERROR**: I could not obtain any search results.');
+				try {
+					//If search fails, check for a playlist
+					var playlist = await youtube.getPlaylist(url);
+					var video = await playlist.getVideos()
+
+					let song = {url: `https://www.youtube.com/watch?v=${video[0].id}`, title: video[0].title, requester: message.author.username}
+					queueMusic(song)
+
+					for (let i=1; i < video.length; i++) {
+						if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
+						queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video[i].id}`, title: video[i].title, requester: message.author.username});
+					}
+					const embed = new Discord.MessageEmbed()
+						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
+						.setDescription(":white_check_mark: **OK:** I've added the playlist **" + playlist.title + "** into the queue.")
+						.setColor("#b3cc39")
+						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
+					message.channel.send({ embed })
+					return;
+				} catch (err) {
+					//If all else fails, throw an error.
+					log(err, logType.critical)
+					return message.reply(":no_entry_sign: **ERROR**: I couldn't obtain any search results.");
+				}
 			}
 			}
 
@@ -150,16 +173,14 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 			}
 
 			if (queue[message.guild.id].playing || queue[message.guild.id].songs.length > 0) {
-			console.log(colors.bgYellow("▲ There is a song already playing."));
 					if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 					queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video.id}`, title: video.title, requester: message.author.username});
 					const embed = new Discord.MessageEmbed()
-						.setAuthor('ᴍᴜꜱɪᴄ ᴀᴅᴅᴇᴅ » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
+						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
 						.setDescription(":white_check_mark: **OK:** I've added **" + video.title + "** into the queue.")
 						.setColor("#b3cc39")
 						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 					message.channel.send({ embed })
-					console.log(queue[message.guild.id].songs)
 			return;
 			}
 		}
@@ -168,7 +189,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 		function queueMusic(song) {
 			queue[message.guild.id].playing = true;
-			console.log("song = " + song.title)
+			log("Playing song " + song.title + " in " + message.guild.name + ".", logType.info)
 
 				if (songRepeat == true) {
 					currentSong = currentSong;
@@ -178,7 +199,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 			if (Settings.getValue(message.guild, "musicNPModule") == true) {
 				const embed = new Discord.MessageEmbed()
-					.addField('ᴍᴜꜱɪᴄ ᴘʟᴀʏɪɴɢ', ":headphones: **" + song.title + "** is now playing.", true)
+					.addField('Music Playing', ":headphones: **" + song.title + "** is now playing.", true)
 					.setColor("#39cc45")
 					.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 				message.channel.send({ embed })
@@ -195,11 +216,14 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 			const dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
 
 			dispatcher.on('end', () => {
-				if (musicEnd == false) {
+					if (songRepeat == true) {
+						var nextSong = queue[message.guild.id].songs[0];
+						queueMusic(nextSong);
+						return;
+						}
 					var nextSong = queue[message.guild.id].songs.shift();
-					console.log(nextSong)
 					if (nextSong == undefined) {
-						console.log("Music ended.");
+						log("Music ended in " + message.guild.name + ".", logType.info);
 						message.channel.send(":mute: The queue is empty.");
 						queue[message.guild.id].playing = false;
 						firstSong = true
@@ -208,7 +232,6 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 						return;
 					}
 					queueMusic(nextSong);
-				}
 			});
 		}
 
