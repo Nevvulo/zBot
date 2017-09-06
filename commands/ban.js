@@ -3,96 +3,14 @@ const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
 const Settings = require('./../structures/general/Settings.js');
+const Punish = require('./../structures/moderation/HandlePunish.js');
 var colors = require('colors');
 
-var banReason = {};
-var banMember = null;
-var banConfirm = false;
+let reason = {};
+var answered = false;
 
 exports.run = (client, message, args) => {
 	message.delete();
-
-	if (banConfirm == true) {
-
-		banMember = banMember.toString();
-		banMember = banMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
-console.log(banMember)
-		banConfirm = false;
-		message.guild.members.fetch(banMember).then(function (member) {
-			//Write ban information to .csv file
-			var writer = csvWriter({
-				headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
-				sendHeaders: false
-			})
-			writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
-				flags: 'a'
-			}))
-			writer.write([message.guild.id, member.id, new Date(), "Ban", message.author.username, banReason])
-			writer.end()
-			console.log(colors.green("* Successfully wrote ban for user '" + colors.underline(member.displayName) + "' to CSV file."));
-
-			if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
-								channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
-						} else {
-								log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
-						}
-			const embed = new Discord.MessageEmbed()
-			channel.send({
-				embed: {
-					color: 11475996,
-					author: {
-						name: "ʙᴀɴ »  " + member.user.tag,
-						icon_url: member.user.avatarURL({
-							format: 'png'
-						})
-					},
-					description: ":warning: <@" + member.id + "> has been banned.\n",
-					fields: [{
-							name: '**User**',
-							value: "<@" + member.id + ">"
-						},
-						{
-							name: '**Moderator**',
-							value: "<@" + message.author.id + ">"
-						},
-						{
-							name: '**Reason**',
-							value: banReason
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-
-			member.send({
-				embed: {
-					color: 11475996,
-					author: {
-						name: "ʙᴀɴ »  " + member.user.tag,
-						icon_url: member.user.avatarURL({
-							format: 'png'
-						})
-					},
-					description: ":warning: You have been banned on " + message.guild.name + ".\n",
-					fields: [{
-							name: '**Reason**',
-							value: banReason
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-
-			message.channel.send(":white_check_mark: " + member.displayName + " was successfully banned.");
-			message.guild.ban(banMember, 7, banReason);
-			banMember = null;
-
-		});
-		return;
-	}
-
-	doNotDelete = true;
-		doNotDelete = true;
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
@@ -107,40 +25,66 @@ console.log(banMember)
 			}
 			ban = ban.replace(argsArray[0], "");
 			ban = ban.trim();
-			banReason = ban;
+			reason = ban;
 		}
 
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
-			banMember = member;
-			if (banMember.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS") || member.bannable == false) return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to ban this person. Make sure I have the `BAN_MEMBERS` permission.")
+
+			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t ban other moderators.');
 			} else {
 				if (ban == ("")) {
 					message.reply(':no_entry_sign: **NOPE:** You are banning **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are banning them.');
 				} else {
-					banConfirm = true;
-					message.reply(':oncoming_police_car: You are about to ban **' + member.displayName + '** for *' + ban + '*.\n:no_entry: **Bans are only meant to be issued under serious circumstances, and if used incorrectly will lead to consequences.**\nTo confirm, type in `+ban`, or type in `+cancel` to cancel this operation.');
-				}
-			}
-		}).catch(function (reason) {
-			if (banConfirm == false && banMember == null || ("") || undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See +help for more information.');
-				message.delete();
+
+			const filter = m => m.author == message.author;
+			message.channel.awaitMessages(filter, { max: 1, time: 15000, errors: ['time'] })
+			.then(collected => {
+				console.log(collected.first().content)
+				if (collected.first().content.startsWith('y')) {
+				answered = true;
+				message.channel.send(":white_check_mark: **OK**: **" + member.displayName + "** was successfully banned.")
+				Punish.performPunish(message.guild, "ban", message.author, member, reason)
 				return;
 			}
-			switch (Math.floor(Math.random() * 1000) % 4) {
-			case 0:
-				message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
-				break;
-			case 1:
-				message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
-				break;
-			case 2:
-				message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
-				break;
-			case 3:
-				message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
-				break;
+				if (collected.first().content.startsWith('n')) {
+				answered = true;
+				message.channel.send(":white_check_mark: **OK**: I won't ban **" + member.displayName + "**.")
+				return;
+			}
+			})
+			.catch(collected => {
+				if (answered === false) {
+					message.channel.send(":large_orange_diamond: **OK**: The ban against **" + member.displayName + "** won't be completed because you didn't reply with an answer in time.");
+					return;
+				} else {
+
+				}
+			});
+
+			confirmPunish();
+			async function confirmPunish() {
+			var amount = await Punish.getPunishments(message.guild, member, "ban");
+			message.channel.send(":gear: **BAN**: Are you sure you want to issue this ban against **" + member.displayName + "**? *(__y__es | __n__o)*")
+			const embed = new Discord.MessageEmbed()
+			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
+			embed.addField("Reason", reason)
+			embed.setColor("#b3cc39")
+			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
+			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
+		message.channel.send({ embed })
+	}
+
+			}
+			}
+		}).catch(function (reason) {
+			if (args == "" || args == undefined) {
+				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See `' + Settings.getValue(message.guild, "prefix") +'help ban` for more information.');
+				message.delete();
+				return;
+			} else {
+				throw reason;
 			}
 		});
 }

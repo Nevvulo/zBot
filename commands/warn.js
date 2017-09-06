@@ -3,149 +3,88 @@ const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
 const Settings = require('./../structures/general/Settings.js');
+const Punish = require('./../structures/moderation/HandlePunish.js');
 var colors = require('colors');
-var warnMember = "";
+
+let reason = {};
+var answered = false;
 
 exports.run = (client, message, args) => {
-		doNotDelete = true;
+	message.delete();
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
 		//Grab command and remove user argument to get reason
-		var warning = "";
+		var warn = "";
 		var argsArray = message.content.split(" ").slice(1);
 		var arrayLength = argsArray.length;
 
 		if (arrayLength > 1) {
 			for (let i = 0; i < arrayLength; i++) {
-				warning = (warning + argsArray[i] + " ");
+				warn = (warn + argsArray[i] + " ");
 			}
-			warning = warning.replace(argsArray[0], "");
-			warning = warning.trim();
-			warnReason = warning;
+			warn = warn.replace(argsArray[0], "");
+			warn = warn.trim();
+			reason = warn;
 		}
 
-		message.guild.members.fetch(args.split(" ").toString()).then(function(member) {
-			// Init variables
-			let warnReason = warning;
-			warnMember = member;
-			let warningCount = 0;
-
-			warnMember = warnMember.toString();
-			warnMember = warnMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").toString();
-
+		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t warn other moderators.');
 			} else {
-				if (warning == ("")) {
-					message.reply(':no_entry_sign: **NOPE:** You are warning **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are giving the warning.');
+				if (warn == ("")) {
+					message.reply(':no_entry_sign: **NOPE:** You are warning **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are warning them.');
 				} else {
-					const rl = readline.createInterface({
-						input: fs.createReadStream('./data/punishment/Punishment Tracker.csv')
-						//Retrieve warning count info early so that it is ready to use when the user confirms the warn.
-					});
 
-					rl.on('line', function(line) {
-						if (line.includes("Warning") && line.includes(member.id)) {
-							warningCount = warningCount + 1
-						}
-					});
-					console.log(warnMember)
-					message.guild.members.fetch(warnMember).then(function(member) {
-
-						//Write warning information to .csv file
-						var writer = csvWriter({
-							headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
-							sendHeaders: false
-						})
-						writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
-							flags: 'a'
-						}))
-						writer.write([message.guild.id, member.id, new Date(), "Warning", message.author.username, warnReason])
-						writer.end()
-						console.log(colors.green("* Successfully wrote warning for user '" + colors.underline(member.displayName) + "' to CSV file."));
-
-						if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
-								channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
-						} else {
-								log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
-						}
-						const embed = new Discord.MessageEmbed()
-						channel.send({
-							embed: {
-								color: 15056925,
-								author: {
-									name: "ᴡᴀʀɴɪɴɢ »  " + member.user.tag,
-									icon_url: member.user.avatarURL({
-										format: 'png'
-									})
-								},
-								description: ":warning: <@" + member.id + "> has received a warning.\n",
-								fields: [{
-										name: '**User**',
-										value: "<@" + member.id + ">"
-									},
-									{
-										name: '**Moderator**',
-										value: "<@" + message.author.id + ">"
-									},
-									{
-										name: '**Reason**',
-										value: warnReason
-									}
-								],
-								timestamp: new Date()
-							}
-						});
-
-						member.send({
-							embed: {
-								color: 15056925,
-								author: {
-									name: "ᴡᴀʀɴɪɴɢ »  " + member.user.tag,
-									icon_url: member.user.avatarURL({
-										format: 'png'
-									})
-								},
-								description: ":warning: You have received a warning on " + message.guild.name + ".\n",
-								fields: [{
-									name: '**Reason**',
-									value: warnReason
-								}],
-								timestamp: new Date()
-							}
-						});
-
-						message.channel.send(":white_check_mark: **" + member + "** was successfully warned.");
-					});
-					return;
-				}
-			}
-		}).catch(function(reason) {
-
-			if (warnMember == null) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See +help for more information.');
-				message.delete();
+			const filter = m => m.author == message.author;
+			message.channel.awaitMessages(filter, { max: 1, time: 15000, errors: ['time'] })
+			.then(collected => {
+				console.log(collected.first().content)
+				if (collected.first().content.startsWith('y')) {
+				answered = true;
+				message.channel.send(":white_check_mark: **OK**: **" + member.displayName + "** was successfully warned.")
+				Punish.performPunish(message.guild, "warn", message.author, member, reason)
 				return;
 			}
-			console.log(reason);
-			switch (Math.floor(Math.random() * 1000) % 4) {
-				case 0:
-					message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
-					break;
-				case 1:
-					message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
-					break;
-				case 2:
-					message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
-					break;
-				case 3:
-					message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
-					break;
+				if (collected.first().content.startsWith('n')) {
+				answered = true;
+				message.channel.send(":white_check_mark: **OK**: I won't warn **" + member.displayName + "**.")
+				return;
+			}
+			})
+			.catch(collected => {
+				if (answered === false) {
+					message.channel.send(":large_orange_diamond: **OK**: The warning against **" + member.displayName + "** won't be completed because you didn't reply with an answer in time.");
+					return;
+				} else {
+
+				}
+			});
+
+			confirmPunish();
+			async function confirmPunish() {
+			var amount = await Punish.getPunishments(message.guild, member, "warn");
+			message.channel.send(":gear: **WARN**: Are you sure you want to issue this warn against **" + member.displayName + "**? *(__y__es | __n__o)*")
+			const embed = new Discord.MessageEmbed()
+			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
+			embed.addField("Reason", reason)
+			embed.setColor("#b3cc39")
+			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
+			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
+		message.channel.send({ embed })
+	}
+
+			}
+			}
+		}).catch(function (reason) {
+			if (args == "" || args == undefined) {
+				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See `' + Settings.getValue(message.guild, "prefix") +'help warn` for more information.');
+				message.delete();
+				return;
+			} else {
+				throw reason;
 			}
 		});
-
-	message.delete();
 }
 
 let command = 'warn'

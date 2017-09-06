@@ -1,97 +1,16 @@
 const Discord = require('discord.js');
-const Settings = require('./../structures/general/Settings.js');
 const fs = require('fs');
 const readline = require('readline');
 const csvWriter = require('csv-write-stream');
+const Settings = require('./../structures/general/Settings.js');
+const Punish = require('./../structures/moderation/HandlePunish.js');
 var colors = require('colors');
 
-var kickReason = {};
-var kickMember = null;
-var kickConfirm = false;
+let reason = {};
+var answered = false;
 
 exports.run = (client, message, args) => {
 	message.delete();
-
-	if (kickConfirm == true) {
-		kickMember = kickMember.toString();
-		kickMember = kickMember.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-
-		kickConfirm = false;
-		message.guild.members.fetch(kickMember).then(function (member) {
-			//Write kick information to .csv file
-			var writer = csvWriter({
-				headers: ["Guild", "Discord ID", "Date and Time", "Type of Punishment", "Punished by", "Reason"],
-				sendHeaders: false
-			})
-			writer.pipe(fs.createWriteStream('./data/punishment/Punishment Tracker.csv', {
-				flags: 'a'
-			}))
-			writer.write([message.guild.id, member.id, new Date(), "Kick", message.author.username, kickReason])
-			writer.end()
-			console.log(colors.green("* Successfully wrote kick for user '" + colors.underline(member.displayName) + "' to CSV file."));
-
-			if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
-								channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
-						} else {
-								log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
-						}
-			const embed = new Discord.MessageEmbed()
-			channel.send({
-				embed: {
-					color: 11475996,
-					author: {
-						name: "ᴋɪᴄᴋ »  " + member.user.tag,
-						icon_url: member.user.avatarURL({
-							format: 'png'
-						})
-					},
-					description: ":warning: <@" + member.id + "> has been kicked.\n",
-					fields: [{
-							name: '**User**',
-							value: "<@" + member.id + ">"
-						},
-						{
-							name: '**Moderator**',
-							value: "<@" + message.author.id + ">"
-						},
-						{
-							name: '**Reason**',
-							value: kickReason
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-
-			member.send({
-				embed: {
-					color: 11475996,
-					author: {
-						name: "ᴋɪᴄᴋ »  " + member.user.tag,
-						icon_url: member.user.avatarURL({
-							format: 'png'
-						})
-					},
-					description: ":warning: You have been kicked from " + message.guild.name + ".\n",
-					fields: [{
-							name: '**Reason**',
-							value: kickReason
-						}
-					],
-					timestamp: new Date()
-				}
-			});
-
-			message.channel.send(":white_check_mark: **" + member + "** was successfully kicked.");
-			message.channel.send("member.kick");
-			kickMember = null;
-
-		});
-		return;
-	}
-
-	doNotDelete = true;
-		doNotDelete = true;
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 
@@ -106,42 +25,66 @@ exports.run = (client, message, args) => {
 			}
 			kick = kick.replace(argsArray[0], "");
 			kick = kick.trim();
-			kickReason = kick;
+			reason = kick;
 		}
 
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
-			kickMember = member;
-		if (kickMember.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			if (!message.guild.member(client.user).hasPermission("KICK_MEMBERS") || member.kickable == false) return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to kick this person. Make sure I have the `KICK_MEMBERS` permission.")
+
+			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t kick other moderators.');
 			} else {
 				if (kick == ("")) {
 					message.reply(':no_entry_sign: **NOPE:** You are kicking **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are kicking them.');
 				} else {
-					kickConfirm = true;
-					exports.kickConfirm = kickConfirm
-					exports.kickMember = kickMember
-					message.reply(':oncoming_police_car: You are about to kick **' + member.displayName + '** for *' + kick + '*.\nTo confirm, type in `+kick`, or type in `+cancel` to cancel this operation.');
-				}
-			}
-		}).catch(function (reason) {
-			if (kickConfirm == false && kickMember == null || kickMember == ("") || kickMember == undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to kick. See +help for more information.');
-				message.delete();
+
+			const filter = m => m.author == message.author;
+			message.channel.awaitMessages(filter, { max: 1, time: 15000, errors: ['time'] })
+			.then(collected => {
+				console.log(collected.first().content)
+				if (collected.first().content.startsWith('y')) {
+				answered = true;
+				message.channel.send(":white_check_mark: **OK**: **" + member.displayName + "** was successfully kicked.")
+				Punish.performPunish(message.guild, "kick", message.author, member, reason)
 				return;
 			}
-			switch (Math.floor(Math.random() * 1000) % 4) {
-			case 0:
-				message.channel.send(':no_entry_sign: **ERROR:** That didn\'t work. You might want to try again.');
-				break;
-			case 1:
-				message.channel.send(':no_entry_sign: **ERROR:** Something\'s blocking us! You might want to try again.');
-				break;
-			case 2:
-				message.channel.send(':no_entry_sign: **ERROR:** Too much cosmic interference! You might want to try again.');
-				break;
-			case 3:
-				message.channel.send(':no_entry_sign: **ERROR:** We are experiencing technical difficulties. You might want to try again.');
-				break;
+				if (collected.first().content.startsWith('n')) {
+				answered = true;
+				message.channel.send(":white_check_mark: **OK**: I won't kick **" + member.displayName + "**.")
+				return;
+			}
+			})
+			.catch(collected => {
+				if (answered === false) {
+					message.channel.send(":large_orange_diamond: **OK**: The kick against **" + member.displayName + "** won't be completed because you didn't reply with an answer in time.");
+					return;
+				} else {
+
+				}
+			});
+
+			confirmPunish();
+			async function confirmPunish() {
+			var amount = await Punish.getPunishments(message.guild, member, "kick");
+			message.channel.send(":gear: **KICK**: Are you sure you want to issue this kick against **" + member.displayName + "**? *(__y__es | __n__o)*")
+			const embed = new Discord.MessageEmbed()
+			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
+			embed.addField("Reason", reason)
+			embed.setColor("#b3cc39")
+			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
+			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
+		message.channel.send({ embed })
+	}
+
+			}
+			}
+		}).catch(function (reason) {
+			if (args == "" || args == undefined) {
+				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to kick. See `' + Settings.getValue(message.guild, "prefix") +'help kick` for more information.');
+				message.delete();
+				return;
+			} else {
+				throw reason;
 			}
 		});
 }
