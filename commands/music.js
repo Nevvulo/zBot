@@ -5,6 +5,7 @@ const api = require('./../data/main/keys/keys.js');
 const YouTube = require('simple-youtube-api');
 var youtube = new YouTube(api.youtube());
 const Settings = require('./../structures/general/Settings.js');
+const moment = require('moment');
 var colors = require('colors');
 
 var queue = {};
@@ -82,7 +83,10 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 		} else if (url == "queue") {
 			if (queue[message.guild.id] === undefined) return message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
 					let tosend = [];
-					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. **${song.title}**  ■  *Requested by ${song.requester}*`);});
+					queue[message.guild.id].songs.forEach((song, i) => {
+						let d = moment.duration({s: song.duration});
+						tosend.push(`${i+1}. **${song.title}** (${moment().startOf('day').add(d).format('HH:mm:ss')})`);
+					});
 					const embed = new Discord.MessageEmbed()
 						if (tosend == [] || tosend.length < 1) {
 						embed.addField("Queued Songs", "There are no songs in the queue.")
@@ -143,12 +147,12 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 					var playlist = await youtube.getPlaylist(url);
 					var video = await playlist.getVideos()
 
-					let song = {url: `https://www.youtube.com/watch?v=${video[0].id}`, title: video[0].title, requester: message.author.username}
+					let song = {url: `https://www.youtube.com/watch?v=${video[0].id}`, title: video[0].title, requester: message.author.username, duration: video[0].durationSeconds}
 					queueMusic(song)
 
 					for (let i=1; i < video.length; i++) {
 						if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
-						queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video[i].id}`, title: video[i].title, requester: message.author.username});
+						queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video[i].id}`, title: video[i].title, requester: message.author.username, duration: video[i].durationSeconds});
 					}
 					const embed = new Discord.MessageEmbed()
 						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
@@ -167,17 +171,19 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 			if (firstSong) {
 				firstSong = false;
-				let song = {url: `https://www.youtube.com/watch?v=${video.id}`, title: video.title, requester: message.author.username}
+				let song = {url: `https://www.youtube.com/watch?v=${video.id}`, title: video.title, requester: message.author.username, duration: video.durationSeconds}
+				console.log(song.duration)
 				queueMusic(song)
 				return;
 			}
 
 			if (queue[message.guild.id].playing || queue[message.guild.id].songs.length > 0) {
 					if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
-					queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video.id}`, title: video.title, requester: message.author.username});
+					queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video.id}`, title: video.title, requester: message.author.username, duration: video.durationSeconds});
+					let d = moment.duration({s: video.durationSeconds});
 					const embed = new Discord.MessageEmbed()
 						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
-						.setDescription(":white_check_mark: **OK:** I've added **" + video.title + "** into the queue.")
+						.setDescription(`:white_check_mark: **OK:** I've added **${video.title}** into the queue. (${moment().startOf('day').add(d).format('HH:mm:ss')})`)
 						.setColor("#b3cc39")
 						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 					message.channel.send({ embed })
@@ -198,8 +204,9 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 				}
 
 			if (Settings.getValue(message.guild, "musicNPModule") == true) {
+				let d = moment.duration({s: song.duration});
 				const embed = new Discord.MessageEmbed()
-					.addField('Music Playing', ":headphones: **" + song.title + "** is now playing.", true)
+					.addField('Music Playing', `:headphones: **${song.title}** is now playing. (${moment().startOf('day').add(d).format('HH:mm:ss')})`, true)
 					.setColor("#39cc45")
 					.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 				message.channel.send({ embed })
@@ -242,6 +249,6 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 let command = 'music'
 , description = 'Music player that can play YouTube videos.'
-, usage = 'music **[link]** (queue|skip|next|repeat|end)'
+, usage = 'music **[search query or link]** (queue | skip | next | repeat | end)'
 , throttle = {usages: 3, duration: 10};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}
