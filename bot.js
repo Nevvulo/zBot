@@ -87,11 +87,11 @@ if (developer.developerMode == true) {
 	developerMode = false;
 }
 
-const panicMode = require('./commands/panic.js');
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience.js');
 const Settings = require('./structures/general/Settings.js');
 const Version = require('./structures/general/Version.js')
+const UpdateStats = require('./structures/general/UpdateStats.js')
 const Spam = require('./structures/general/Spam.js')
 Spam.constructor(client, commandEmitter);
 const Expletive = require('./structures/general/Expletive.js')
@@ -146,10 +146,13 @@ async function setGame() {
 
 
 client.on('ready', () => {
-	//log("> zBot is now online!", logType.success)
+	log("> zBot is now online!", logType.success)
 	client.setInterval(setGame, 300000);
 	setGame();
   client.setInterval(function(){Settings.saveConfig()}, 300000);
+  if (process.argv[2] !== "--beta") {
+  UpdateStats.updateDBL()
+  }
 
   //Version handler
   var repoPath = path.resolve(process.env.REPO || (__dirname + '/.git'));
@@ -374,15 +377,6 @@ client.on('ready', () => {
       terminal: false
   });
 
-
-
-
-
-
-
-
-
-
 function processConsoleInput(line) {
   var text = line;
     commandHistory.unshift(line);
@@ -430,6 +424,11 @@ function processConsoleInput(line) {
         }
       } else if (text.startsWith("throw")) {
           new TypeError(text.substr(6))
+        } else if (text.startsWith("vacuum")) {
+          client.guilds.forEach(function (i) {
+            log(i.name + " (" + i.id + ")", logType.info)
+            Settings.checkGuild(i);
+          });
         }
     	}
 }
@@ -477,20 +476,6 @@ function messageChecker(oldMessage, newMessage) {
   }
   previousMessages.push(colors.gray("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg)))
 
-
-  	if (message.author.id !== 303017211457568778 && !message.author.bot && message.channel.type !== 'dm') {
-      	logBox.log("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg));
-  		}
-
-	// If panicMode has no value, init to false.
-	if (panicMode.enabled == undefined) {
-		panicMode.enabled = false;
-	}
-
-	// When panic mode is enabled, delete all messages.
-	if (panicMode.enabled) {
-		message.delete();
-	}
 
   }
 // END OF MESSAGE Function
@@ -590,10 +575,10 @@ client.on('guildMemberRemove', function(guildMember) {
 });
 
 client.on('messageDelete', function(message) {
-  if (`${Date.now() - message.createdTimestamp}` < 2000) return;
+  if (`${Date.now() - message.createdTimestamp}` < 1300) return;
 	if (message.content.startsWith(Settings.getValue(message.guild, "prefix"))) return;
   if (message.author.bot) return;
-  if (message.cleanContent.length > 1023) return;
+
   if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
       channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
   } else {
@@ -601,48 +586,35 @@ client.on('messageDelete', function(message) {
       return;
   }
 
-	embed = new Discord.MessageEmbed();
+	const embed = new Discord.MessageEmbed();
     embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag, message.member.user.avatarURL( {format: 'png'} ));
     embed.setColor("#e08743");
     embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n")
-
-    var msg = message.cleanContent;
+    var msg = "No message."
+    if (message.cleanContent.length > 1020 || message.content.length > 1020) {
+    msg = message.cleanContent.substr(1019) + "...";
+  } else if (message.cleanContent.length < 1) {
+    msg = "*No message provided*.";
+  } else {
+    msg = message.cleanContent;
+  }
+    if (message.attachments.size > 0) {
+      let files = message.attachments.map(a => a.attachment)
+        msg += " " + files.toString()
+    }
     embed.addField("**Message**", msg);
 
-    var msg = "Message manually deleted by user.\n";
+    msg = "Message manually deleted by user.\n";
     embed.addField("**Reason**", msg);
-	embed.setTimestamp(new Date());
+	  embed.setTimestamp(new Date());
 
 	channel.send({ embed });
-});
-
-client.on('messageDeleteBulk', function(messages) {
-	var channel = null;
-	channel = client.channels.get("345783379397967872");
-	if (panicMode[messages.first().guild.id])
-		return; //Don't want to be doing this in panic mode!
-
-	//Debugging information.
-	if (developerMode == true) {
-	channel.send(":page_facing_up: **DEBUG:** BulkDelete function called. Deleted " + messages.size + " messages.");
-	}
-
-
-
-	if (channel != null) {
-		log("▲ " + messages.size + " messages deleted using bulkDelete.", logType.warn);
-	}
-
 });
 
 client.on('messageUpdate', function(oldMessage, newMessage) {
 	if (oldMessage.cleanContent == newMessage.cleanContent) return; //Ignore
   if (oldMessage.author.bot) return;
-  var oldMessageContent = oldMessage.cleanContent;
-  if (oldMessageContent == "" || oldMessageContent == null) {
-    oldMessageContent = "*No message was provided.*";
-  }
-  if (oldMessage.cleanContent.length > 1023 || newMessage.cleanContent.length > 1023) return;
+
 	var channel = null;
 	if (oldMessage.guild != null) {
     if (client.channels.has(Settings.getValue(oldMessage.guild, "modLogsChannel"))) {
@@ -653,15 +625,37 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
     }
 
 		if (channel != null) {
-	embed = new Discord.MessageEmbed();
-    embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.tag, oldMessage.member.user.avatarURL( {format: 'png'} ));
+	const embed = new Discord.MessageEmbed();
+    embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴇᴅɪᴛᴇᴅ »  " + oldMessage.author.tag, oldMessage.author.avatarURL( {format: 'png'} ));
     embed.setColor("#f4c242");
     embed.setDescription(":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n")
+    var msg = "";
+    if (oldMessage.cleanContent.length > 1020) {
+    msg = oldMessage.cleanContent.substr(1019) + "...";
+  } else if (oldMessage.cleanContent.length < 1) {
+    msg = "*No message provided*.";
+  } else {
+    msg = oldMessage.cleanContent;
+  }
+    if (oldMessage.attachments.size > 0) {
+      let files = oldMessage.attachments.map(a => a.attachment)
+        msg += " " + files.toString()
+    }
 
-    var msg = oldMessage.cleanContent;
     embed.addField("**Previous Content**", msg);
 
-    var msg = newMessage.cleanContent;
+    var msg = "";
+    if (newMessage.cleanContent.length > 1020) {
+    msg = newMessage.cleanContent.substr(1019) + "...";
+  } else if (newMessage.cleanContent.length < 1) {
+    msg = "*No message provided*.";
+  } else {
+    msg = newMessage.cleanContent;
+  }
+  if (newMessage.attachments.size > 0) {
+    let files = newMessage.attachments.map(a => a.attachment)
+      msg += " " + files.toString()
+  }
     embed.addField("**Updated Content**", msg);
 	embed.setTimestamp(new Date());
 
@@ -674,7 +668,6 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 
 process.on("unhandledRejection", err => {
 	log("[UNCAUGHT PROMISE] " + err.stack, logType.critical);
-  recentErrors.push(log("[UNCAUGHT PROMISE] " + err.stack, logType.critical))
 });
 
 if (process.argv[2] == "--beta") {

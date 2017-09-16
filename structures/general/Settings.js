@@ -37,13 +37,26 @@ class Settings {
     };
 	}
 
+	static checkGuild(guild) {
+		try {
+			eval(Config[guild.id].requiresConfig)
+		} catch (error) {
+			if (error) log("Guild successfully vacuumed: " + guild.name + " (" + guild.id + ")", logType.success)
+			Settings.newGuild(guild)
+		}
+	}
+
 	static removeGuild(guild) {
 		Config[guild.id] = null;
     delete Config[guild.id];
 	}
 
 	static getValue(guild, setting) {
+		try {
 		return eval(`Config[guild.id].${setting}`);
+	} catch (err) {
+		if (err) log("Error occured whilst grabbing guild " + guild.id + " for setting " + setting + ".", logType.critical)
+	}
 	}
 
 	static editSetting(guild, setting, value) {
