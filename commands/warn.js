@@ -28,6 +28,11 @@ exports.run = (client, message, args) => {
 			reason = warn;
 		}
 
+		if (args == "" || args == undefined) {
+			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See `' + Settings.getValue(message.guild, "prefix") +'help warn` for more information.');
+			return;
+		}
+
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t warn other moderators.');
@@ -77,13 +82,7 @@ exports.run = (client, message, args) => {
 			}
 			}
 		}).catch(function (reason) {
-			if (args == "" || args == undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to warn. See `' + Settings.getValue(message.guild, "prefix") +'help warn` for more information.');
-				message.delete();
-				return;
-			} else {
 				throw reason;
-			}
 		});
 }
 

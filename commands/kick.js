@@ -28,11 +28,16 @@ exports.run = (client, message, args) => {
 			reason = kick;
 		}
 
-		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
-			if (!message.guild.member(client.user).hasPermission("KICK_MEMBERS") || member.kickable == false) return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to kick this person. Make sure I have the `KICK_MEMBERS` permission.")
+			if (args == "" || args == undefined) {
+					message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ' + this.settings.command + '. See `' + Settings.getValue(message.guild, "prefix") +'help ' + this.settings.command + '` for more information.');
+					return;
+			}
 
+		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t kick other moderators.');
+			} else if (!message.guild.member(client.user).hasPermission("KICK_MEMBERS") || member.kickable == false) {
+				 return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to kick this person. Make sure I have the `KICK_MEMBERS` permission.");
 			} else {
 				if (kick == ("")) {
 					message.reply(':no_entry_sign: **NOPE:** You are kicking **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are kicking them.');
@@ -70,7 +75,7 @@ exports.run = (client, message, args) => {
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
 			embed.addField("Reason", reason)
-			embed.setColor("#b3cc39")
+			embed.setColor("#f4b942")
 			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
 			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })
@@ -79,13 +84,7 @@ exports.run = (client, message, args) => {
 			}
 			}
 		}).catch(function (reason) {
-			if (args == "" || args == undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to kick. See `' + Settings.getValue(message.guild, "prefix") +'help kick` for more information.');
-				message.delete();
-				return;
-			} else {
 				throw reason;
-			}
 		});
 }
 

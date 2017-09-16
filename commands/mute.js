@@ -28,6 +28,11 @@ exports.run = (client, message, args) => {
 			reason = mute;
 		}
 
+		if (args == "" || args == undefined) {
+			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to mute. See `' + Settings.getValue(message.guild, "prefix") +'help mute` for more information.');
+			return;
+		}
+
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
@@ -68,7 +73,7 @@ exports.run = (client, message, args) => {
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
 			embed.addField("Reason", reason)
-			embed.setColor("#b3cc39")
+			embed.setColor("#f4b942")
 			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
 			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })
@@ -77,13 +82,7 @@ exports.run = (client, message, args) => {
 			}
 			}
 		}).catch(function (reason) {
-			if (args == "" || args == undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to mute. See `' + Settings.getValue(message.guild, "prefix") +'help mute` for more information.');
-				message.delete();
-				return;
-			} else {
 				throw reason;
-			}
 		});
 }
 

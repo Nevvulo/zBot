@@ -28,6 +28,11 @@ exports.run = (client, message, args) => {
 			reason = ban;
 		}
 
+		if (args == "" || args == undefined) {
+			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to softban. See `' + Settings.getValue(message.guild, "prefix") +'help softban` for more information.');
+			return;
+		}
+
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
 			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS") || member.bannable == false) return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to softban this person. Make sure I have the `BAN_MEMBERS` permission.")
 
@@ -70,7 +75,7 @@ exports.run = (client, message, args) => {
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
 			embed.addField("Reason", reason)
-			embed.setColor("#b3cc39")
+			embed.setColor("#f4b942")
 			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
 			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })
@@ -79,13 +84,7 @@ exports.run = (client, message, args) => {
 			}
 			}
 		}).catch(function (reason) {
-			if (args == "" || args == undefined) {
-				message.reply(':no_entry_sign: **ERROR:** You need to enter a user to softban. See `' + Settings.getValue(message.guild, "prefix") +'help softban` for more information.');
-				message.delete();
-				return;
-			} else {
 				throw reason;
-			}
 		});
 }
 
