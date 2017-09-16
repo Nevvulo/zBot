@@ -27,109 +27,114 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 	const url = args[0] ? args[0].replace(/<(.+)>/g, '$1') : '';
 	const voiceChannel = message.member.voiceChannel;
 
+		if (url == "" && searchString == "") {
+			return message.reply(":no_entry_sign: **ERROR**: You need to provide a video to play, or use one of the sub-commands. " +  'See `' + Settings.getValue(message.guild, "prefix") +'help music` for more information.')
+		}
+
 	if (!voiceChannel) {
 		message.reply(":no_entry_sign: **ERROR:** You aren't currently in a voice channel.");
 		message.delete();
 		return;
 	}
 
-	voiceChannel.join()
-	.then(connection => {
-		if (url == "skip") {
-			if (queue == "") {
-				message.reply(":no_entry_sign: **ERROR:** There are no more songs in the queue left to skip.");
+	if (url == "skip") {
+		if (queue == "") {
+			message.reply(":no_entry_sign: **ERROR:** There are no more songs in the queue left to skip.");
+			return;
+		}
+
+		if (voiceChannel.members.size < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole")) || skipCount < 2) {
+			if (usersVotedSkip.includes(message.author.id)) {
+				message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
 				return;
 			}
+			usersVotedSkip = [];
+			skipCount = 3
+				yt.getInfo(currentSong, function (err, info) {
+					message.channel.send(":white_check_mark: **OK:** " + message.author + " skipped **" + info.title + "**.").then(() => {
+						message.guild.voiceConnection.dispatcher.end("Skip")
+					});
+				});
+			return;
+		} else {
+			if (skipCount == 3) {
 
-			if (voiceChannel.members.size < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole")) || skipCount < 2) {
 				if (usersVotedSkip.includes(message.author.id)) {
 					message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
 					return;
 				}
-				usersVotedSkip = [];
-				skipCount = 3
-					yt.getInfo(currentSong, function (err, info) {
-						message.channel.send(":white_check_mark: **OK:** " + message.author + " skipped **" + info.title + "**.").then(() => {
-							message.guild.voiceConnection.dispatcher.end("Skip")
-						});
-					});
-				return;
+				usersVotedSkip.push(message.author.id);
+				skipCount = skipCount - 1
+					message.channel.send(":white_check_mark: **OK:** " + message.author + " has started a vote to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
+					return;
 			} else {
-				if (skipCount == 3) {
 
-					if (usersVotedSkip.includes(message.author.id)) {
-						message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
-						return;
-					}
-					usersVotedSkip.push(message.author.id);
-					skipCount = skipCount - 1
-						message.channel.send(":white_check_mark: **OK:** " + message.author + " has started a vote to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
-						return;
-				} else {
-
-					if (usersVotedSkip.includes(message.author.id)) {
-						message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
-						return;
-					}
-					usersVotedSkip.push(message.author.id);
-					skipCount = skipCount - 1
-						message.channel.send(":white_check_mark: **OK:** " + message.member.displayName + " has voted to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
-						return;
+				if (usersVotedSkip.includes(message.author.id)) {
+					message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
+					return;
 				}
-				return;
+				usersVotedSkip.push(message.author.id);
+				skipCount = skipCount - 1
+					message.channel.send(":white_check_mark: **OK:** " + message.member.displayName + " has voted to skip the current song. **" + skipCount + "** more votes are required in order to skip.")
+					return;
 			}
 			return;
-
-		} else if (url == "queue") {
-			if (queue[message.guild.id] === undefined) return message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
-					let tosend = [];
-					queue[message.guild.id].songs.forEach((song, i) => {
-						let d = moment.duration({s: song.duration});
-						tosend.push(`${i+1}. **${song.title}** (${moment().startOf('day').add(d).format('HH:mm:ss')})`);
-					});
-					const embed = new Discord.MessageEmbed()
-						if (tosend == [] || tosend.length < 1) {
-						embed.addField("Queued Songs", "There are no songs in the queue.")
-					} else {
-						embed.addField("Queued Songs", tosend.slice(0,5).join('\n'))
-					}
-						embed.setColor("#b3cc39")
-						embed.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
-					message.channel.send({ embed })
-		} else if (url == "next") {
-			if (queue[message.guild.id].songs.length < 1) {
-				message.channel.send(":no_entry_sign: **ERROR:** There are no songs that are next.");
-				return;
-			}
-				message.channel.send(":fast_forward: **NEXT SONG:** " + queue[message.guild.id].songs[0].title);
-				message.delete();
-			return;
-		} else if (url == "repeat") {
-			if (songRepeat == true) {
-				songRepeat = false;
-				message.channel.send(":repeat_one: Repeat is now turned off.");
-			} else {
-				yt.getInfo(currentSong, function (err, info) {
-					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" + Settings.getValue(message.guild, "prefix") + "music repeat` again to toggle off.");
-					message.delete ();
-					songRepeat = true;
-				});
-			}
-			return;
-		} else if (url == "end") {
-			if (voiceChannel.members.size < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
-				queue[message.guild.id].songs = [];
-				musicEnd = true;
-				message.guild.voiceConnection.dispatcher.end("End")
-				voiceChannel.leave();
-				firstSong = true;
-				message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
-				return;
-			} else {
-				message.reply(":no_entry_sign: **NOPE:** You can't do that, there are other people in this channel listening to the music!");
-				return;
-			}
 		}
+		return;
+
+	} else if (url == "queue") {
+		if (queue[message.guild.id] === undefined) return message.channel.send(":no_entry_sign: **ERROR:** There are no songs currently in the queue.");
+				let tosend = [];
+				queue[message.guild.id].songs.forEach((song, i) => {
+					let d = moment.duration({s: song.duration});
+					tosend.push(`${i+1}. **${song.title}** (${moment().startOf('day').add(d).format('HH:mm:ss')})`);
+				});
+				const embed = new Discord.MessageEmbed()
+					if (tosend == [] || tosend.length < 1) {
+					embed.addField("Queued Songs", "There are no songs in the queue.")
+				} else {
+					embed.addField("Queued Songs", tosend.slice(0,5).join('\n'))
+				}
+					embed.setColor("#b3cc39")
+					embed.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
+				message.channel.send({ embed })
+	} else if (url == "next") {
+		if (queue[message.guild.id].songs.length < 1) {
+			message.channel.send(":no_entry_sign: **ERROR:** There are no songs that are next.");
+			return;
+		}
+			message.channel.send(":fast_forward: **NEXT SONG:** " + queue[message.guild.id].songs[0].title);
+			message.delete();
+		return;
+	} else if (url == "repeat") {
+		if (songRepeat == true) {
+			songRepeat = false;
+			message.channel.send(":repeat_one: Repeat is now turned off.");
+		} else {
+			yt.getInfo(currentSong, function (err, info) {
+				message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" + Settings.getValue(message.guild, "prefix") + "music repeat` again to toggle off.");
+				message.delete ();
+				songRepeat = true;
+			});
+		}
+		return;
+	} else if (url == "end") {
+		if (voiceChannel.members.size < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			queue[message.guild.id].songs = [];
+			musicEnd = true;
+			message.guild.voiceConnection.dispatcher.end("End")
+			voiceChannel.leave();
+			firstSong = true;
+			message.channel.send(":mute: The queue was cleared by **" + message.author + "**.");
+			return;
+		} else {
+			message.reply(":no_entry_sign: **NOPE:** You can't do that, there are other people in this channel listening to the music!");
+			return;
+		}
+	}
+
+	voiceChannel.join()
+	.then(connection => {
 		results()
 		async function results() {
 		if (url !== "skip" && url !== "queue" && url !== "next" && url !== "repeat" && url !== "end") {
@@ -147,19 +152,23 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 					var playlist = await youtube.getPlaylist(url);
 					var video = await playlist.getVideos()
 
-					let song = {url: `https://www.youtube.com/watch?v=${video[0].id}`, title: video[0].title, requester: message.author.username, duration: video[0].durationSeconds}
-					queueMusic(song)
 
-					for (let i=1; i < video.length; i++) {
+					for (let i=0; i < video.length; i++) {
+						console.log(video[0])
+						let videoDuration = await youtube.getVideoByID(video[i].id);
+						let duration = videoDuration.durationSeconds;
 						if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
-						queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video[i].id}`, title: video[i].title, requester: message.author.username, duration: video[i].durationSeconds});
+						queue[message.guild.id].songs.push({url: `https://www.youtube.com/watch?v=${video[i].id}`, title: video[i].title, requester: message.author.username, duration: duration});
 					}
+
 					const embed = new Discord.MessageEmbed()
 						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
 						.setDescription(":white_check_mark: **OK:** I've added the playlist **" + playlist.title + "** into the queue.")
 						.setColor("#b3cc39")
 						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 					message.channel.send({ embed })
+
+					queueMusic(queue[message.guild.id].songs.shift())
 					return;
 				} catch (err) {
 					//If all else fails, throw an error.
@@ -222,13 +231,30 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 			const dispatcher = message.guild.voiceConnection.playStream(streamfunc, streamOptions);
 
-			dispatcher.on('end', () => {
+			dispatcher.on('end', (reason) => {
 					if (songRepeat == true) {
 						var nextSong = queue[message.guild.id].songs[0];
 						queueMusic(nextSong);
 						return;
 						}
+
+					if (reason === "End") {
+						queue[message.guild.id].playing = false;
+						firstSong = true
+						dispatcher.end();
+						voiceChannel.leave();
+						return;
+					}
+
+					if (reason === "Skip") {
+						var nextSong = queue[message.guild.id].songs.shift();
+						queueMusic(nextSong);
+						return;
+					}
+
 					var nextSong = queue[message.guild.id].songs.shift();
+					queueMusic(nextSong);
+
 					if (nextSong == undefined) {
 						log("Music ended in " + message.guild.name + ".", logType.info);
 						message.channel.send(":mute: The queue is empty.");
@@ -238,7 +264,6 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 						voiceChannel.leave();
 						return;
 					}
-					queueMusic(nextSong);
 			});
 		}
 
