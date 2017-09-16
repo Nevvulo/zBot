@@ -47,14 +47,6 @@ if (message.author.id == challengePending) {
 	if (message.mentions.users.first().id == waitingOnEnemyResponse) {
 		message.guild.members.fetch(waitingOnEnemyResponse.toString()).then(function(enemy) {
 
-			const voiceChannel = message.member.voiceChannel;
-				voiceChannel.join()
-				.then(connection => {
-				return connection.playFile('./assets/challenge/audio/challenge.mp3', {volume: 0.6});
-				}).then(dispatcher => {
-				dispatcher.on('error', console.log);
-			}).catch(console.log);
-
 		var dms = true
 		exports.challengeInDMS = dms
 		exports.startedChallenge = "true";
