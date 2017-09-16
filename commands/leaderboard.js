@@ -6,17 +6,18 @@ var limit = 5
 exports.run = (client, message, args) => {
 	leaderboard();
 	async function leaderboard() {
+		var memberCountnb = message.guild.members.filter(a => !a.user.bot).array().length;
 		limit = args;
 		if (args == [] || args == "") {
 			limit = 5
 		}
 
-		if (limit > message.guild.memberCount) {
-			limit = message.guild.memberCount - 1
-		} 
-
 		if (limit.isNaN || limit == 0 || limit == "" || limit == NaN) {
 			limit = 5;
+		}
+
+		if (limit > message.guild.memberCount) {
+				limit = memberCountnb
 		}
 
 		if (limit > 10) {
@@ -29,13 +30,15 @@ exports.run = (client, message, args) => {
 		var test = await sql.all(`SELECT * FROM experience WHERE guild = '${message.guild.id}' ORDER BY experience DESC LIMIT ${limit}`);
 		//Loop through all users in query and push them to an array.
 		for (let i = 0; i < limit; i++) {
-			message.guild.members.fetch(test[i].userId).then(function (member) {
-				tosend.push("**" + member.displayName + "**  ■  *" + test[i].experience + " experience*\n");
-			})
+			client.users.fetch(test[i].userId).then(function (member) {
+				tosend.push("**" + member.username + "**  ■  *" + test[i].experience + " experience*\n");
+			}).catch(function (reason) {
+				throw reason;
+			});
 		}
 		//Send array.
 		await console.log();
-		const embed =  new Discord.MessageEmbed();
+		const embed = new Discord.MessageEmbed();
 		message.channel.send({embed: {
 		title: "ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ » ",
 		color: 3191350,

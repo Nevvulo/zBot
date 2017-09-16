@@ -19,9 +19,7 @@ if (argument == "view") {
   if (setting == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a setting to view.");
   if (Settings.getValue(message.guild, setting) == undefined) return message.channel.send(":no_entry_sign: **ERROR**: The setting you've provided doesn't exist. Try `+config settings` to see all of the available settings you can view.");
   message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + Settings.getValue(message.guild, setting) + "__")
-}
-
-if (argument == "set") {
+} else if (argument == "set") {
   if (setting == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a setting to edit.");
   if (value == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a new value to this setting.");
   if (Settings.getValue(message.guild, setting) == undefined) return message.channel.send(":no_entry_sign: **ERROR**: The setting you've provided doesn't exist. Try `+config settings` to see all of the available settings you can view.");
@@ -102,11 +100,10 @@ if (argument == "set") {
   Settings.editSetting(message.guild, setting, value)
   Settings.saveConfig()
   message.channel.send(":white_check_mark: **OK**: I've set the setting *" + setting + "* to __" + value + "__.")
-}
-
-
-if (argument == "settings") {
-  message.channel.send(":white_check_mark: **OK**: Here are all of the possible editable settings in zBot:\n**expletiveFilter** **spamFilter** **moderatorRole** **mutedRole** **prefix** **experienceTracking** **musicNPModule** **memberLogsChannel** **modLogsChannel**")
+} else if (argument == "settings") {
+  message.channel.send(":white_check_mark: **OK**: Here are all of the possible editable settings in zBot:\n**expletiveFilter** **spamFilter** **moderatorRole** **muteRole** **prefix** **experienceTracking** **musicNPModule** **memberLogsChannel** **modLogsChannel**")
+} else {
+  message.reply(":no_entry_sign: **ERROR**: The syntax of the command is incorrect. Try `" + Settings.getValue(message.guild, "prefix") + "help " + this.settings.command + "` to get more information on this command.")
 }
 
 }

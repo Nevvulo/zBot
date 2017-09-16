@@ -31,6 +31,10 @@ if (arrayLength > 0) {
 		messagesay = messagesay.trim();
 	}
 
+if (message.content.length > 1014) {
+	return message.reply(":no_entry_sign: **NOPE**: Your equation is too long to calculate. Try again, or simplify your equation.")
+}
+
 try {
 	const embed = new Discord.MessageEmbed()
 message.channel.send({

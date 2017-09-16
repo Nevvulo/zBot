@@ -6,9 +6,15 @@ const rl = readline.createInterface({
     input: fs.createReadStream('./data/punishment/Punishment Tracker.csv')
 });
 const Punish = require('./../structures/moderation/HandlePunish.js');
+const Settings = require('./../structures/general/Settings.js');
 
 exports.run = (client, message, args) => {
     args = args.slice(0).join(' ');
+
+    if (args == "") {
+      return message.reply(':no_entry_sign: **ERROR:** You need to enter a user to search for. See `' + Settings.getValue(message.guild, "prefix") +'help uinfo` for more information.');
+    }
+
     args = UserFinder.getUser(args).shift().id
     if (message.guild.members.exists("id", args)) {
         message.guild.members.fetch(args).then(function(member) {
