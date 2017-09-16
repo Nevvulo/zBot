@@ -1,6 +1,8 @@
 
 exports.run = (client, message, args) => {
 doNotDelete = true;
+const user = args.slice(0).join(' ');
+
 var bshipName = message.member.displayName
 var shipName = bshipName.substr("0", Math.floor(message.member.displayName.length / 2))
 var bshipUser = message.guild.members.random().displayName

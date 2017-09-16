@@ -29,14 +29,30 @@ exports.run = (client, message, args) => {
 		filter = messagesay.split("--")[1].trim();
 		messagesay = messagesay.split("--")[0].trim();
 	}
-	console.log(messagesay)
-	console.log(filter)
+
+
 	var userArgs = UserFinder.getUser(messagesay).shift().id
 	if (messagesay == "") {
 		userArgs = message.author.id
 	}
-	console.log(userArgs)
+
+
+
 	client.users.fetch(userArgs).then(function (user) {
+		if (filter == "") {
+			message.delete()
+			const embed = new Discord.MessageEmbed();
+			embed.setAuthor(user.tag + "'s Profile Picture » ", user.avatarURL( {format: 'png'} ));
+			if (message.guild.members.exists("id", userArgs)) {
+					message.guild.members.fetch(userArgs).then(function (member) {
+			embed.setColor(member.highestRole.hexColor);
+			});
+			}
+			embed.setImage(user.avatarURL( {format: 'png', size: 1024} ))
+			message.reply({ embed })
+			return;
+		}
+
 		async function drawStats() {
 			message.delete ();
 			const Image = Canvas.Image;

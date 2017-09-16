@@ -74,6 +74,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 
 			var canvas = new Canvas(300, 300)
 			var ctx = canvas.getContext('2d')
+			const template = new Image();
 			const base = new Image();
 			const cond = new Image();
 			const subbadge = new Image();
@@ -90,6 +91,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				// Environment Variables
 				ctx.globalAlpha = 1
 					ctx.drawImage(base, 0, 0, 300, 300);
+					ctx.drawImage(template, 0, 0, 300, 300);
 				ctx.scale(1, 1);
 				ctx.patternQuality = 'billinear';
 				ctx.filter = 'bilinear';
@@ -127,14 +129,14 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#E5E5E5';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-				ctx.fillText('EXP.', 74, 142);
+				ctx.fillText('EXP.', 74, 152);
 
 				// EXP
 				ctx.font = '16px Roboto';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#d1d1d1';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
-				ctx.fillText(`${currentExp}/${levelBounds.upperBound - levelBounds.lowerBound}`, 74, 160);
+				ctx.fillText(`${currentExp}/${levelBounds.upperBound - levelBounds.lowerBound}`, 74, 170);
 
 				// EXP
 				ctx.font = '10px Roboto';
@@ -148,19 +150,19 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#E5E5E5';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-				ctx.fillText('LVL.', 74, 87);
+				ctx.fillText('LVL.', 74, 97);
 
 				// LVL Number
 				ctx.font = '19px Roboto';
 				ctx.fillStyle = '#E5E5E5';
-				ctx.fillText(`${level}`, 74, 107);
+				ctx.fillText(`${level}`, 74, 117);
 
 				// TOTAL EXP TITLE
 				ctx.font = '22px Uni Sans Heavy CAPS';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#E5E5E5';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-				ctx.fillText('TOTAL EXP.', 74, 197);
+				ctx.fillText('TOTAL EXP.', 74, 207);
 
 				// TOTAL EXP
 				ctx.font = '16px Roboto';
@@ -170,7 +172,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 					ctx.fillStyle = '#c1453a';
 				}
 				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
-				ctx.fillText(totalExperience, 74, 215);
+				ctx.fillText(totalExperience, 74, 225);
 
 				//BADGES
 				// BADGE TITLE
@@ -263,6 +265,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 			};
 
 			base.src = await fs.readFileAsync(`./assets/profile/backgrounds/${userProfile.background}.png`);
+			template.src = await fs.readFileAsync(`./assets/profile/backgrounds/template.png`);
 			cond.src = await request({
 					uri: member.user.avatarURL() ? member.user.avatarURL( {format: 'png'} ) : member.user.displayAvatarURL,
 					encoding: null

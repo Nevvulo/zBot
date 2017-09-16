@@ -82,7 +82,7 @@ exports.run = (client, message, args) => {
 				ctx.fillText(message.member.displayName + " says:", 75, 35);
 
 				// Message
-				var maxWidth = 275;
+				var maxWidth = 255;
 				var context = ctx;
 				var lineHeight = 13;
 				var x = 75;
