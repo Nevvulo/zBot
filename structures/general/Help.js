@@ -29,6 +29,11 @@ class Help {
 			embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));
 			return { embed };
 	}
+
+	static throttleInfo(command) {
+		const commandFile = require(`./../../commands/${command}.js`);
+		return commandFile.settings.throttle;
+	}
 }
 
 module.exports = Help;

@@ -33,6 +33,13 @@ class Experience {
 		return Math.floor(0.177 * Math.sqrt(totalXP)) + 1;
 	}
 
+	static removeMember(userID, guildID) {
+		sql.get(`SELECT * FROM experience WHERE userId ='${userID}' AND guild = '${guildID}'`).then(row => {
+			sql.get(`DELETE FROM experience WHERE userId = '${userID}' AND guild = '${guildID}'`).then(row => {
+				log("Member removed from guild", logType.info)
+			});
+		});
+	}
 }
 
 module.exports = Experience;
