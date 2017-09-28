@@ -18,13 +18,24 @@ if (arrayLength > 0) {
 if (argument == "view") {
   if (setting == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a setting to view.");
   if (Settings.getValue(message.guild, setting) == undefined) return message.channel.send(":no_entry_sign: **ERROR**: The setting you've provided doesn't exist. Try `+config settings` to see all of the available settings you can view.");
+
+  if (setting == "modLogsChannel" || setting == "memberLogsChannel" || setting == "joinMessageChannel") {
+    var channel = message.guild.channels.find("id", Settings.getValue(message.guild, setting));
+    return message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + channel + "__")
+  }
+
+  if (setting == "moderatorRole" || setting == "muteRole") {
+    var role = message.guild.roles.find("id", Settings.getValue(message.guild, setting));
+    return message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + role.name + "__")
+  }
+
   message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + Settings.getValue(message.guild, setting) + "__")
 } else if (argument == "set") {
   if (setting == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a setting to edit.");
   if (value == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a new value to this setting.");
   if (Settings.getValue(message.guild, setting) == undefined) return message.channel.send(":no_entry_sign: **ERROR**: The setting you've provided doesn't exist. Try `+config settings` to see all of the available settings you can view.");
 
-  if (setting == "modLogsChannel" || setting == "memberLogsChannel") {
+  if (setting == "modLogsChannel" || setting == "memberLogsChannel" || setting == "joinMessageChannel") {
     var type = "name";
   if (!message.guild.channels.exists("name", value) && !message.guild.channels.exists("id", value)) {
       message.channel.send(":no_entry_sign: **NOPE**: That channel doesn't exist. Please enter the name or ID of a channel and try again.");
@@ -46,12 +57,17 @@ if (argument == "view") {
           Settings.editSetting(message.guild, setting, channel.id);
           Settings.saveConfig()
           return;
-          } else {
+        } else if (setting == "memberLogsChannel") {
           message.channel.send(":white_check_mark: **OK**: I've set member alerts to be sent to <#" + channel.id + ">.")
           Settings.editSetting(message.guild, setting, channel.id);
           Settings.saveConfig()
           return;
-          }
+        } else {
+          message.channel.send(":white_check_mark: **OK**: I've set member join messages to be sent to <#" + channel.id + ">.")
+          Settings.editSetting(message.guild, setting, channel.id);
+          Settings.saveConfig()
+          return;
+        }
       }
     }
     return;
@@ -77,7 +93,7 @@ if (argument == "view") {
     return;
   }
 
-  if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule" || setting == "experienceTracking") {
+  if (setting == "expletiveFilter" || setting == "spamFilter" || setting == "musicNPModule" || setting == "experienceTracking" || setting == "joinMessageEnabled") {
     if (value == "true" || value == "false") {
       var isTrueSet = (value == 'true');
       if (isTrueSet) {
