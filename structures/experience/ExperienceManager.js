@@ -119,6 +119,38 @@ function newMessage(message) {
         sql.run('INSERT INTO badgeprogress (guild, userId, photographer) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 0]);
       });
     });
+
+
+    //BACKGROUNDS
+
+    sql.get(`SELECT * FROM background WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
+      if (!row) {
+        sql.run('INSERT INTO background (guild, userId, background) VALUES (?, ?, ?)', [message.guild.id, message.author.id, "default"]);
+      }
+  }).catch(() => {
+    console.error;
+    sql.run('CREATE TABLE IF NOT EXISTS background (guild TEXT, userId TEXT, background TEXT)').then(() => {
+      sql.run('INSERT INTO background (guild, userId, background) VALUES (?, ?, ?)', [message.guild.id, message.author.id, "default"]);
+    });
+  });
+
+
+  //ROLE MANAGER
+  sql.get(`SELECT * FROM roles WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
+    if (!row) {
+      sql.run('INSERT INTO roles (guild, userId, role, color) VALUES (?, ?, ?, ?)', [message.guild.id, message.author.id, message.member.highestRole.name, message.member.displayHexColor]);
+    } else {
+      if (row.role !== message.member.highestRole.name || row.color !== message.member.displayHexColor) {
+        sql.run(`UPDATE roles SET role = "${message.member.highestRole.name}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+        sql.run(`UPDATE roles SET color = "${message.member.displayHexColor}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+      }
+    }
+}).catch(() => {
+  console.error;
+  sql.run('CREATE TABLE IF NOT EXISTS roles (guild TEXT, userId TEXT, role TEXT, color TEXT)').then(() => {
+    sql.run('INSERT INTO roles (guild, userId, role, color) VALUES (?, ?, ?, ?)', [message.guild.id, message.author.id, message.member.highestRole.name, message.member.displayHexColor]);
+  });
+});
     })
 }
 
