@@ -16,7 +16,7 @@ exports.run = (client, message, args) => {
 			limit = 5;
 		}
 
-		if (limit > message.guild.memberCount) {
+		if (memberCountnb < 6) {
 				limit = memberCountnb
 		}
 
