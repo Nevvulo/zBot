@@ -33,7 +33,7 @@ fs.readdir(testFolder, (err, files) => {
 message.delete();
 
 if (args[0] == "list") {
-if (args[1] == "badges") {
+if (args[1] == "badges" || args[1] == "badge") {
 let tosend = []
 sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(rows => {
 	let tempRows = JSON.stringify(rows, null, 2)
@@ -44,13 +44,15 @@ sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}' AND guild = '
 			tosend.push(" " + key)
 			}
 	  }
-		message.reply(":white_check_mark: **OK:** These are the badges that you currently own:**" + tosend + "**.");
-		return;
+		message.reply(":white_check_mark: **OK**: These are the badges that you currently own:**" + tosend + "**.");
 })
+return;
+} else if (args[1] == "backgrounds" || args[1] == "background") {
+	return message.reply(":white_check_mark: **OK**: Here are all of the backgrounds that you can equip:**" + backgrounds + "**.");
 } else {
-		message.reply(":white_check_mark: **OK:** Here are all of the backgrounds that you can equip:**" + backgrounds + "**.");
-		return;
+	return message.reply(":no_entry_sign: **NOPE**: That's not a valid category. Try `" + Settings.getValue(message.guild, "prefix") + "equip list backgrounds` or `" + Settings.getValue(message.guild, "prefix") + "equip list badges`");
 }
+return;
 }
 
 var num = args[0];
@@ -69,12 +71,20 @@ sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '$
 })
 } else if (num == "background") {
 			if (backgrounds.toString().includes(`${badge}`)) {
-		eval(`userProfile.background = "${badge}"`);
-		fs.writeFile('./data/profile/profile-background.json', JSON.stringify(badgesP, null, 2), function(err) {
-				if (err) {
-					console.error(err)
+
+		sql.get(`SELECT * FROM background WHERE userId = '${message.author.id}' AND guild = '${message.guild.id}'`).then(rows => {
+			if (!rows) {
+				sql.run('INSERT INTO background (guild, userId, background) VALUES (?, ?, ?)', [message.guild.id, message.author.id, "default"]);
+				} else {
+				sql.run(`UPDATE background SET background = "${badge}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
 				}
+		}).catch(() => {
+			console.error;
+			sql.run('CREATE TABLE IF NOT EXISTS background (guild TEXT, userId TEXT, background TEXT)').then(() => {
+				sql.run('INSERT INTO background (guild, userId, background) VALUES (?, ?, ?)', [message.guild.id, message.author.id, "default"]);
 			});
+		});
+
 			message.reply(":white_check_mark: **OK:** You've successfully equipped the background **" + badge + "**.");
 		return;
 	} else {
