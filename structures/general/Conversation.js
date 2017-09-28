@@ -8,12 +8,15 @@ const api = require('./../../data/main/keys/keys.js')
 function newMessage(message) {
   var msg = message.content;
   var conversationMessage = msg.split(" ").slice(1);
+  var mention = msg.split(" ").slice(1);
 	if (message.author.bot) return;
   // Start a conversation with the bot.
 	if (message.mentions !== null) {
 		doNotDelete = true;
 		// If the message content starts with a mention to zBot, execute conversation code.
-		if (message.mentions.users.has(client.user.id)) {
+		if (msg.startsWith("<@" + client.user.id + ">") || msg.startsWith("<@!" + client.user.id + ">")) {
+      if (conversationMessage == "" || conversationMessage == " ") return;
+
       let clev = new Cleverbot({
         key: api.cleverbot()
       });
