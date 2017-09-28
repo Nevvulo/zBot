@@ -1,8 +1,8 @@
 exports.run = (client, message, args) => {
 doNotDelete = false;
 message.author.send(
-	"Copyright (C) 2017 Victor Tran and Rylan Arbour\n\n" +
-	"Rewritten by zBlake for use on Rainbow Gaming. " +
+	"Copyright (C) 2017 Blake Ward\n\n" +
+	"Based off of AstralMod, created by Victor Tran." +
 
 	"This program is free software: you can redistribute it and/or modify\n" +
 	"it under the terms of the GNU General Public License as published by\n" +
