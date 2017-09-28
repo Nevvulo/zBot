@@ -18,6 +18,6 @@ message.channel.send({ embed })
 
 let command = 'credits'
 , description = 'Shows credits and information relating to people who have contributed to zBot.'
-, usage = '+credits'
+, usage = 'credits'
 , throttle = {usages: 1, duration: 7};
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle}
