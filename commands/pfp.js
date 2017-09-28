@@ -42,13 +42,13 @@ exports.run = (client, message, args) => {
 		if (filter == "") {
 			message.delete()
 			const embed = new Discord.MessageEmbed();
-			embed.setAuthor(user.tag + "'s Profile Picture » ", user.avatarURL( {format: 'png'} ));
+			embed.setAuthor(user.tag + "'s Profile Picture » ", user.displayAvatarURL( {format: 'png' } ));
 			if (message.guild.members.exists("id", userArgs)) {
 					message.guild.members.fetch(userArgs).then(function (member) {
 			embed.setColor(member.highestRole.hexColor);
 			});
 			}
-			embed.setImage(user.avatarURL( {format: 'png', size: 1024} ))
+			embed.setImage(user.displayAvatarURL( {format: 'png', size: 1024} ))
 			message.reply({ embed })
 			return;
 		}
