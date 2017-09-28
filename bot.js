@@ -90,6 +90,7 @@ if (developer.developerMode == true) {
 const debug = require('./commands/debug/toggle.js');
 const Experience = require('./structures/profile/Experience.js');
 const Settings = require('./structures/general/Settings.js');
+const Timers = require('./structures/general/Timers.js');
 const Version = require('./structures/general/Version.js')
 const UpdateStats = require('./structures/general/UpdateStats.js')
 const Spam = require('./structures/general/Spam.js')
@@ -128,7 +129,7 @@ var ignoreMessage = false;
 
 async function setGame() {
 	let presence = {};
-	presence.game = {};
+	presence.activity = {};
 	presence.afk = false;
 
 	await fs.readFile('./data/main/setGame/setGame.txt', function(err, data){
@@ -137,8 +138,9 @@ async function setGame() {
 	var fileContentLines = data.split( '\n' );
 	var randomLineIndex = Math.floor( Math.random() * fileContentLines.length );
 	var randomLine = fileContentLines[ randomLineIndex ];
-  presence.game.type = 0;
-	presence.game.name = randomLine;
+  presence.activity.type = 0;
+	presence.activity.name = randomLine;
+  console.log(presence)
 	client.user.setPresence(presence);
 	})
 
@@ -150,8 +152,10 @@ client.on('ready', () => {
 	client.setInterval(setGame, 300000);
 	setGame();
   client.setInterval(function(){Settings.saveConfig()}, 300000);
+  client.setInterval(function(){Timers.pollTimers()}, 1000);
   if (process.argv[2] !== "--beta") {
-  UpdateStats.updateDBL()
+  UpdateStats.updateDBL();
+  UpdateStats.updateDLB();
   }
 
   //Version handler
@@ -428,6 +432,7 @@ function processConsoleInput(line) {
           client.guilds.forEach(function (i) {
             log(i.name + " (" + i.id + ")", logType.info)
             Settings.checkGuild(i);
+            Settings.checkGuildSettings(i);
           });
         }
     	}
@@ -461,7 +466,8 @@ function messageChecker(oldMessage, newMessage) {
 	var msg = message.content;
   commandEmitter.emit('newMessage', message);
 	exports.userAFK = userAFK;
-	if (message.mentions.users.size > 0 && message.author.bot == false) {
+  if (message.author.bot) return;
+	if (message.mentions.users.size > 0) {
 		if (userAFK.indexOf(message.mentions.users.first().id) > -1) {
 			message.reply(":information_source: **" + message.mentions.users.first().username + "** is currently *AFK*. They may not respond to your message for a while.").then(message => {
 				message.delete({
@@ -469,14 +475,7 @@ function messageChecker(oldMessage, newMessage) {
 				});
 			});
 		}
-	} else {}
-  if (message.author.bot) return;
-  if (previousMessages.length > 3) {
-    previousMessages.shift()
-  }
-  previousMessages.push(colors.gray("[ " + moment().format('MMMM Do YYYY, h:mm:ss a') + " ] [ " + message.guild.name + " ] " + colors.white(message.author.username + colors.green(" » ") + msg)))
-
-
+	}
   }
 // END OF MESSAGE Function
 
@@ -484,12 +483,18 @@ client.on('message', messageChecker);
 client.on('messageUpdate', messageChecker);
 
 client.on('guildMemberAdd', function(guildMember) {
-  if (client.channels.has(Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
-      channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
+  if (client.channels.has(Settings.getValue(guildMember.guild, "joinMessageChannel"))) {
+      var channel = client.channels.get(Settings.getValue(guildMember.guild, "joinMessageChannel"));
   } else {
-      log("Chat Logs channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
       return;
   }
+
+  if (client.channels.has(Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
+      var memberchannel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
+  } else {
+      return;
+  }
+
 		let randomjoin = "";
 		switch (Math.floor(Math.random() * 1000) % 7) {
 			case 0:
@@ -514,21 +519,25 @@ client.on('guildMemberAdd', function(guildMember) {
 				randomjoin = "Nice to see you!";
 				break;
 		}
-		//channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*")
+    if (Settings.getValue(guildMember.guild, "joinMessageEnabled")) {
+      if (Settings.getValue(guildMember.guild, "joinMessage") === "null" || Settings.getValue(guildMember.guild, "joinMessage") === "none" || Settings.getValue(guildMember.guild, "joinMessage") === "") {
+    channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*")
+  } else {
+    channel.send("​" + Settings.getValue(guildMember.guild, "joinMessage").replace("{user}", guildMember).replace("{username}", guildMember.user.username))
+  }
+  }
 
 	embed = new Discord.MessageEmbed();
-    embed.setAuthor("ᴜꜱᴇʀ ᴊᴏɪɴᴇᴅ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
+    embed.setAuthor("ᴍᴇᴍʙᴇʀ ᴊᴏɪɴᴇᴅ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
     embed.setColor("#39cc45");
     embed.setDescription(":wave: <@" + guildMember.id + "> has joined " + guildMember.guild.name + ".\n")
 
-    var msg = guildMember.user.createdAt.toDateString() + " at " + guildMember.user.createdAt.toLocaleTimeString()
+    var msg = moment(`${guildMember.user.createdAt.toLocaleDateString()} ${guildMember.user.createdAt.toLocaleTimeString()}`, 'YYYY-MM-DD h:mm:ss a').format('Do [of] MMMM, YYYY [at] h:mm:ss a');
     embed.addField("**User Created**", msg);
 
-	var msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString()
-    embed.addField("**User Joined**", msg);
 	embed.setFooter("For more information on this user, type " + Settings.getValue(guildMember.guild, "prefix") + "uinfo " + guildMember.user.username + ".");
 
-	channel.send({ embed });
+	memberchannel.send({ embed });
 });
 
 client.on('guildCreate', function(guild) {
@@ -545,28 +554,23 @@ Settings.removeGuild(guild)
 client.on('guildMemberRemove', function(guildMember) {
   if (client.channels.has(Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
       channel = client.channels.get(Settings.getValue(guildMember.guild, "memberLogsChannel"));
-      if (guildMember.id == "345766303052857344") {
+      if (guildMember.id == client.user.id) {
         log("Guild removed: " + guildMember.guild.id, logType.info);
         Settings.removeGuild(guildMember.guild)
       }
   } else {
-      log("Member logging channel " + Settings.getValue(guildMember.guild, "memberLogsChannel") + " not found", logType.critical);
-      if (guildMember.id == "345766303052857344") {
-        log("Guild removed: " + guildMember.guild.id, logType.info);
-        Settings.removeGuild(guildMember.guild)
-      }
-      return;
+    return;
   }
 
 	embed = new Discord.MessageEmbed();
-    embed.setAuthor("ᴜꜱᴇʀ ǫᴜɪᴛ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
+    embed.setAuthor("ᴍᴇᴍʙᴇʀ ǫᴜɪᴛ »  " + guildMember.user.tag, guildMember.user.avatarURL( {format: 'png'} ));
     embed.setColor("#d16c2e");
     embed.setDescription(":wave: <@" + guildMember.id + "> has left " + guildMember.guild.name + ".\n")
 
     var msg = guildMember.user.tag;
     embed.addField("**Username**", msg);
 
-    var msg = guildMember.joinedAt.toDateString() + " at " + guildMember.joinedAt.toLocaleTimeString();
+    var msg = moment(`${guildMember.joinedAt.toLocaleDateString()} ${guildMember.joinedAt.toLocaleTimeString()}`, 'YYYY-MM-DD h:mm:ss a').format('Do [of] MMMM, YYYY [at] h:mm:ss a');
     embed.addField("**User Joined**", msg);
 	embed.setTimestamp(new Date());
 
@@ -582,17 +586,16 @@ client.on('messageDelete', function(message) {
   if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
       channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
   } else {
-      log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
       return;
   }
 
 	const embed = new Discord.MessageEmbed();
-    embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag, message.member.user.avatarURL( {format: 'png'} ));
+    embed.setAuthor("ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛᴇᴅ »  " + message.author.tag, message.author.avatarURL( {format: 'png'} ));
     embed.setColor("#e08743");
     embed.setDescription(":wastebasket: Message by <@" + message.author.id + "> in <#" + message.channel.id + "> was removed.\n")
     var msg = "No message."
     if (message.cleanContent.length > 1020 || message.content.length > 1020) {
-    msg = message.cleanContent.substr(1019) + "...";
+    msg = message.cleanContent.substr(0, 1019) + "...";
   } else if (message.cleanContent.length < 1) {
     msg = "*No message provided*.";
   } else {
@@ -620,7 +623,6 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
     if (client.channels.has(Settings.getValue(oldMessage.guild, "modLogsChannel"))) {
         channel = client.channels.get(Settings.getValue(oldMessage.guild, "modLogsChannel"));
     } else {
-        log("Moderation logging channel " + Settings.getValue(oldMessage.guild, "modLogsChannel") + " not found", logType.critical);
         return;
     }
 
@@ -631,7 +633,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
     embed.setDescription(":pencil: Message by <@" + oldMessage.author.id + "> in <#" + oldMessage.channel.id + "> was edited.\n")
     var msg = "";
     if (oldMessage.cleanContent.length > 1020) {
-    msg = oldMessage.cleanContent.substr(1019) + "...";
+    msg = oldMessage.cleanContent.substr(0, 1019) + "...";
   } else if (oldMessage.cleanContent.length < 1) {
     msg = "*No message provided*.";
   } else {
@@ -646,7 +648,7 @@ client.on('messageUpdate', function(oldMessage, newMessage) {
 
     var msg = "";
     if (newMessage.cleanContent.length > 1020) {
-    msg = newMessage.cleanContent.substr(1019) + "...";
+    msg = newMessage.cleanContent.substr(0, 1019) + "...";
   } else if (newMessage.cleanContent.length < 1) {
     msg = "*No message provided*.";
   } else {
