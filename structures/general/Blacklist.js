@@ -4,6 +4,7 @@ const commandEmitter = new events.EventEmitter();
 const colors = require('colors');
 
 function newMessage(message) {
+  if (message.channel.type !== 'text') return;
   var msg = message.content;
 
   var blacklist = ["ौ"]
