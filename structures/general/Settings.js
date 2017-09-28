@@ -6,7 +6,7 @@ const Config = JSON.parse(fs.readFileSync('./data/main/settings/Settings.json', 
 class Settings {
 
 	static loadConfig() {
-		log("Loading AstralMod configuration file...", logType.info);
+		log("Loading zBot configuration file...", logType.info);
 
         try {
             return Config;
@@ -33,7 +33,10 @@ class Settings {
 				"experienceTracking": true,
 				"musicNPModule": false,
 				"modLogsChannel": 0,
-				"memberLogsChannel": 0
+				"memberLogsChannel": 0,
+				"joinMessageEnabled": false,
+				"joinMessage": null,
+				"joinMessageChannel": 0
     };
 	}
 
@@ -43,6 +46,46 @@ class Settings {
 		} catch (error) {
 			if (error) log("Guild successfully vacuumed: " + guild.name + " (" + guild.id + ")", logType.success)
 			Settings.newGuild(guild)
+		}
+
+	}
+
+	static checkGuildSettings(guild) {
+		var configSettingsList = {
+        "requiresConfig": true,
+				"expletiveFilter": false,
+				"spamFilter": true,
+				"moderatorRole": "Moderator",
+				"muteRole": "Muted",
+				"prefix": "+",
+				"experienceTracking": true,
+				"musicNPModule": false,
+				"modLogsChannel": 0,
+				"memberLogsChannel": 0,
+				"joinMessageEnabled": false,
+				"joinMessage": null,
+				"joinMessageChannel": 0
+    };
+
+		try {
+			var configSettings = configSettingsList
+			console.log(configSettings)
+			Object.entries(configSettings).forEach(
+    		([key, value]) => {
+				const setting = key;
+				const settingvalue = value;
+				console.log(`Config[guild.id].${setting}`)
+				console.log(eval(`Config[guild.id].${setting}`) === undefined)
+				if (eval(`Config[guild.id].${setting}`) === undefined) {
+					log("Guild setting successfully vacuumed: SETTING " + setting + " in " + guild.name + " (" + guild.id + ")", logType.success)
+					console.log(eval(`configSettings.${setting}`))
+					Settings.editSetting(guild, setting, settingvalue)
+				}
+				}
+			);
+		} catch (error) {
+			log(error, logType.critcal)
+
 		}
 	}
 
@@ -87,6 +130,7 @@ class Settings {
         }
     });
 	}
+
 }
 
 module.exports = Settings;
