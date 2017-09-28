@@ -21,19 +21,10 @@ exports.run = (client, message, args) => {
 	}
 
 	message.guild.members.fetch(args).then(function (member) {
-	let badgesP = JSON.parse(fs.readFileSync('./data/profile/profile-background.json', 'utf8'));
-
-	// if the user has no badges, init to false.
-	if (!badgesP[member.id])
-		badgesP[member.id] = {
-			background: "default"
-	};
-
-
-	var userProfile = badgesP[member.id];
 
 sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(rows => {
 	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
+		sql.get(`SELECT * FROM background WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(rowbg => {
 		async function drawStats() {
 			message.delete ();
 
@@ -90,8 +81,8 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 			const generate = () => {
 				// Environment Variables
 				ctx.globalAlpha = 1
-					ctx.drawImage(base, 0, 0, 300, 300);
-					ctx.drawImage(template, 0, 0, 300, 300);
+				ctx.drawImage(base, 0, 0, 300, 300);
+				ctx.drawImage(template, 0, 0, 300, 300);
 				ctx.scale(1, 1);
 				ctx.patternQuality = 'billinear';
 				ctx.filter = 'bilinear';
@@ -104,15 +95,15 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				// Username
 				if (member.id == 246574843460321291) {
 					texter(member.displayName, 75, 35)
-				} else if (member.highestRole.name == "@everyone") {
-				ctx.font = '16px Roboto';
-				ctx.fillStyle = "#FFF";
-				ctx.fillText(member.displayName, 75, 35);
-			} else {
-			ctx.font = '16px Roboto';
-			ctx.fillStyle = member.displayHexColor;
-			ctx.fillText(member.displayName, 75, 35);
-		}
+					} else if (member.highestRole.name == "@everyone") {
+					ctx.font = '16px Roboto';
+					ctx.fillStyle = "#FFF";
+					ctx.fillText(member.displayName, 75, 35);
+					} else {
+					ctx.font = '16px Roboto';
+					ctx.fillStyle = member.displayHexColor;
+					ctx.fillText(member.displayName, 75, 35);
+					}
 				// Role
 				if (member.highestRole.name == "@everyone") {
 					ctx.font = '12px Roboto';
@@ -233,22 +224,12 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				}
 				}
 
-				if (eval(`rows.slot1`) == "empty") {
-					if (eval(`rows.slot2`) == "empty") {
-						if (eval(`rows.slot3`) == "empty") {
-							if (eval(`rows.slot4`) == "empty") {
-								if (eval(`rows.slot5`) == "empty") {
-									if (eval(`rows.slot6`) == "empty") {
+				if (eval(`rows.slot1`) == "empty" && eval(`rows.slot2`) == "empty" && eval(`rows.slot3`) == "empty" && eval(`rows.slot4`) == "empty" && eval(`rows.slot5`) == "empty" && eval(`rows.slot6`) == "empty") {
 				ctx.font = '13px Roboto';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#ba2a2a';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
 				ctx.fillText('There doesn\'t seem to be anything here.', 25, 275);
-									}
-								}
-							}
-						}
-					}
 				}
 
 
@@ -264,7 +245,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				ctx.drawImage(cond, 15, 15, 50, 50); //org 15, 15, 50, 50
 			};
 
-			base.src = await fs.readFileAsync(`./assets/profile/backgrounds/${userProfile.background}.png`);
+			base.src = await fs.readFileAsync(`./assets/profile/backgrounds/${rowbg.background}.png`);
 			template.src = await fs.readFileAsync(`./assets/profile/backgrounds/template.png`);
 			cond.src = await request({
 					uri: member.user.avatarURL() ? member.user.avatarURL( {format: 'png'} ) : member.user.displayAvatarURL,
@@ -290,8 +271,8 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 		}
 
 		drawStats();
-
-	})
+			})
+		})
 	})
 	})
 }
