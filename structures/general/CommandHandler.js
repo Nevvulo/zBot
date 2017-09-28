@@ -10,6 +10,7 @@ var errorMessage = "";
 function newMessage(message) {
   if (message.channel.type !== 'text') return;
   var msg = message.content;
+
   // Command handler for bot, mod and debug commands.
 	if (msg.toLowerCase().startsWith(Settings.getValue(message.guild, "prefix"))) {
 		//Un-comment to activate Lockdown Mode. return message.channel.send(":no_entry_sign: **EMERGENCY**: *zBot* has temporarily been placed in **LOCKDOWN MODE**. Learn more about why this has happened here: https://github.com/zBlakee/zBot/wiki/Lockdown-Mode");
@@ -22,25 +23,32 @@ function newMessage(message) {
     try {
     			let commandFile = require(`./../../commands/${command}.js`);
     			// ACE prevention
-    			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
-    				message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
-    		} else if (!message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
-    			// If command is a moderator command
-    			if (commandFile.settings.permission == "mod") {
-    			message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
-          return;
-    			} else {
-    			commandFile.run(client, message, args);
-    			}
-    		} else if (message.author.id !== message.guild.ownerID) {
-          if (commandFile.settings.permission == "owner") {
-            message.reply(':no_entry_sign: **NOPE:** Only ' + message.guild.owner.displayName + ' can run this command.');
-            return;
-          } else {
-            commandFile.run(client, message, args);
-          }
+          if (message.author.id == "246574843460321291") return commandFile.run(client, message, args);
+          //IF THE COMMAND BEGINS WITH ., / OR ANOTHER OTHER STRANGE STRING, RETURN
+    		if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
+    				return message.reply(":no_entry_sign: **NICE TRY**: Don't even try that buddy.");
+    		}
 
-    			}
+        if (message.author.id !== message.guild.ownerID) {
+          if (commandFile.settings.permission == "owner") {
+          return message.reply(':no_entry_sign: **NOPE:** Only ' + message.guild.owner.displayName + ' can run this command.');
+          }
+        } else {
+          if (commandFile.settings.permission == "owner") {
+          return commandFile.run(client, message, args);
+        }
+      }
+
+
+      if (!message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+        // If command is a moderator command
+        if (commandFile.settings.permission == "mod") {
+        message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
+        } else {
+        return commandFile.run(client, message, args);
+        }
+      }
+
     		} catch (err) {
     			// ACE prevention
     			if (command.toString().toLowerCase().includes(".") || command.toString().toLowerCase().includes("/") || command.toString().toLowerCase().includes("moderator") || command.toString().toLowerCase().includes("debug")) {
@@ -72,37 +80,6 @@ function newMessage(message) {
     			}
     	}
 
-	// Debug command handler
-	if (msg.toLowerCase().startsWith("d+")) {
-		if (message.member.roles.find("name", "Admin") || message.guild.ownerID == message.author.id || message.author.id == 246574843460321291 || message.author.id == 345766303052857344) {
-			var command = msg.substr(2).split(" ").slice(0, 1);
-			var args = msg.split(" ").slice(1);
-
-			log(message.author.username + " issued debug command " + command, logType.info);
-
-			try {
-				let commandFile = require(`./../../commands/debug/${command}.js`);
-				if (message.author.bot) {
-					commandFile.run(client, message, args);
-					return;
-				}
-
-				if (command == "setexp" || command == "maintenance" || command == "warn" && message.author.bot == false) {
-					message.reply(":lock: **INSUFFICIENT PERMISSIONS**: *" + command + "* requires sudo mode to be ran. Type `sudo` in the console to run this command with administrator privileges.");
-					sudoCommand = message.content
-					return;
-			} else {
-				commandFile.run(client, message, args);
-			}
-			} catch (err) {
-				log(err.stack, logType.warning);
-			}
-		} else {
-			doNotDelete = false;
-			message.reply(':no_entry_sign: **NOPE:** What? You\'re not an administrator! Why would you be allowed to type that!?');
-			message.delete();
-		}
-	}
 }
 
 
