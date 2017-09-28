@@ -113,14 +113,16 @@ var author = message.author
 var enemy = message.mentions.users.first()
 
 if (enemy == author) {
-message.reply(":no_entry_sign: **NOPE**: You can't challenge yourself!");
-return;
+return message.reply(":no_entry_sign: **NOPE**: You can't challenge yourself!");
+}
+
+if (enemy == undefined) {
+return message.reply(":no_entry_sign: **NOPE**: You need to specify who you want to challenge by mentioning them.");
 }
 
 
 	if (challengePending.includes(message.author.id)) {
-		message.reply(":no_entry_sign: **NOPE**: You've already initiated a challenge request, please wait until your current request expires before trying again.");
-		return;
+		return message.reply(":no_entry_sign: **NOPE**: You've already initiated a challenge request, please wait until your current request expires before trying again.");
 	} else {
 
 		message.channel.send(":crossed_swords: **CHALLENGE**: " + message.author + " has challenged " + enemy + " to battle!\n" + enemy + " has 60 seconds to accept this challenge by using `+challenge accept @" + message.author.tag + "`, or ignore it.");
