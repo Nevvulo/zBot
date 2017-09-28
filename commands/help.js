@@ -13,10 +13,10 @@ doNotDelete = false;
 
 const embed = new Discord.MessageEmbed();
 
-var general = "config\ncopyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\nping\nmusic"
+var general = "config\ncopyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\ntranslate\nping\nmusic"
 var social = "profile\nstats\nequip\nleaderboard"
-var misc = "git\npfp\nisay\ngraph\nmath\ndog\ncat\nsearch\nflip\nface"
-var fun = "ship\nmerge\nchallenge\n8ball\ndadjoke"
+var misc = "git\npfp\nisay\ngraph\nmath\ndog\ncat\nsearch\nflip\nface\nmods"
+var fun = "ship\nmerge\nchallenge\n8ball\ndadjoke\nlol"
 var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nkick\nsay\nfind\nfilter"
 
 embed.setAuthor("zBot • Help • version " + Version.getVersionNumber() + " »  ", client.user.avatarURL( {format: 'png' }));
