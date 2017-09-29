@@ -34,6 +34,9 @@ exports.run = (client, message, args) => {
 		}
 
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
+			if (!message.guild.roles.exists("name", Settings.getValue(message.guild, "muteRole"))) {
+				return message.reply(":no_entry_sign: **ERROR**: The server owner hasn't set the `muteRole` setting to a valid role.")
+			}
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
 			} else {

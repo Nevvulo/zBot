@@ -29,16 +29,16 @@ exports.run = (client, message, args) => {
 		}
 
 		if (args == "" || args == undefined) {
-			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to ban. See `' + Settings.getValue(message.guild, "prefix") +'help ban` for more information.');
+			message.reply(':no_entry_sign: **ERROR**: You need to enter a user to ban. See `' + Settings.getValue(message.guild, "prefix") +'help ban` for more information.');
 			return;
 		}
 
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
+			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS")) return message.reply(":no_entry_sign: **NOPE**: I don't have permission to ban this person. Make sure I have the `BAN_MEMBERS` permission and try again.")
+			if (member.bannable == false) return message.reply(":no_entry_sign: **NOPE**: You can't ban this person.")
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t ban other moderators.');
-			} else if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS") || member.bannable == false) {
-				 return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to ban this person. Make sure I have the `BAN_MEMBERS` permission.");
-			 } else {
+		 } else {
 				if (ban == ("")) {
 					message.reply(':no_entry_sign: **NOPE:** You are banning **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are banning them.');
 				} else {

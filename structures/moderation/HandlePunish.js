@@ -30,9 +30,6 @@ class HandlePunish {
 
 		const embed = new Discord.MessageEmbed()
 		if (type == "ban") {
-			if (member.bannable == false) throw "You don\'t have permission to ban that person.";
-			if (!guild.member(client.user).hasPermission("BAN_MEMBERS")) throw "I don't have enough permissions to ban this person."
-
 				embed.setAuthor('ʙᴀɴ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
 				embed.setDescription("You were banned from " + guild.name + " by " + moderator + ".")
 				embed.setColor("#ce4937")
@@ -48,9 +45,6 @@ class HandlePunish {
 
 			message.guild.ban(member, reason);
 		} else if (type == "softban") {
-			if (member.bannable == false) throw "You don\'t have permission to softban that person.";
-			if (!guild.member(client.user).hasPermission("BAN_MEMBERS")) throw "I don't have enough permissions to softban this person."
-
 				embed.setAuthor('sᴏғᴛʙᴀɴ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
 				embed.setDescription("You were softbanned from " + guild.name + " by " + moderator + ".")
 				embed.setColor("#ce6e37")
@@ -64,10 +58,10 @@ class HandlePunish {
 				embed.setFooter('User ID: ' + member.id, client.user.avatarURL)
 			channel.send({ embed })
 
+			let id = member.id
+			message.guild.ban(member, reason);
+			message.guild.unban(id, "Unbanned from softban");
 		} else if (type == "kick") {
-			if (member.kickable == false) throw "You don't have permission to kick that person.";
-			if (!guild.member(client.user).hasPermission("KICK_MEMBERS")) throw "I don't have enough permissions to kick this person.";
-
 				embed.setAuthor('ᴋɪᴄᴋ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
 				embed.setDescription("You were kicked from " + guild.name + " by " + moderator + ".")
 				embed.setColor("#374bce")
@@ -108,6 +102,9 @@ class HandlePunish {
 				embed.setColor("#ad37ce")
 				embed.setFooter('User ID: ' + member.id, client.user.avatarURL)
 			channel.send({ embed })
+
+			var role = guild.roles.get("id", Settings.getValue(guild, "muteRole"));
+			member.addRole(role);
 		} else {
 			throw "Invalid punishment type given."
 		}

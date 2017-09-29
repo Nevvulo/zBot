@@ -34,10 +34,10 @@ exports.run = (client, message, args) => {
 			}
 
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
+			if (!message.guild.member(client.user).hasPermission("KICK_MEMBERS")) return message.reply(":no_entry_sign: **NOPE**: I don't have permission to kick this person. Make sure I have the `KICK_MEMBERS` permission and try again.")
+			if (member.kickable == false) return message.reply(":no_entry_sign: **NOPE**: You can't kick this person.")
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t kick other moderators.');
-			} else if (!message.guild.member(client.user).hasPermission("KICK_MEMBERS") || member.kickable == false) {
-				 return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to kick this person. Make sure I have the `KICK_MEMBERS` permission.");
 			} else {
 				if (kick == ("")) {
 					message.reply(':no_entry_sign: **NOPE:** You are kicking **' + member.displayName + '** without a reason. You should go back and give a reason as to why you are kicking them.');

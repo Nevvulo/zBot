@@ -34,8 +34,8 @@ exports.run = (client, message, args) => {
 		}
 
 		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
-			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS") || member.bannable == false) return message.channel.send(":no_entry_sign: **NOPE**: I don't have permission to softban this person. Make sure I have the `BAN_MEMBERS` permission.")
-
+			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS")) return message.reply(":no_entry_sign: **NOPE**: I don't have permission to softban this person. Make sure I have the `BAN_MEMBERS` permission and try again.")
+			if (member.bannable == false) return message.reply(":no_entry_sign: **NOPE**: You can't softban this person.")
 			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t softban other moderators.');
 			} else {
