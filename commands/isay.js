@@ -40,7 +40,7 @@ exports.run = (client, message, args) => {
 			}) // eslint-disable-line max-len
 			const Image = Canvas.Image;
 
-			var canvas = new Canvas(300, 90)
+			var canvas = new Canvas(400, 90)
 				var ctx = canvas.getContext('2d')
 			const cond = new Image();
 
@@ -49,6 +49,7 @@ exports.run = (client, message, args) => {
 				function wrapText(context, text, x, y, maxWidth, lineHeight) {
         var words = text.split(' ');
         var line = '';
+				var amount = 0;
 
         for(var n = 0; n < words.length; n++) {
           var testLine = line + words[n] + ' ';
@@ -58,12 +59,15 @@ exports.run = (client, message, args) => {
             context.fillText(line, x, y);
             line = words[n] + ' ';
             y += lineHeight;
+
           }
           else {
             line = testLine;
           }
         }
+				message.channel.send("Just thought I'd let you know mate, we had to make the y " + y + " for that text.")
         context.fillText(line, x, y);
+				canvas.height = canvas.height + y
       }
 
 
@@ -79,10 +83,10 @@ exports.run = (client, message, args) => {
 				// Username
 				ctx.font = '16px Roboto';
 				ctx.fillStyle = message.member.displayHexColor;
-				ctx.fillText(message.member.displayName + " says:", 75, 35);
+				ctx.fillText(message.member.displayName, 75, 35);
 
 				// Message
-				var maxWidth = 255;
+				var maxWidth = 300;
 				var context = ctx;
 				var lineHeight = 13;
 				var x = 75;

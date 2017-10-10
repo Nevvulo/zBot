@@ -16,7 +16,7 @@ exports.run = (client, message, args) => {
 	args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
 	console.log(args);
 	console.log(num);
-	message.guild.fetchMember(args.split(" ").toString()).then(function(member) {
+	message.guild.members.fetch(args.toString()).then(function(member) {
 	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
 		sql.run(`UPDATE experience SET experience = ${num} WHERE userId = ${member.id} AND guild = ${message.guild.id}`);
 		message.channel.send(":white_check_mark: **OK:** I've updated " + member + "'s experience to " + num + ".");

@@ -21,7 +21,7 @@ var parser = math.parser();
       .addField('Process Uptime', moment.duration(process.uptime() * 1000).format('D [days], H [hrs], m [mins], s [secs]'), true)
       .addField('Heartbeat Ping', Math.floor(message.client.ping) + 'ms', true)
       .setURL('https://github.com/zBlakee/Xail-Bot')
-      .setColor(0x00FF00)
+      .setColor("#27ae60")
       .setFooter('zBot - Derived from AstralMod v1, created by zBlake.')
       .setTimestamp()
     message.channel.send({ embed })
