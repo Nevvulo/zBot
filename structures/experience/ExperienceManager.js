@@ -2,33 +2,44 @@ const Discord = require("discord.js");
 const events = require('events');
 const commandEmitter = new events.EventEmitter();
 const fs = require('fs');
+const colors = require('colors');
 const sql = require('sqlite');
 sql.open('./data/user/userData.sqlite')
 const Settings = require('./../general/Settings.js');
+const User = require('./../../models/User.js');
+const Slots = require('./../../models/Slots.js');
+const Badges = require('./../../models/Badges.js');
 var talkedRecently = [];
 
-function newMessage(message) {
+async function newMessage(message) {
+if (message.guild == null) return;
+const userProfile = await User.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
   if (message.channel.type !== 'text') return;
-  if (Settings.getValue(message.guild, "experienceTracking") == false) return;
+  if (await Settings.getValue(message.guild, "experienceTracking") == false) return;
   if (message.author.bot) return;
   //✦ Experience handler, including levels, badges and experience gained per message. ✦
-  message.guild.members.fetch(message.author).then(function(member) {
+  message.guild.members.fetch(message.author).then(async function(member) {
     const filter = message => message.author.id === member.user.id && member.user.bot == false;
-      sql.get(`SELECT * FROM experience WHERE userId = '${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
-        if (!row) {
-          sql.run('INSERT INTO experience (guild, userId, experience) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 1]);
-          log("Added a new user to experience database.", logType.info);
+
+        if (!userProfile) {
+          User.create({ userID: message.author.id,
+                        guildID: message.guild.id,
+                        experience: 1,
+                        g_experience: 1,
+                        background: "default",
+                        role: "@everyone",
+                        roleColor: "000000",
+                        weapon: "wooden" });
+          log(colors.magenta("[+] " + message.author.username + " was added to the experience database."), logType.info);
         } else {
           // Checks if they have talked recently
           if (talkedRecently.includes(message.author.id)) {
             return;
           } else {
-            sql.get(`SELECT * FROM experience WHERE userId = '${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
-
               let rand = Math.round(Math.random() * (11 - 4) + 4);
-              sql.run(`UPDATE experience SET experience = ${row.experience + rand} WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+              User.increment('experience', { by: rand, where: { userID: message.author.id, guildID: message.guild.id } });
               log("Added " + rand + " experience to " + message.author.username + ".", logType.info);
-            });
+
             // Adds the user to the array so that they can't talk for 65 seconds
             talkedRecently.push(message.author.id);
             client.setTimeout(() => {
@@ -38,69 +49,63 @@ function newMessage(message) {
             }, 65000);
           }
         }
-      }).catch(() => {
-        console.error;
-        sql.run('CREATE TABLE IF NOT EXISTS experience (guild TEXT, userId TEXT, experience INTEGER)').then(() => {
-          sql.run('INSERT INTO experience (guild, userId, experience) VALUES (?, ?, ?)', [message.guild.id, message.author.id, 1]);
-        });
-      });
 
-      sql.get(`SELECT * FROM badges WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
-        if (!row) {
-          sql.run('INSERT INTO badges (guild, userId, developer, active, moderator, essaywriter, friendship, photographer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, 0, 0, 0, 0, 0, 0]);
+      const userBadges = await Badges.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
+        if (!userBadges) {
+          Badges.create({ userID: message.author.id,
+                        guildID: message.guild.id,
+                        developer: 0,
+                        active: 0,
+                        moderator: 0,
+                        essaywriter: 0,
+                        friendship: 0,
+                        photographer: 0 });
         } else {
         // Check if message author is zBlake:
         if (message.author.id == 246574843460321291) {
-          sql.run(`UPDATE badges SET developer = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+          Badges.update({ developer: 1 }, { where: { userID: message.author.id, guildID: message.guild.id } });
         }
 
         // If message author has a moderator role:
-        if (message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
-          sql.run(`UPDATE badges SET moderator = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+        if (message.member.roles.has(await Settings.getValue(message.guild, "moderatorRole"))) {
+          Badges.update({ moderator: 1 }, { where: { userID: message.author.id, guildID: message.guild.id } });
+        } else {
+          Badges.update({ moderator: 0 }, { where: { userID: message.author.id, guildID: message.guild.id } });
         }
 
         // If message author is one of the names below (active badge):
         if (member.id == 246574843460321291 || member.id == 284551391781978112 || member.id == 184050823326728193 || member.id == 246129294785380353 || member.id == 224472981571633153 || member.id == 213776985581813760 || member.id == 213776985581813760 || member.id == 196792235654774784) { // add id's here if active
-          sql.run(`UPDATE badges SET active = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+          Badges.update({ active: 1 }, { where: { userID: message.author.id, guildID: message.guild.id } });
         }
 
+        //TODO: Add badgeprogress to Postgres
         // If message author has 50/50 on the photographer progress badge:
         sql.get(`SELECT * FROM badgeprogress WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
         if (row.photographer > 50) {
-
-          sql.run(`UPDATE badges SET photographer = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+          Badges.update({ photographer: 1 }, { where: { userID: message.author.id, guildID: message.guild.id } });
         }
         });
 
         // If message author is lvl 10 or higher:
-        sql.get(`SELECT * FROM experience WHERE userId ='${message.author.id}'`).then(row => {
-        if (`${row.experience}` > 2500) {
-          sql.run(`UPDATE badges SET essaywriter = 1 WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
+        if (userProfile.experience > 2500) {
+          Badges.update({ developer: 1 }, { where: { userID: message.author.id, guildID: message.guild.id } });
         }
-        });
 
         }
-      }).catch(() => {
-        console.error;
-        sql.run('CREATE TABLE IF NOT EXISTS badges (guild TEXT, userId TEXT, developer INTEGER, active INTEGER, moderator INTEGER, essaywriter INTEGER, friendship INTEGER, photographer INTEGER)').then(() => {
-          sql.run('INSERT INTO badges (guild, userId, developer, active, moderator, essaywriter, friendship, photographer) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, 0, 0, 0, 0, 0, 0]);
-        });
-      });
 
       //SLOTS
 
-      sql.get(`SELECT * FROM slots WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
-        if (!row) {
-          sql.run('INSERT INTO slots (guild, userId, slot1, slot2, slot3, slot4, slot5, slot6) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, "empty", "empty", "empty", "empty", "empty", "empty"]);
-        } else {
-
+      const userSlots = await Slots.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
+        if (!userSlots) {
+          Slots.create({ userID: message.author.id,
+                        guildID: message.guild.id,
+                        slot1: "empty",
+                        slot2: "empty",
+                        slot3: "empty",
+                        slot4: "empty",
+                        slot5: "empty",
+                        slot6: "empty" });
         }
-      }).catch(() => {
-        console.error;
-        sql.run('CREATE TABLE IF NOT EXISTS slots (guild TEXT, userId TEXT, slot1 TEXT, slot2 TEXT, slot3 TEXT, slot4 TEXT, slot5 TEXT, slot6 TEXT)').then(() => {
-          sql.run('INSERT INTO slots (guild, userId, slot1, slot2, slot3, slot4, slot5, slot6) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [message.guild.id, message.author.id, "empty", "empty", "empty", "empty", "empty", "empty"]);
-        });
-      });
 
       //BADGEPROGRESS
 
@@ -121,39 +126,14 @@ function newMessage(message) {
     });
 
 
-    //BACKGROUNDS
-
-    sql.get(`SELECT * FROM background WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
-      if (!row) {
-        sql.run('INSERT INTO background (guild, userId, background) VALUES (?, ?, ?)', [message.guild.id, message.author.id, "default"]);
+  //ROLE MANAGER TODO: role isn't defined before i call it here
+  const userProfileRole = await User.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
+      if (userProfileRole.role !== message.member.highestRole.name || userProfileRole.roleColor !== message.member.displayHexColor) {
+        User.update({ role: message.member.highestRole.name }, { where: { userID: message.author.id, guildID: message.guild.id } });
+        User.update({ roleColor: message.member.displayHexColor }, { where: { userID: message.author.id, guildID: message.guild.id } });
       }
-  }).catch(() => {
-    console.error;
-    sql.run('CREATE TABLE IF NOT EXISTS background (guild TEXT, userId TEXT, background TEXT)').then(() => {
-      sql.run('INSERT INTO background (guild, userId, background) VALUES (?, ?, ?)', [message.guild.id, message.author.id, "default"]);
-    });
   });
-
-
-  //ROLE MANAGER
-  sql.get(`SELECT * FROM roles WHERE userId ='${message.author.id}' AND guild = '${message.guild.id}'`).then(row => {
-    if (!row) {
-      sql.run('INSERT INTO roles (guild, userId, role, color) VALUES (?, ?, ?, ?)', [message.guild.id, message.author.id, message.member.highestRole.name, message.member.displayHexColor]);
-    } else {
-      if (row.role !== message.member.highestRole.name || row.color !== message.member.displayHexColor) {
-        sql.run(`UPDATE roles SET role = "${message.member.highestRole.name}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
-        sql.run(`UPDATE roles SET color = "${message.member.displayHexColor}" WHERE userId = ${message.author.id} AND guild = ${message.guild.id}`);
-      }
-    }
-}).catch(() => {
-  console.error;
-  sql.run('CREATE TABLE IF NOT EXISTS roles (guild TEXT, userId TEXT, role TEXT, color TEXT)').then(() => {
-    sql.run('INSERT INTO roles (guild, userId, role, color) VALUES (?, ?, ?, ?)', [message.guild.id, message.author.id, message.member.highestRole.name, message.member.displayHexColor]);
-  });
-});
-    })
 }
-
 
 module.exports = {
     name: "ExperienceManager",
