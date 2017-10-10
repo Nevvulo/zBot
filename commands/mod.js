@@ -1,15 +1,15 @@
 const Settings = require('./../structures/general/Settings.js');
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
     message.delete();
-    if (Settings.getValue(message.guild, "expletiveFilter") == true || Settings.getValue(message.guild, "spamFilter") == true) {
+    if (await Settings.getValue(message.guild, "expletiveFilter") == true || await Settings.getValue(message.guild, "spamFilter") == true) {
         message.channel.send(':arrow_forward: **Moderation** has been toggled off.');
-        Settings.editSetting(message.guild, "expletiveFilter", false)
-        Settings.editSetting(message.guild, "spamFilter", false)
+        await Settings.editSetting(message.guild, "expletiveFilter", false)
+        await Settings.editSetting(message.guild, "spamFilter", false)
     } else {
         message.channel.send(':arrow_forward: **Moderation** has been toggled on.');
-        Settings.editSetting(message.guild, "expletiveFilter", true)
-        Settings.editSetting(message.guild, "spamFilter", true)
+        await Settings.editSetting(message.guild, "expletiveFilter", true)
+        await Settings.editSetting(message.guild, "spamFilter", true)
     }
 }
 

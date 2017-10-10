@@ -2,17 +2,17 @@ const Settings = require('./../structures/general/Settings.js');
 const Discord = require("discord.js");
 var tosend = [];
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 tosend = [];
 message.delete();
-var moderatorAmount = message.guild.roles.get(Settings.getValue(message.guild, "moderatorRole")).members.array().length
+var moderatorAmount = message.guild.roles.get(await Settings.getValue(message.guild, "moderatorRole")).members.array().length
 let count = 0;
 var amountLeft = 0;
 let exit = false;
-if (message.guild.roles.get(Settings.getValue(message.guild, "moderatorRole")).members.size < 1) {
+if (message.guild.roles.get(await Settings.getValue(message.guild, "moderatorRole")).members.size < 1) {
 return message.reply(":no_entry_sign: **ERROR**: The owner of this guild hasn't set up a moderator role in the config.")
 }
-message.guild.roles.get(Settings.getValue(message.guild, "moderatorRole")).members.forEach(member => {
+message.guild.roles.get(await Settings.getValue(message.guild, "moderatorRole")).members.forEach(member => {
 count += 1
 amountLeft = moderatorAmount - count;
 

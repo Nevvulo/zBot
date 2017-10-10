@@ -30,7 +30,7 @@ exports.run = (client, message, args) => {
 		.addField('GitHub Repository', Version.getGitHubLink(), true)
 		.addField('zBot Version', version, true)
 		.addField('Latest Commit', commitTitle, true)
-		.setColor(0x00FF00)
+		.setColor("#2ecc71")
 		.setFooter('zBot - GitHub information')
 		.setTimestamp()
 	message.channel.send({ embed })

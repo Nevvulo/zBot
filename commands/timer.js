@@ -38,7 +38,7 @@ Timers.newTimer(timer[message.author.id], message.author.id)
 
 const embed = new Discord.MessageEmbed();
 embed.setAuthor("ᴛɪᴍᴇʀ » ", client.user.avatarURL( {format: 'png'} ));
-embed.setColor("#1ebc8d");
+embed.setColor("#26c6da");
 embed.setDescription(":white_check_mark: **OK**: I'll remind you " + moment(endDate).fromNow() + " about '**" + reason + "**'.")
 
 var msg = reason

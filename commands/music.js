@@ -37,7 +37,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 		if (url == "skip") {
 			if (queue == {}) return message.reply(":no_entry_sign: **ERROR:** There are no more songs in the queue left to skip.");
 			var memberCountnb = voiceChannel.members.filter(a => !a.user.bot).array().length;
-			if (memberCountnb < 3 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole")) || usersVotedSkip[message.guild.id].count < 2) {
+			if (memberCountnb < 3 || message.member.roles.has(await Settings.getValue(message.guild, "moderatorRole")) || usersVotedSkip[message.guild.id].count < 2) {
 				if (usersVotedSkip[message.guild.id].members.includes(message.author.id)) {
 					message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
 					return;
@@ -85,7 +85,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 					} else {
 						embed.addField("Queued Songs", tosend.slice(0,5).join('\n'))
 					}
-						embed.setColor("#b3cc39")
+						embed.setColor("#ffee58")
 						embed.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued',  client.user.avatarURL( {format: 'png'} ))
 					message.channel.send({ embed })
 		} else if (url == "next") {
@@ -97,7 +97,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 				message.channel.send(":repeat_one: Repeat is now turned off.");
 			} else {
 				yt.getInfo(queue[message.guild.id].currentSong.url, function (err, info) {
-					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" + Settings.getValue(message.guild, "prefix") + "music repeat` again to toggle off.");
+					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" + await Settings.getValue(message.guild, "prefix") + "music repeat` again to toggle off.");
 					queue[message.guild.id].repeat = true;
 				});
 			}
@@ -112,7 +112,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 			return;
 		} else if (url == "end") {
 			var memberCountnb = voiceChannel.members.filter(a => !a.user.bot).array().length;
-			if (memberCountnb < 2 || message.member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			if (memberCountnb < 2 || message.member.roles.has(await Settings.getValue(message.guild, "moderatorRole"))) {
 				queue[message.guild.id].songs = [];
 				musicEnd = true;
 				usersVotedSkip[message.guild.id].members = [];
@@ -154,7 +154,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 					const embed = new Discord.MessageEmbed()
 						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
 						.setDescription(":white_check_mark: **OK:** I've added the playlist **" + playlist.title + "** into the queue.")
-						.setColor("#b3cc39")
+						.setColor("#d4e157")
 						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 					message.channel.send({ embed })
 
@@ -174,7 +174,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 					const embed = new Discord.MessageEmbed()
 						.setAuthor('Music Added » ' + message.author.tag, message.author.avatarURL( {format: 'png'} ))
 						.setDescription(`:white_check_mark: **OK:** I've added **${video.title}** into the queue. (${moment().startOf('day').add(d).format('HH:mm:ss')})`)
-						.setColor("#b3cc39")
+						.setColor("#d4e157")
 						.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 					message.channel.send({ embed })
 			return;
@@ -188,7 +188,6 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 		function queueMusic(song) {
 			queue[message.guild.id].currentSong = song;
-			console.log(queue[message.guild.id].currentSong)
 
 			 	if (eval(song.url === undefined)) {
 				message.reply(":no_entry_sign: **ERROR**: I couldn't play that video. This may be because the video is blocked in **Australia** (where zBot is hosted), or because the video is private. Try again with a different video.");
@@ -200,11 +199,11 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 
 
 
-			if (Settings.getValue(message.guild, "musicNPModule") == true) {
+			if (await Settings.getValue(message.guild, "musicNPModule") == true) {
 				let d = moment.duration({s: song.duration});
 				const embed = new Discord.MessageEmbed()
 					.addField('Music Playing', `:headphones: **${song.title}** is now playing. (${moment().startOf('day').add(d).format('HH:mm:ss')})`, true)
-					.setColor("#39cc45")
+					.setColor("#9ccc65")
 					.setFooter('zBot Music Player - ' + queue[message.guild.id].songs.length + ' songs queued', musicAccount)
 				message.channel.send({ embed })
 			}
@@ -232,7 +231,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 					log("Music ended in " + message.guild.name + ".", logType.info);
 					message.channel.send(":mute: The queue is empty.");
 					queue[message.guild.id].playing = false;
-					firstSong = true
+					delete queue[message.guild.id]
 					voiceChannel.leave();
 					return;
 				}

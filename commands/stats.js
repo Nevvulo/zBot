@@ -3,6 +3,7 @@ const Canvas = require('canvas');
 const userStats = require('./../bot.js');
 const path = require('path');
 const request = require('request-promise');
+const Find = require('./../structures/general/UserFinder.js');
 const {
 	promisifyAll
 } = require('tsubaki');
@@ -23,9 +24,9 @@ exports.run = (client, message, args) => {
 		async function drawStats() {
 			message.delete ();
 			const totalExp = await Experience.getTotalExperience(member.id, message.guild.id);
-			const level = await Experience.getLevel(member.id);
+			const level = await Experience.getLevel(member.id, message.guild.id);
 			const levelBounds = await Experience.getLevelBounds(level);
-			const currentExp = await Experience.getCurrentExperience(member.id);
+			const currentExp = await Experience.getCurrentExperience(member.id, message.guild.id);
 
 			function fontFile(name) {
 				return path.join(__dirname, '..', '/assets/', 'profile', 'fonts', name)

@@ -8,21 +8,21 @@ const rl = readline.createInterface({
 const Punish = require('./../structures/moderation/HandlePunish.js');
 const Settings = require('./../structures/general/Settings.js');
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
     args = args.slice(0).join(' ');
 
     if (args == "") {
-      return message.reply(':no_entry_sign: **ERROR:** You need to enter a user to search for. See `' + Settings.getValue(message.guild, "prefix") +'help uinfo` for more information.');
+      return message.reply(':no_entry_sign: **ERROR:** You need to enter a user to search for. See `' + await Settings.getValue(message.guild, "prefix") + 'help uinfo` for more information.');
     }
 
     args = UserFinder.getUser(args).shift().id
-    if (message.guild.members.exists("id", args)) {
+    if (message.guild.members.has(args)) {
         message.guild.members.fetch(args).then(function(member) {
             const embed = new Discord.MessageEmbed();
             embed.setAuthor("ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ » " + member.user.username + "#" + member.user.discriminator, member.user.avatarURL({
                 format: 'png'
             }));
-            embed.setColor("#c64ed3");
+            embed.setColor("#e74c3c");
                 var msg = "**Created** » " + member.user.createdAt.toDateString() + " at " + member.user.createdAt.toLocaleTimeString() + "\n";
                 if (member.joinedAt.getTime() == 0) {
                     msg += "**Joined** » Discord seems to be giving incorrect info... :(";
@@ -124,7 +124,7 @@ exports.run = (client, message, args) => {
                 format: 'png'
             }));
             embed.setDescription("This user is not a part of this server.")
-            embed.setColor("#c64ed3"); {
+            embed.setColor("#c0392b"); {
                 var msg = "**Created** » " + user.createdAt.toDateString() + " at " + user.createdAt.toLocaleTimeString() + "\n";
 
                 embed.addField("Timestamps", msg, true);

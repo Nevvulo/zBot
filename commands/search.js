@@ -2,14 +2,14 @@ const google = require('google')
 const Discord = require("discord.js");
 const Settings = require('./../structures/general/Settings.js');
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 	message.delete();
 
 google.resultsPerPage = 25
 var nextCounter = 0
 const searchString = args.slice(0).join(' ');
 if (searchString == "") {
-	return message.reply(':no_entry_sign: **ERROR:** You need to enter something to search for. See `' + Settings.getValue(message.guild, "prefix") +'help search` for more information.');
+	return message.reply(':no_entry_sign: **ERROR:** You need to enter something to search for. See `' + await Settings.getValue(message.guild, "prefix") +'help search` for more information.');
 }
 google(searchString, function (err, res){
 
@@ -29,7 +29,7 @@ let randomPhrase = ["Right, here's what I've found under", "No problem! Here's w
 		} else {
 			embed.addField(title, "*There doesn't seem to be a description for this result.*")
 		}
-			embed.setColor("#b3cc39")
+			embed.setColor("#26c6da")
 		message.channel.send({ embed })
 })
 };

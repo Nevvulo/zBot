@@ -39,7 +39,7 @@ try {
 	const embed = new Discord.MessageEmbed()
 message.channel.send({
 			embed: {
-				color: 3191350,
+				color: 8359053,
 				author: {
 					name: "ᴍᴀᴛʜ ʀᴇꜱᴜʟᴛ »  ",
 					icon_url: message.author.displayAvatarURL
@@ -57,7 +57,7 @@ message.channel.send({
 			}
 		})
 } catch (err) {
-	throw err.toString()
+	message.reply(":no_entry_sign: **ERROR**: An error occured whilst running the command. " + err.toString())
 return;
 }
 }

@@ -1,4 +1,5 @@
 exports.run = (client, message, args) => {
+	if (args == "") return;
 	message.delete();
     throw args.slice(0).join(' ');
 };

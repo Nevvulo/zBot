@@ -9,7 +9,7 @@ exports.run = (client, message, args) => {
 
 	const embed = new Discord.MessageEmbed();
 	embed.setAuthor("ᖴɪɴᴅ » ", client.user.avatarURL( {format: "png"} ));
-	embed.setColor("#8babdd");
+	embed.setColor("#2980b9");
 	if (users.length == 1) {
 	var msg = users
 	embed.addField(users.length + " user found containing '" + args + "'", msg)

@@ -1,13 +1,13 @@
 const Settings = require('./../structures/general/Settings.js');
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 	message.delete();
-	if (Settings.getValue(message.guild, "expletiveFilter") == true) {
+	if (await Settings.getValue(message.guild, "expletiveFilter") == true) {
 		message.channel.send(':arrow_forward: **Expletive Filter** has been toggled off.');
-		Settings.editSetting(message.guild, "expletiveFilter", false)
+		await Settings.editSetting(message.guild, "expletiveFilter", false)
 	} else {
 		message.channel.send(':arrow_forward: **Expletive Filter** has been toggled on.');
-		Settings.editSetting(message.guild, "expletiveFilter", true)
+		await Settings.editSetting(message.guild, "expletiveFilter", true)
 	}
 }
 

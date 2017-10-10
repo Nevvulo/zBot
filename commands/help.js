@@ -4,24 +4,24 @@ const Version = require('./../structures/general/Version.js');
 const Settings = require('./../structures/general/Settings.js');
 var msg = "";
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 if (args[0] !== undefined) {
-  return message.channel.send(Help.getCommandHelp(args[0], message.guild));
+  return message.channel.send(await Help.getCommandHelp(args[0], message.guild));
 } else {
 
 doNotDelete = false;
 
 const embed = new Discord.MessageEmbed();
 
-var general = "config\ncopyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\ntranslate\nping\nmusic"
+var general = "config\ncopyright\nwarranty\ncredits\nafk\ninfo\nhelp\nhug\ntag\nping\nmusic\ntimer"
 var social = "profile\nstats\nequip\nleaderboard"
-var misc = "git\npfp\nisay\ngraph\nmath\ndog\ncat\nsearch\nflip\nface\nmods"
+var misc = "git\npfp\nisay\nmath\ndog\ncat\nsearch\nflip\nface\nmods\ntranslate"
 var fun = "ship\nmerge\nchallenge\n8ball\ndadjoke\nlol"
-var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nkick\nsay\nfind\nfilter"
+var mod = "mod\nrm\nuinfo\nwarn\nban\nsoftban\nmute\nkick\nunban\nsay\nfind\nfilter"
 
 embed.setAuthor("zBot • Help • version " + Version.getVersionNumber() + " »  ", client.user.avatarURL( {format: 'png' }));
-embed.setColor("#42aab2");
-embed.setDescription(":information_source: These are all of the commands available in zBot. To view more information about a specific command, type `" + Settings.getValue(message.guild, "prefix") + "help [command]`.")
+embed.setColor("#26c6da");
+embed.setDescription(":information_source: These are all of the commands available in zBot. To view more information about a specific command, type `" + await Settings.getValue(message.guild, "prefix") + "help [command]`.")
 embed.addField("General", general, true);
 embed.addField("Moderator", mod, true);
 embed.addField("Misc.", misc, true);
