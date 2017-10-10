@@ -28,11 +28,11 @@ exports.run = (client, message, args) => {
 
 
 		if (args == "" || args == undefined) {
-			message.reply(':no_entry_sign: **ERROR**: You need to enter the ID of a user to unban. See `' + Settings.getValue(message.guild, "prefix") +'help unban` for more information.');
+			message.reply(':no_entry_sign: **ERROR**: You need to enter the ID of a user to unban. See `' + await Settings.getValue(message.guild, "prefix") +'help unban` for more information.');
 			return;
 		}
 
-		client.users.fetch(args.split(" ").toString()).then(function (user) {
+		client.users.fetch(args.split(" ").toString()).then(async function (user) {
 			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS")) return message.reply(":no_entry_sign: **NOPE**: I don't have permission to unban this person. Make sure I have the `BAN_MEMBERS` permission and try again.")
 			getBans();
 			async function getBans() {

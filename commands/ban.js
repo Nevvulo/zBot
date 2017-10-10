@@ -9,7 +9,7 @@ var colors = require('colors');
 let reason = {};
 var answered = false;
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 	message.delete();
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
@@ -29,14 +29,14 @@ exports.run = (client, message, args) => {
 		}
 
 		if (args == "" || args == undefined) {
-			message.reply(':no_entry_sign: **ERROR**: You need to enter a user to ban. See `' + Settings.getValue(message.guild, "prefix") +'help ban` for more information.');
+			message.reply(':no_entry_sign: **ERROR**: You need to enter a user to ban. See `' + await Settings.getValue(message.guild, "prefix") +'help ban` for more information.');
 			return;
 		}
 
-		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
+		message.guild.members.fetch(args.split(" ").toString()).then(async function (member) {
 			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS")) return message.reply(":no_entry_sign: **NOPE**: I don't have permission to ban this person. Make sure I have the `BAN_MEMBERS` permission and try again.")
 			if (member.bannable == false) return message.reply(":no_entry_sign: **NOPE**: You can't ban this person.")
-			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			if (member.roles.has(await Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t ban other moderators.');
 		 } else {
 				if (ban == ("")) {
@@ -74,8 +74,8 @@ exports.run = (client, message, args) => {
 			message.channel.send(":gear: **BAN**: Are you sure you want to issue this ban against **" + member.displayName + "**? *(__y__es | __n__o)*")
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
-			embed.addField("Reason", reason)
-			embed.setColor("#f4b942")
+			embed.addField("Reason", reason.substr(0, 1019) + "...")
+			embed.setColor("#e57373")
 			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
 			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })

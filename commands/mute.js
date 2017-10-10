@@ -29,15 +29,15 @@ exports.run = (client, message, args) => {
 		}
 
 		if (args == "" || args == undefined) {
-			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to mute. See `' + Settings.getValue(message.guild, "prefix") +'help mute` for more information.');
+			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to mute. See `' + await Settings.getValue(message.guild, "prefix") +'help mute` for more information.');
 			return;
 		}
 
-		message.guild.members.fetch(args.split(" ").toString()).then(function (member) {
-			if (!message.guild.roles.exists("name", Settings.getValue(message.guild, "muteRole"))) {
+		message.guild.members.fetch(args.split(" ").toString()).then(async function (member) {
+			if (!message.guild.roles.exists("name", await Settings.getValue(message.guild, "muteRole"))) {
 				return message.reply(":no_entry_sign: **ERROR**: The server owner hasn't set the `muteRole` setting to a valid role.")
 			}
-			if (member.roles.has(Settings.getValue(message.guild, "moderatorRole"))) {
+			if (member.roles.has(await Settings.getValue(message.guild, "moderatorRole"))) {
 				message.channel.send(':no_entry_sign: **ERROR:** You can\'t mute other moderators.');
 			} else {
 				if (mute == ("")) {
@@ -75,8 +75,8 @@ exports.run = (client, message, args) => {
 			message.channel.send(":gear: **MUTE**: Are you sure you want to issue this mute against **" + member.displayName + "**? *(__y__es | __n__o)*")
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
-			embed.addField("Reason", reason)
-			embed.setColor("#f4b942")
+			embed.addField("Reason", reason.substr(0, 1019) + "...")
+			embed.setColor("#9575cd")
 			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
 			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })
