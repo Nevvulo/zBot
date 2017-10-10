@@ -6,7 +6,7 @@ var prefix = "+";
 
 class Help {
 
-	static getCommandHelp(command, guild) {
+	static async getCommandHelp(command, guild) {
 			const commandFile = require(`./../../commands/${command}.js`);
 
 			help.title = "Information about `" + command + "`.";
@@ -27,9 +27,9 @@ class Help {
 			}
 
 			embed.addField("**Description**", help.desc);
-			embed.addField("**Usage**", Settings.getValue(guild, "prefix") + help.usage);
+			embed.addField("**Usage**", await Settings.getValue(guild, "prefix") + help.usage);
 			if (help.example !== undefined) {
-				embed.addField("**Example**", Settings.getValue(guild, "prefix") + help.example);
+				embed.addField("**Example**", await Settings.getValue(guild, "prefix") + help.example);
 			}
 
 			embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));

@@ -6,9 +6,9 @@ const Settings = require('./Settings.js');
 var caughtSwear;
 var botDelMessage = true;
 
-function newMessage(message) {
+async function newMessage(message) {
   if (message.channel.type !== 'text') return;
-  if (Settings.getValue(message.guild, "expletiveFilter") == false) return;
+  if (await Settings.getValue(message.guild, "expletiveFilter") == false) return;
     if (botDelMessage && caughtSwear) {
       if (message.author.id == 303017211457568778) {
         console.log(colors.yellow("▲ Bot is about to delete: " + colors.grey(message)));
@@ -37,10 +37,10 @@ function newMessage(message) {
     caughtSwear = true;
       if (dxp != -1) { //extra bad word!
         log("▲ Expletive (level 2) caught in message by " + message.author.tag, logType.info);
-        if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
-            channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+        if (client.channels.has(await Settings.getValue(message.guild, "modLogsChannel"))) {
+            channel = client.channels.get(await Settings.getValue(message.guild, "modLogsChannel"));
         } else {
-            log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+            log("Moderation logging channel " + await Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
             return;
         }
   			channel.send({

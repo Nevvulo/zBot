@@ -1,18 +1,16 @@
-const sql = require('sqlite');
-sql.open('./data/user/userData.sqlite');
+const User = require('./../../models/User.js');
 var totalXP = 0;
 
 class Experience {
 
 	static async getTotalExperience(userID, guild) {
-		await sql.get(`SELECT * FROM experience WHERE userId ='${userID}' AND guild = '${guild}'`).then(row => {
-			totalXP = `${row.experience}`;
-			return totalXP;
-		})
+		const userProfile = await User.findOne({ where: { userID: userID, guildID: guild } });
+		totalXP = userProfile.experience;
+		return userProfile.experience;
 	}
 
-	static async getCurrentExperience(userID) {
-		const level = await Experience.getLevel(userID);
+	static async getCurrentExperience(userID, guildID) {
+		const level = await Experience.getLevel(userID, guildID);
 		const {
 			lowerBound
 		} = Experience.getLevelBounds(level);
@@ -29,8 +27,9 @@ class Experience {
 		};
 	}
 
-	static async getLevel(userID) {
-		return Math.floor(0.177 * Math.sqrt(totalXP)) + 1;
+	static async getLevel(userID, guildID) {
+		const exp = await Experience.getTotalExperience(userID, guildID);
+		return Math.floor(0.177 * Math.sqrt(exp)) + 1;
 	}
 
 	static removeMember(userID, guildID) {

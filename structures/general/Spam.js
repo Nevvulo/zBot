@@ -8,9 +8,9 @@ var fastMessage = {};
 var fastMessageCount = {};
 var sameMessageCount = {};
 
-function newMessage(message) {
+async function newMessage(message) {
   if (message.channel.type !== 'text') return;
-  if (Settings.getValue(message.guild, "spamFilter") == false) return;
+  if (await Settings.getValue(message.guild, "spamFilter") == false) return;
 	if (message.author.bot) return;
 	var msg = message.content
 
@@ -29,10 +29,10 @@ function newMessage(message) {
                 if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] > 3) {
                     if (lastMessages[message.author.id] == msg && sameMessageCount[message.author.id] == 6) {
 											message.reply("Quite enough of this. I'm not warning you anymore.")
-                      if (client.channels.has(Settings.getValue(message.guild, "modLogsChannel"))) {
-                          channel = client.channels.get(Settings.getValue(message.guild, "modLogsChannel"));
+                      if (client.channels.has(await Settings.getValue(message.guild, "modLogsChannel"))) {
+                          channel = client.channels.get(await Settings.getValue(message.guild, "modLogsChannel"));
                       } else {
-                          log("Moderation logging channel " + Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
+                          log("Moderation logging channel " + await Settings.getValue(message.guild, "modLogsChannel") + " not found", logType.critical);
                           return;
                       }
 											channel.send({
