@@ -8,11 +8,11 @@ const {
 	promisifyAll
 } = require('tsubaki');
 const fs = promisifyAll(require('fs'));
-const sql = require('sqlite');
-sql.open('./data/user/userData.sqlite');
+const Slots = require('./../models/Slots.js');
+const User = require('./../models/User.js');
+const Badges = require('./../models/Badges.js');
 
-
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 	args = args.toString();
 	if (args == "") {
 		args = message.author.id;
@@ -20,20 +20,18 @@ exports.run = (client, message, args) => {
 		args = Find.getMember(args, message.guild).shift().id
 	}
 
-	message.guild.members.fetch(args).then(function (member) {
-
-sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(rows => {
-	sql.get(`SELECT * FROM experience WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(row => {
-		sql.get(`SELECT * FROM background WHERE userId ='${member.id}' AND guild = '${message.guild.id}'`).then(rowbg => {
+	message.guild.members.fetch(args).then(async function (member) {
+		const userBadges = await Badges.findOne({ where: { userID: member.id, guildID: message.guild.id } });
+		const userSlots = await Slots.findOne({ where: { userID: member.id, guildID: message.guild.id } });
+		const userProfile = await User.findOne({ where: { userID: member.id, guildID: message.guild.id } });
 		async function drawStats() {
 			message.delete ();
 
 			//Fix error with late promise
-			var totalExperience = `${row.experience}`;
 			const totalExp = await Experience.getTotalExperience(member.id, message.guild.id);
-			const level = await Experience.getLevel(member.id);
+			const level = await Experience.getLevel(member.id, message.guild.id);
 			const levelBounds = await Experience.getLevelBounds(level);
-			const currentExp = await Experience.getCurrentExperience(member.id);
+			const currentExp = await Experience.getCurrentExperience(member.id, message.guild.id);
 			const fillValue = Math.min(Math.max(currentExp / (levelBounds.upperBound - levelBounds.lowerBound), 0), 1);
 
 			function fontFile(name) {
@@ -163,7 +161,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 					ctx.fillStyle = '#c1453a';
 				}
 				ctx.shadowColor = 'rgba(0, 0, 0, 0)';
-				ctx.fillText(totalExperience, 74, 225);
+				ctx.fillText(totalExp, 74, 225);
 
 				//BADGES
 				// BADGE TITLE
@@ -180,59 +178,49 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				let slot5X = 185;
 				let slot6X = 225;
 
-
-				// + SUBSCRIBER BADGE
 				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "subscriber") {
-					ctx.drawImage(subbadge, eval(`slot${i}X`), 260, 25, 25);
-				}
-				}
-
-				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "active") {
+				if (eval(`userSlots.slot${i}`) == "active") {
 					ctx.drawImage(activebadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 			}
 
 				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "moderator") {
+				if (eval(`userSlots.slot${i}`) == "moderator") {
 					ctx.drawImage(modbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 			}
 
 				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "essaywriter") {
+				if (eval(`userSlots.slot${i}`) == "essaywriter") {
 					ctx.drawImage(essaywriterbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 			}
 
 				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "friendship") {
+				if (eval(`userSlots.slot${i}`) == "friendship") {
 					ctx.drawImage(friendshipbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 			}
 
 				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "developer") {
+				if (eval(`userSlots.slot${i}`) == "developer") {
 					ctx.drawImage(devbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 			}
 
 				for (let i = 1; i < 7; i++) {
-				if (eval(`rows.slot${i}`) == "photographer") {
+				if (eval(`userSlots.slot${i}`) == "photographer") {
 					ctx.drawImage(photographerbadge, eval(`slot${i}X`), 260, 25, 25);
 				}
 				}
 
-				if (eval(`rows.slot1`) == "empty" && eval(`rows.slot2`) == "empty" && eval(`rows.slot3`) == "empty" && eval(`rows.slot4`) == "empty" && eval(`rows.slot5`) == "empty" && eval(`rows.slot6`) == "empty") {
+				if (eval(`userSlots.slot1`) == "empty" && eval(`userSlots.slot2`) == "empty" && eval(`userSlots.slot3`) == "empty" && eval(`userSlots.slot4`) == "empty" && eval(`userSlots.slot5`) == "empty" && eval(`userSlots.slot6`) == "empty") {
 				ctx.font = '13px Roboto';
 				ctx.textAlign = 'left';
 				ctx.fillStyle = '#ba2a2a';
 				ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
 				ctx.fillText('There doesn\'t seem to be anything here.', 25, 275);
 				}
-
-
 
 				// Image
 				ctx.globalAlpha = 1
@@ -245,7 +233,7 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 				ctx.drawImage(cond, 15, 15, 50, 50); //org 15, 15, 50, 50
 			};
 
-			base.src = await fs.readFileAsync(`./assets/profile/backgrounds/${rowbg.background}.png`);
+			base.src = await fs.readFileAsync(`./assets/profile/backgrounds/${userProfile.background}.png`);
 			template.src = await fs.readFileAsync(`./assets/profile/backgrounds/template.png`);
 			cond.src = await request({
 					uri: member.user.avatarURL() ? member.user.avatarURL( {format: 'png'} ) : member.user.displayAvatarURL,
@@ -271,9 +259,6 @@ sql.get(`SELECT * FROM slots WHERE userId ='${member.id}' AND guild = '${message
 		}
 
 		drawStats();
-			})
-		})
-	})
 	})
 }
 
