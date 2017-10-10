@@ -1,11 +1,11 @@
-const sql = require('sqlite');
+const User = require('./../models/User.js');
 const Discord = require('discord.js');
-sql.open('./data/user/userData.sqlite');
 var limit = 5
 
 exports.run = (client, message, args) => {
 	leaderboard();
 	async function leaderboard() {
+
 		var memberCountnb = message.guild.members.filter(a => !a.user.bot).array().length;
 		limit = args;
 		if (args == [] || args == "") {
@@ -27,11 +27,13 @@ exports.run = (client, message, args) => {
 
 		var tosend = [];
 		//SQL query in variable.
-		var test = await sql.all(`SELECT * FROM experience WHERE guild = '${message.guild.id}' ORDER BY experience DESC LIMIT ${limit}`);
+		const userProfile = await User.findAll({ where: { guildID: message.guild.id }, order: [['experience', 'DESC']], limit: limit });
 		//Loop through all users in query and push them to an array.
 		for (let i = 0; i < limit; i++) {
-			client.users.fetch(test[i].userId).then(function (member) {
-				tosend.push("**" + member.username + "**  ■  *" + test[i].experience + " experience*\n");
+			const tagString = userProfile.map(t => t.userID)
+			const tagExperience = userProfile.map(a => a.experience)
+			client.users.fetch(tagString[i]).then(function (member) {
+				tosend.push("**" + member.username + "**  ■  *" + tagExperience[i] + " experience*\n");
 			}).catch(function (reason) {
 				throw reason;
 			});
@@ -41,7 +43,7 @@ exports.run = (client, message, args) => {
 		const embed = new Discord.MessageEmbed();
 		message.channel.send({embed: {
 		title: "ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ » ",
-		color: 3191350,
+		color: 15965202,
 		author: {icon_url: message.author.displayAvatarURL},
 		description: ":star2: Listing the top **" + limit + "** users with the most experience.",
 		fields: [
