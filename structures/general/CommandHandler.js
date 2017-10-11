@@ -39,6 +39,8 @@ async function newMessage(message) {
 				async function runCommand() {
 				if (isOwner()) {
 					callOwnerCommand();
+				} else if (isModerator()) {
+					callModeratorCommand();
 				} else {
 	      	callCommand();
 				}
@@ -51,21 +53,15 @@ async function newMessage(message) {
 				        }
 
 				        function callCommand() {
-									if (commandFile.settings.permission == "owner" || commandFile.settings.permission == "mod") throw "test"
+									if (commandFile.settings.permission == "owner") return callOwnerCommand();
+									if (commandFile.settings.permission == "mod") return callModeratorCommand();
 				          return commandFile.run(client, message, args);
 				        }
 
 				        function callModeratorCommand() {
 				          // If command is a moderator command
-				        if (commandFile.settings.permission == "mod") {
-									isModerator().then(moderatorStatus => {
-										if (moderatorStatus) {
-											commandFile.run(client, message, args);
-										} else {
-											 message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
-										}
-									})
-								}
+									if (!isModerator() && commandFile.settings.permission == "mod") return message.reply(':no_entry_sign: **NOPE:** What? You\'re not a moderator! Why would you be allowed to type that!?');
+				          if (isModerator()) return commandFile.run(client, message, args);
 				        }
 
 				        function isOwner() {
@@ -77,6 +73,7 @@ async function newMessage(message) {
 				        }
 
 								function isModerator() {
+									log("too late", logType.success)
 				          if (!message.member.roles.has(moderatorRole)) {
 				            return false;
 				          } else {
@@ -84,7 +81,7 @@ async function newMessage(message) {
 				          }
 				        }
 			}
-
+			log(moderatorRole, logType.success)
 			runCommand();
 
 
