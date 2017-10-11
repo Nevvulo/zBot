@@ -8,19 +8,19 @@ const os = require('os');
 
 exports.run = (client, message, args) => {
 var n = Date.now()
-var uptime = moment.duration(process.uptime() * 1000).format('D [days], H [hrs], m [mins], s [secs]')
+var uptime = moment.duration(process.uptime() * 1000, "milliseconds").format('D [days], H [hrs], m [mins], s [secs]')
 
 const memUsed = process.memoryUsage().heapUsed
 var parser = math.parser();
     const embed = new Discord.MessageEmbed()
-      .setTitle('GitHub Repository')
+      .setTitle('Discord Support Server')
       .addField('Node Version', "`" + process.version + "`", true)
       .addField('Discord.js Version', "`" + Discord.version + "`", true)
       .addField('Bot Memory Usage', parser.eval(`${memUsed.toFixed()} b to Mb`), true)
       .addField("System Memory Usage", "**Free:** *" + parser.eval(`${os.freemem()} b to Gb`) + `*\n**Total:** *` + parser.eval(`${os.totalmem()} b to Gb`) + "*", true)
-      .addField('Process Uptime', moment.duration(process.uptime() * 1000).format('D [days], H [hrs], m [mins], s [secs]'), true)
+      .addField('Process Uptime', uptime, true)
       .addField('Heartbeat Ping', Math.floor(message.client.ping) + 'ms', true)
-      .setURL('https://github.com/zBlakee/Xail-Bot')
+      .setURL('https://discord.gg/uQWCfXB')
       .setColor("#27ae60")
       .setFooter('zBot - Derived from AstralMod v1, created by zBlake.')
       .setTimestamp()

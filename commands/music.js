@@ -24,8 +24,9 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 	const searchString = args.slice(0).join(' ');
 	const url = args[0] ? args[0].replace(/<(.+)>/g, '$1') : '';
 	const voiceChannel = message.member.voiceChannel;
-
-	if (url == "" && searchString == "") return message.reply(":no_entry_sign: **ERROR**: You need to provide a video to play, or use one of the sub-commands. " +  'See `' + Settings.getValue(message.guild, "prefix") +'help music` for more information.')
+	const moderatorRole = await Settings.getValue(message.guild, "moderatorRole");
+	const prefix = await Settings.getValue(message.guild, "prefix");
+	if (url == "" && searchString == "") return message.reply(":no_entry_sign: **ERROR**: You need to provide a video to play, or use one of the sub-commands. " + 'See `' + prefix + 'help music` for more information.')
 	if (!voiceChannel) return message.reply(":no_entry_sign: **ERROR:** You aren't currently in a voice channel.");
 
 	voiceChannel.join()
@@ -37,7 +38,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 		if (url == "skip") {
 			if (queue == {}) return message.reply(":no_entry_sign: **ERROR:** There are no more songs in the queue left to skip.");
 			var memberCountnb = voiceChannel.members.filter(a => !a.user.bot).array().length;
-			if (memberCountnb < 3 || message.member.roles.has(await Settings.getValue(message.guild, "moderatorRole")) || usersVotedSkip[message.guild.id].count < 2) {
+			if (memberCountnb < 3 || message.member.roles.has(moderatorRole) || usersVotedSkip[message.guild.id].count < 2) {
 				if (usersVotedSkip[message.guild.id].members.includes(message.author.id)) {
 					message.reply(":no_entry_sign: **NOPE:** You've already voted to skip!");
 					return;
@@ -97,7 +98,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 				message.channel.send(":repeat_one: Repeat is now turned off.");
 			} else {
 				yt.getInfo(queue[message.guild.id].currentSong.url, function (err, info) {
-					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" + await Settings.getValue(message.guild, "prefix") + "music repeat` again to toggle off.");
+					message.channel.send(":repeat_one: **" + info.title + "** is now on repeat. Type `" +  + "music repeat` again to toggle off.");
 					queue[message.guild.id].repeat = true;
 				});
 			}
@@ -112,7 +113,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 			return;
 		} else if (url == "end") {
 			var memberCountnb = voiceChannel.members.filter(a => !a.user.bot).array().length;
-			if (memberCountnb < 2 || message.member.roles.has(await Settings.getValue(message.guild, "moderatorRole"))) {
+			if (memberCountnb < 2 || message.member.roles.has(moderatorRole)) {
 				queue[message.guild.id].songs = [];
 				musicEnd = true;
 				usersVotedSkip[message.guild.id].members = [];
@@ -186,7 +187,7 @@ var musicAccount = client.users.fetch('287377351845609493').then(user => musicAc
 	}
 	})
 
-		function queueMusic(song) {
+		async function queueMusic(song) {
 			queue[message.guild.id].currentSong = song;
 
 			 	if (eval(song.url === undefined)) {

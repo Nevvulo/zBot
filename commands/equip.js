@@ -10,6 +10,7 @@ var badgesC = JSON.parse(fs.readFileSync('./data/challenge/equipment.json', 'utf
 const userBadges = await Badges.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
 const userSlots = await Slots.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
 const userProfile = await User.findOne({ where: { userID: message.author.id, guildID: message.guild.id } });
+const prefix = await Settings.getValue(message.guild, "prefix")
 
 var backgrounds = [];
 	var testFolder = './assets/profile/backgrounds';
@@ -38,7 +39,7 @@ return;
 } else if (args[1] == "backgrounds" || args[1] == "background") {
 	return message.reply(":white_check_mark: **OK**: Here are all of the backgrounds that you can equip:**" + backgrounds + "**.");
 } else {
-	return message.reply(":no_entry_sign: **NOPE**: That's not a valid category. Try `" + await Settings.getValue(message.guild, "prefix") + "equip list backgrounds` or `" + Settings.getValue(message.guild, "prefix") + "equip list badges`");
+	return message.reply(":no_entry_sign: **NOPE**: That's not a valid category. Try `" + prefix + "equip list backgrounds` or `" + prefix + "equip list badges`");
 }
 return;
 }
@@ -86,7 +87,7 @@ if (num == 1 || num == 2 || num == 3 || num == 4 || num == 5 || num == 6) {
 		} else if (args.toString() == "") {
 			message.reply(":no_entry_sign: **NOPE:** You need to specify what item you want to equip in to which slot. (ex. `equip [slot] [item name]`).\nTo view what items you own, try `equip list [badges / backgrounds]`.");
 		} else {
-		 	message.reply(":no_entry_sign: **ERROR**: The syntax of the command is incorrect. Try `" + await Settings.getValue(message.guild, "prefix") + "help " + this.settings.command + "` to get more information on this command.")
+		 	message.reply(":no_entry_sign: **ERROR**: The syntax of the command is incorrect. Try `" + prefix + "help " + this.settings.command + "` to get more information on this command.")
 		}
 		});
 }

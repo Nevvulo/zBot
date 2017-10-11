@@ -13,7 +13,7 @@ exports.run = (client, message, args) => {
 	message.delete();
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-
+		const prefix = await Settings.getValue(message.guild, "prefix");
 		//Grab command and remove user argument to get reason
 		var ban = "";
 		var argsArray = message.content.split(" ").slice(1);
@@ -29,7 +29,7 @@ exports.run = (client, message, args) => {
 		}
 
 		if (args == "" || args == undefined) {
-			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to softban. See `' + await Settings.getValue(message.guild, "prefix") +'help softban` for more information.');
+			message.reply(':no_entry_sign: **ERROR:** You need to enter a user to softban. See `' + prefix + 'help softban` for more information.');
 			return;
 		}
 
@@ -74,7 +74,7 @@ exports.run = (client, message, args) => {
 			message.channel.send(":gear: **SOFTBAN**: Are you sure you want to issue this softban against **" + member.displayName + "**? *(__y__es | __n__o)*")
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('ᴘᴜɴɪꜱʜ » ' + member.user.tag, member.user.avatarURL( {format: 'png'} ))
-			embed.addField("Reason", reason.substr(0, 1019) + "...")
+			embed.addField("Reason", (reason.length > 1024 ? reason.substr(0, 1019) + "..." : reason))
 			embed.setColor("#ff8a65")
 			embed.setFooter("This user has " + await Punish.getPunishments(message.guild, member, "warn") + " warnings, " + await Punish.getPunishments(message.guild, member, "mute") + " mutes, " +
 			await Punish.getPunishments(message.guild, member, "kick") + " kicks and " + await Punish.getPunishments(message.guild, member, "ban") + " bans.", client.user.avatarURL( {format: 'png'} ))

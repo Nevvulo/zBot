@@ -8,11 +8,11 @@ var colors = require('colors');
 
 var answered = false;
 
-exports.run = (client, message, args) => {
+exports.run = async (client, message, args) => {
 	message.delete();
 		args = args.toString();
 		args = args.replace("<", "").replace(">", "").replace("@", "").replace("!", "").replace(/[^0-9.]/g, "");
-
+		const prefix = await Settings.getValue(message.guild, "prefix");
 		//Grab command and remove user argument to get reason
 		var unban = "";
 		var argsArray = message.content.split(" ").slice(1);
@@ -28,20 +28,17 @@ exports.run = (client, message, args) => {
 
 
 		if (args == "" || args == undefined) {
-			message.reply(':no_entry_sign: **ERROR**: You need to enter the ID of a user to unban. See `' + await Settings.getValue(message.guild, "prefix") +'help unban` for more information.');
+			message.reply(':no_entry_sign: **ERROR**: You need to enter the ID of a user to unban. See `' + prefix + 'help unban` for more information.');
 			return;
 		}
 
 		client.users.fetch(args.split(" ").toString()).then(async function (user) {
 			if (!message.guild.member(client.user).hasPermission("BAN_MEMBERS")) return message.reply(":no_entry_sign: **NOPE**: I don't have permission to unban this person. Make sure I have the `BAN_MEMBERS` permission and try again.")
-			getBans();
-			async function getBans() {
 				var banList = await message.guild.fetchBans()
 				var banned = banList.has("id", user.id);
 				if (!banned) return message.reply(":no_entry_sign: **NOPE**: That user isn't banned!");
 				message.guild.unban(user, unban);
 				message.reply(":white_check_mark: **OK**: " + user.username + " (" + user.id + ") has been **unbanned**.")
-			}
 		}).catch(function (reason) {
 				throw reason;
 		});

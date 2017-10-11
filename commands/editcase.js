@@ -66,7 +66,7 @@ exports.run = async (client, message, args) => {
 			message.channel.send(":gear: **MODIFY**: Are you sure you want to modify punishment case **" + caseD + "**? *(__y__es | __n__o)*")
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('Modify » ', client.user.avatarURL( {format: 'png'} ))
-			embed.addField("New Value for 'reason'", value.substr(0, 1019) + "...")
+			embed.addField("New Value for 'reason'", (value.length > 1024 ? value.substr(0, 1019) + "..." : value))
 			embed.setColor("#e57373")
 			embed.setFooter("zBot Punish - You are editing case " + caseD + " out of " + await Punish.grabCases(message.guild), client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })
@@ -77,7 +77,7 @@ exports.run = async (client, message, args) => {
 
 let command = 'editcase'
 , description = 'Edit a punishment case\'s reason.'
-, usage = 'ban **[mention]** **[reason]**'
+, usage = 'editcase **[case number]** **[reason]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod'
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

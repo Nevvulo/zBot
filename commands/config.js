@@ -29,8 +29,8 @@ if (argument == "view") {
     var role = message.guild.roles.find("id", await Settings.getValue(message.guild, setting));
     return message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + role.name + "__")
   }
-
-  message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + await Settings.getValue(message.guild, setting) + "__")
+  let currentSetting = await Settings.getValue(message.guild, setting)
+  message.channel.send(":white_check_mark: **OK**: The current value for the setting *" + setting + "* is: __" + currentSetting + "__")
 } else if (argument == "set") {
   if (setting == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a setting to edit.");
   if (value == undefined) return message.channel.send(":no_entry_sign: **ERROR**: You need to provide a new value to this setting.");
