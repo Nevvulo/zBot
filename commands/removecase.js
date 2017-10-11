@@ -62,16 +62,16 @@ exports.run = async (client, message, args) => {
 			message.channel.send(":gear: **REMOVE**: Are you sure you want to remove punishment case **" + caseD + "**? *(__y__es | __n__o)*")
 			const embed = new Discord.MessageEmbed()
 			embed.setAuthor('Remove » ', client.user.avatarURL( {format: 'png'} ))
-			embed.addField("Punishment Reason", reasonFinal.substr(0, 1019) + "...")
+			embed.addField("Punishment Reason", (reasonFinal.length > 1024 ? reasonFinal.substr(0, 1019) + "..." : reasonFinal))
 			embed.setColor("#e57373")
 			embed.setFooter("zBot Punish - You are removing case " + caseD + " out of " + await Punish.grabCases(message.guild), client.user.avatarURL( {format: 'png'} ))
 		message.channel.send({ embed })
 	}
 }
 
-let command = 'editcase'
-, description = 'Edit a punishment case\'s reason.'
-, usage = 'ban **[mention]** **[reason]**'
+let command = 'removecase'
+, description = 'Remove a punishment case.'
+, usage = 'removecase **[case number]**'
 , throttle = {usages: 3, duration: 10}
 , permission = 'mod'
 exports.settings = {command: command, description: description, usage: usage, throttle: throttle, permission: permission}

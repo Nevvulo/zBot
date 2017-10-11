@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const fs = require('fs');
+const colors = require('colors');
 const main = require('./../../bot.js')
 const SettingsModel = require('./../../models/Settings.js')
 
@@ -46,7 +47,7 @@ class Settings {
 		try {
 			eval(guildSettings.expletiveFilter)
 		} catch (error) {
-			if (error) log("Guild successfully vacuumed: " + guild.name + " (" + guild.id + ")", logType.success)
+			if (error) log(colors.bold("Guild successfully vacuumed ▪ " + guild.name) + " (" + guild.id + ")", logType.success)
 			Settings.newGuild(guild)
 		}
 
@@ -64,7 +65,7 @@ class Settings {
 				const settingvalue = value;
 
 				if (eval(`guildSettings.${setting}`) === undefined) {
-					log("Guild setting successfully vacuumed: SETTING " + setting + " in " + guild.name + " (" + guild.id + ")", logType.success)
+					log(colors.bold("Guild setting successfully vacuumed ▪ " + setting + " in " + guild.name) + " (" + guild.id + ")", logType.success)
 					Settings.editSetting(guild, setting, settingvalue)
 				}
 				}
@@ -90,7 +91,6 @@ class Settings {
 	}
 
 	static async editSetting(guild, setting, value) {
-		console.log("Called on " + setting + " with value " + value)
 		if (value == true || value == false) {
 			eval(`SettingsModel.update({ ${setting}: ${value} }, { where: { guildID: guild.id } })`);
 		} else {

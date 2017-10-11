@@ -8,8 +8,7 @@ class UpdateStats {
 		const snekfetch = require('snekfetch')
 
 	snekfetch.post('https://discordbots.org/api/bots/345766303052857344/stats')
-
-	  .set('Authorization', api.dbot())
+	  .set('Authorization', api.dbot(true))
 	  .send({ server_count: client.guilds.size })
 	  .then(log('Updated discordbots.org status.', logType.info))
 	  .catch(e => log('Unable to update discordbots.org status. ' + e, logType.critical));

@@ -521,6 +521,7 @@ client.on('guildMemberAdd', async function(guildMember) {
       randomjoin = "Nice to see you!";
       break;
   }
+
   if (await Settings.getValue(guildMember.guild, "joinMessageEnabled")) {
     if (await Settings.getValue(guildMember.guild, "joinMessage") === "null" || await Settings.getValue(guildMember.guild, "joinMessage") === "none" || await Settings.getValue(guildMember.guild, "joinMessage") === "") {
       channel.send("**" + guildMember + "** has joined our awesome server! *" + randomjoin + "*");
@@ -541,17 +542,17 @@ client.on('guildMemberAdd', async function(guildMember) {
 
   embed.setFooter("For more information on this user, type " + await Settings.getValue(guildMember.guild, "prefix") + "uinfo " + guildMember.user.username + ".");
 
-  memberchannel.send({ embed });
+  memberchannel.send({ embed: embed });
 });
 
 client.on('guildCreate', function(guild) {
-  log("New Guild: " + guild.id, logType.success);
+  log(colors.bold(colors.green("A new guild was added!")) + colors.blue(" (ID ▪ " + guild.id + ")"), logType.info);
   Settings.newGuild(guild);
   guild.owner.send(":wave: **Hey!** Thanks for inviting me to your server! I'm *zBot*, and I am an 'all-in-one' bot created by zBlake#6715. I feature moderation tools, entertainment, customizable profiles and lots more!\n\n:warning: **zBot** is currently undergoing a big update. You may experience temporary downtime or glitches every so often, and I apologize for this. However, this update should be finished very soon.\n*:information_source: To get started using zBot, type `+help` to see what you can do!*\n:gear: If you want to configure my settings, such as which channel logs get sent to, you can run `+config settings` and see the settings that are customizable. It's highly recommended that you spend a few minutes configuring my settings first, so that you can choose where logs and other messages are sent.\n\nIf you ever need any help, feel free to visit the GitHub page here: **https://github.com/zBlakee/zBot** and you can find some information in the 'Wiki'. Have fun!");
 });
 
 client.on('guildRemove', function(guild) {
-  log("Guild removed: " + guild.id, logType.info);
+  log(colors.bold(colors.red("A guild was removed. 😭")) + colors.blue(" (ID ▪ " + guild.id + ")"), logType.info);
   Settings.removeGuild(guild);
 });
 
@@ -559,7 +560,7 @@ client.on('guildMemberRemove', async function(guildMember) {
   if (client.channels.has(await Settings.getValue(guildMember.guild, "memberLogsChannel"))) {
     channel = client.channels.get(await Settings.getValue(guildMember.guild, "memberLogsChannel"));
     if (guildMember.id == client.user.id) {
-      log("Guild removed: " + guildMember.guild.id, logType.info);
+      log(colors.bold(colors.red("A guild was removed. 😭")) + colors.blue(" (ID ▪ " + guild.id + ")"), logType.info);
       Settings.removeGuild(guildMember.guild);
     }
   } else {

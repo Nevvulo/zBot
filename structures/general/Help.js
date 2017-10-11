@@ -2,7 +2,6 @@ const Discord = require('discord.js');
 const Version = require('./Version.js');
 const Settings = require('./Settings.js')
 var help = {title: "Title not supplied.", desc: "No description found.", usage: "No usage found."};
-var prefix = "+";
 
 class Help {
 
@@ -33,7 +32,7 @@ class Help {
 			}
 
 			embed.setFooter("zBot • Help • version " + Version.getVersionNumber(), client.user.avatarURL( {format: 'png' }));
-			return { embed };
+			return { embed: embed };
 	}
 
 	static throttleInfo(command) {
