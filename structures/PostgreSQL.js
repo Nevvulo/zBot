@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const fs = require('fs');
 const path = require('path');
-const database = new Sequelize((process.argv[2] !== "--beta" ? "postgres://zBotData:admin@localhost:5432/zBotData" : "postgres://postgres:postgres@localhost:5433/data"), { logging: false });
+const database = new Sequelize((process.argv[2] !== "--beta" ? "postgres://[redacted]@localhost:5432/zBotData" : "postgres://[redacted]@localhost:5433/data"), { logging: false });
 
 class Database {
 	static get db() {
